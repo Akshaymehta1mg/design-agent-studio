@@ -30,7 +30,7 @@ function printNotes(title: string, sections: NoteSection[]) {
     p, li { margin: 0 0 6pt; } ul, ol { padding-left: 18pt; margin: 0 0 8pt; }
     table { border-collapse: collapse; width: 100%; margin: 6pt 0; font-size: 10pt; } th, td { border: 1px solid #ccc; padding: 4pt 6pt; text-align: left; vertical-align: top; }
     code { font-family: ui-monospace, Menlo, monospace; font-size: 9.5pt; } img { max-width: 100%; } a { color: inherit; }
-  </style></head><body><h1>${escapeHtml(title)}</h1><div class="meta">Design Agent Studio · ${new Date().toLocaleDateString()}</div>${notesHtml(sections)}</body></html>`)
+  </style></head><body><h1>${escapeHtml(title)}</h1><div class="meta">Prismu · ${new Date().toLocaleDateString()}</div>${notesHtml(sections)}</body></html>`)
   doc.close()
   const go = () => {
     frame.contentWindow?.focus()

@@ -16,6 +16,7 @@ import {
   Paperclip,
   Plus,
   Package,
+  Pencil,
   RotateCcw,
   Settings2,
   Square,
@@ -164,7 +165,7 @@ export function ChatPanel() {
           <div className="mx-auto flex max-w-[760px] flex-col gap-6 px-4 pt-5 pb-44">
             {conv.messages.map((m) => (
               <motion.div key={m.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: EASE_OUT }}>
-                {m.role === "user" ? <UserMessage m={m} /> : <AssistantMessage m={m} convId={conv.id} />}
+                {m.role === "user" ? <UserMessage m={m} convId={conv.id} /> : <AssistantMessage m={m} convId={conv.id} />}
               </motion.div>
             ))}
           </div>
@@ -247,16 +248,102 @@ function Thumb({ a }: { a: Attachment }) {
 
 const COLLAPSED_H = 168
 
-function UserMessage({ m }: { m: ChatMessage }) {
+function UserMessage({ m, convId }: { m: ChatMessage; convId: string }) {
   const atts = m.attachments ?? []
   const body = useRef<HTMLDivElement>(null)
   const [long, setLong] = useState(false)
   const [open, setOpen] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState("")
+  const [copied, setCopied] = useState(false)
+  const [hovered, setHovered] = useState(false)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
   useLayoutEffect(() => {
     if (body.current) setLong(body.current.scrollHeight > COLLAPSED_H + 24)
   }, [m.text])
+
+  // Auto-grow the edit textarea
+  useLayoutEffect(() => {
+    if (editing && textareaRef.current) {
+      const el = textareaRef.current
+      el.style.height = "auto"
+      el.style.height = `${el.scrollHeight}px`
+      el.focus()
+      el.setSelectionRange(el.value.length, el.value.length)
+    }
+  }, [editing, draft])
+
+  const startEdit = () => {
+    setDraft(m.text)
+    setEditing(true)
+  }
+
+  const cancelEdit = () => setEditing(false)
+
+  const saveEdit = () => {
+    const newText = draft.trim()
+    if (!newText || newText === m.text) { setEditing(false); return }
+    const store = useStore.getState()
+    const c = store.conversations.find((x) => x.id === convId)
+    if (!c) { setEditing(false); return }
+    // Find this message's index, keep messages up to and including it, drop everything after
+    const idx = c.messages.findIndex((x) => x.id === m.id)
+    const updatedMsg: ChatMessage = { ...m, text: newText }
+    store.updateConversation(convId, (cc) => ({
+      ...cc,
+      messages: [...cc.messages.slice(0, idx), updatedMsg],
+    }))
+    setEditing(false)
+    runChat(convId, updatedMsg)
+  }
+
+  const copy = () => {
+    navigator.clipboard?.writeText(m.text).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1400)
+    }).catch(() => toast.error("Couldn't copy here."))
+  }
+
+  if (editing) {
+    return (
+      <div className="flex flex-col items-end gap-2 w-full">
+        {atts.length > 0 && (
+          <div className="flex max-w-[90%] flex-wrap justify-end gap-1.5">
+            {atts.map((a, i) => <Thumb key={i} a={a} />)}
+          </div>
+        )}
+        <div className="w-full max-w-[85%]">
+          <textarea
+            ref={textareaRef}
+            value={draft}
+            onChange={(e) => {
+              setDraft(e.target.value)
+              e.target.style.height = "auto"
+              e.target.style.height = `${e.target.scrollHeight}px`
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); saveEdit() }
+              if (e.key === "Escape") cancelEdit()
+            }}
+            className="bg-bubble text-bubble-foreground w-full resize-none overflow-hidden rounded-[20px] px-4 py-2.5 text-[14.5px] leading-[1.6] outline-none ring-2 ring-ring"
+            rows={1}
+          />
+          <div className="mt-1.5 flex justify-end gap-2">
+            <Button variant="ghost" size="sm" className="h-7 text-[13px]" onClick={cancelEdit}>Cancel</Button>
+            <Button size="sm" className="h-7 text-[13px]" onClick={saveEdit}><ArrowUp className="size-3.5" /> Send</Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="flex flex-col items-end gap-1.5">
+    <div
+      className="flex flex-col items-end gap-1.5"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       {atts.length > 0 && (
         <div className="flex max-w-[90%] flex-wrap justify-end gap-1.5">
           {atts.map((a, i) => (
@@ -285,6 +372,43 @@ function UserMessage({ m }: { m: ChatMessage }) {
           </button>
         )}
       </div>
+      {/* hover actions */}
+      <AnimatePresence>
+        {hovered && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.12 }}
+            className="flex items-center gap-0.5"
+          >
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={copy}
+                  aria-label="Copy message"
+                  className="text-muted-foreground hover:text-foreground hover:bg-accent grid size-7 place-items-center rounded-md transition-colors"
+                >
+                  {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Copy</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={startEdit}
+                  aria-label="Edit message"
+                  className="text-muted-foreground hover:text-foreground hover:bg-accent grid size-7 place-items-center rounded-md transition-colors"
+                >
+                  <Pencil className="size-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Edit</TooltipContent>
+            </Tooltip>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
