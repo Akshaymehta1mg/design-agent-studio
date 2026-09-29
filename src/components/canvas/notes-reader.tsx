@@ -1,13 +1,103 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
-import { Check, Copy, Download, FileText, Pencil } from "@/components/ui/icons"
+import { Bold, Check, Copy, Download, FilePdf, FileText, Heading2, Heading3, Italic, ListBullets, ListNumbers, Pencil, Pilcrow } from "@/components/ui/icons"
 import { useStore } from "@/lib/store"
-import { parseSections } from "@/lib/notes"
+import { htmlToMarkdown, parseSections, type NoteSection } from "@/lib/notes"
 import { cn } from "@/lib/utils"
-import { Markdown } from "@/components/chat/markdown"
+import { Markdown, toHtml } from "@/components/chat/markdown"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
-import { Textarea } from "@/components/ui/textarea"
+
+const escapeHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+
+/** The notes as formatted HTML: a heading per section, then its body. */
+const notesHtml = (sections: NoteSection[]) => sections.map((s) => `<h${s.level >= 3 ? 3 : 2}>${escapeHtml(s.title)}</h${s.level >= 3 ? 3 : 2}>${s.body ? toHtml(s.body) : "<p><br></p>"}`).join("")
+
+/** Print the notes to PDF through the browser's print dialog (Save as PDF), as a clean document. */
+function printNotes(title: string, sections: NoteSection[]) {
+  const frame = document.createElement("iframe")
+  frame.setAttribute("aria-hidden", "true")
+  Object.assign(frame.style, { position: "fixed", right: "0", bottom: "0", width: "0", height: "0", border: "0" })
+  document.body.appendChild(frame)
+  const doc = frame.contentDocument!
+  doc.open()
+  doc.write(`<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(title)}</title><style>
+    @page { margin: 18mm 16mm; }
+    body { font: 11pt/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #111; }
+    h1 { font-size: 20pt; margin: 0 0 4pt; } .meta { color: #666; font-size: 9pt; margin-bottom: 18pt; }
+    h2 { font-size: 14pt; margin: 18pt 0 6pt; break-after: avoid; } h3, h4 { font-size: 12pt; margin: 12pt 0 4pt; break-after: avoid; }
+    p, li { margin: 0 0 6pt; } ul, ol { padding-left: 18pt; margin: 0 0 8pt; }
+    table { border-collapse: collapse; width: 100%; margin: 6pt 0; font-size: 10pt; } th, td { border: 1px solid #ccc; padding: 4pt 6pt; text-align: left; vertical-align: top; }
+    code { font-family: ui-monospace, Menlo, monospace; font-size: 9.5pt; } img { max-width: 100%; } a { color: inherit; }
+  </style></head><body><h1>${escapeHtml(title)}</h1><div class="meta">Design Agent Studio · ${new Date().toLocaleDateString()}</div>${notesHtml(sections)}</body></html>`)
+  doc.close()
+  const go = () => {
+    frame.contentWindow?.focus()
+    frame.contentWindow?.print()
+    setTimeout(() => frame.remove(), 1000)
+  }
+  // Give images a moment to load before printing.
+  setTimeout(go, 250)
+}
+
+const TOOLS = [
+  { label: "Heading", icon: Heading2, run: () => document.execCommand("formatBlock", false, "h2") },
+  { label: "Subheading", icon: Heading3, run: () => document.execCommand("formatBlock", false, "h3") },
+  { label: "Text", icon: Pilcrow, run: () => document.execCommand("formatBlock", false, "p") },
+  { label: "Bold", icon: Bold, run: () => document.execCommand("bold") },
+  { label: "Italic", icon: Italic, run: () => document.execCommand("italic") },
+  { label: "Bulleted list", icon: ListBullets, run: () => document.execCommand("insertUnorderedList") },
+  { label: "Numbered list", icon: ListNumbers, run: () => document.execCommand("insertOrderedList") },
+] as const
+
+/** Edit the notes like a normal document; they're saved back as Markdown behind the scenes. */
+function NotesEditor({ sections, editorRef }: { sections: NoteSection[]; editorRef: React.RefObject<HTMLDivElement | null> }) {
+  const initial = useMemo(() => notesHtml(sections), [sections])
+  useEffect(() => {
+    const el = editorRef.current
+    if (!el) return
+    el.innerHTML = initial
+    el.focus()
+  }, [initial, editorRef])
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex shrink-0 items-center gap-0.5 border-b px-4 py-1.5" role="toolbar" aria-label="Formatting">
+        {TOOLS.map((t, i) => (
+          <button
+            key={t.label}
+            title={t.label}
+            aria-label={t.label}
+            // Keep the text selection while clicking the toolbar.
+            onMouseDown={(e) => {
+              e.preventDefault()
+              t.run()
+            }}
+            className={cn("hover:bg-accent text-muted-foreground hover:text-foreground grid size-8 place-items-center rounded-md", (i === 3 || i === 5) && "ml-2")}
+          >
+            <t.icon className="size-4" />
+          </button>
+        ))}
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto" data-scrollable>
+        <div
+          ref={editorRef}
+          contentEditable
+          suppressContentEditableWarning
+          role="textbox"
+          aria-multiline="true"
+          aria-label="Notes"
+          onPaste={(e) => {
+            // Paste as plain text so outside formatting doesn't leak in.
+            e.preventDefault()
+            document.execCommand("insertText", false, e.clipboardData.getData("text/plain"))
+          }}
+          className="md mx-auto min-h-full max-w-[720px] px-8 py-8 text-[14.5px] leading-[1.7] outline-none [&_h2]:mt-7 [&_h2]:mb-1 [&_h2]:text-[19px] [&_h2]:font-semibold [&_h2]:tracking-[-0.01em] [&_h2:first-child]:mt-0 [&_h3]:mt-5 [&_h3]:text-[15px] [&_h3]:font-semibold"
+        />
+      </div>
+    </div>
+  )
+}
 
 /** The agent's notes document: contents on the left, the full text in the centre. */
 export function NotesReader() {
@@ -22,7 +112,7 @@ export function NotesReader() {
   const sections = useMemo(() => (note ? parseSections(note.text) : []), [note])
   const [active, setActive] = useState<string | undefined>()
   const [editing, setEditing] = useState(false)
-  const [draft, setDraft] = useState("")
+  const editorRef = useRef<HTMLDivElement>(null)
   const [article, setArticle] = useState<HTMLDivElement | null>(null)
   const jumping = useRef(false)
 
@@ -60,7 +150,8 @@ export function NotesReader() {
 
   const title = note?.title || "Design notes"
   const save = () => {
-    if (note && draft !== note.text) edit((d) => ({ ...d, nodes: d.nodes.map((x) => (x.id === note.id ? { ...x, text: draft } : x)) }))
+    const text = editorRef.current ? htmlToMarkdown(editorRef.current) : note?.text
+    if (note && text != null && text !== note.text) edit((d) => ({ ...d, nodes: d.nodes.map((x) => (x.id === note.id ? { ...x, text } : x)) }))
     setEditing(false)
   }
   const download = () => {
@@ -105,18 +196,22 @@ export function NotesReader() {
                   >
                     <Copy /> Copy
                   </Button>
-                  <Button variant="ghost" size="sm" className="h-8" onClick={download}>
-                    <Download /> .md
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8"
-                    onClick={() => {
-                      setDraft(note.text)
-                      setEditing(true)
-                    }}
-                  >
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-8">
+                        <Download /> Download
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-44">
+                      <DropdownMenuItem onSelect={() => printNotes(title, sections)}>
+                        <FilePdf /> PDF
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={download}>
+                        <FileText /> Markdown (.md)
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <Button variant="outline" size="sm" className="h-8" onClick={() => setEditing(true)}>
                     <Pencil /> Edit
                   </Button>
                 </>
@@ -143,19 +238,7 @@ export function NotesReader() {
                 ))}
               </nav>
               {editing ? (
-                <div className="flex min-h-0 flex-1 flex-col p-4">
-                  <Textarea
-                    autoFocus
-                    value={draft}
-                    onChange={(e) => setDraft(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) save()
-                    }}
-                    className="min-h-0 flex-1 resize-none font-mono text-[13px] leading-relaxed"
-                    aria-label="Notes (Markdown)"
-                  />
-                  <p className="text-muted-foreground mt-2 text-[12px]">Markdown. Use ## headings to add sections to the contents.</p>
-                </div>
+                <NotesEditor sections={sections} editorRef={editorRef} />
               ) : (
                 <div ref={setArticle} className="relative min-h-0 flex-1 overflow-y-auto" data-scrollable>
                   <article className="mx-auto flex max-w-[720px] flex-col gap-8 px-8 py-8">
