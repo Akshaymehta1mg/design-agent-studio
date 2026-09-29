@@ -26,6 +26,7 @@ import {
   MessageSquareText,
   StickyNote,
   AlertCircle,
+  Images,
 } from "@/components/ui/icons"
 import { toast } from "sonner"
 import type { ActionLog, Attachment, ChatMessage, FrameNode } from "@/lib/types"
@@ -66,6 +67,44 @@ import { WorkflowCard } from "@/components/agents/workflow-graph"
 import { answerAsk, isWaiting } from "@/lib/message-parts"
 import { legacyAnswers } from "@/lib/decisions"
 
+type VisualResearchPart = Extract<MessagePart, { type: "visual_research" }>
+
+function VisualResearchCard({ part }: { part: VisualResearchPart }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="bg-muted/50 rounded-xl border">
+      <button
+        className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left"
+        onClick={() => setOpen((v) => !v)}
+      >
+        <Images className="text-muted-foreground size-3.5 shrink-0" />
+        <span className="text-[13px] font-medium flex-1 truncate">
+          Visual research{part.query ? ` · ${part.query}` : ""}
+        </span>
+        <span className="text-muted-foreground text-[12px]">{part.results.length} screens</span>
+        <ChevronDown className={cn("text-muted-foreground size-3.5 shrink-0 transition-transform", open && "rotate-180")} />
+      </button>
+      {open && (
+        <div className="grid grid-cols-3 gap-2 px-3 pb-3">
+          {part.results.map((r) => (
+            <a key={r.id} href={r.pin_url} target="_blank" rel="noreferrer" className="group flex flex-col gap-1">
+              <div className="bg-background overflow-hidden rounded-lg border">
+                <img
+                  src={r.image}
+                  alt={r.title}
+                  className="block h-28 w-full object-cover object-top transition-opacity group-hover:opacity-90"
+                  loading="lazy"
+                />
+              </div>
+              <p className="text-muted-foreground truncate px-0.5 text-[10.5px] leading-tight">{r.title || r.id}</p>
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 type AskPart = Extract<MessagePart, { type: "ask" }>
 
 function answerList(part: AskPart, answers: ApprovalCardAnswers) {
@@ -89,6 +128,7 @@ function PartView({ part, loc }: { part: MessagePart; loc: { convId: string; msg
   if (part.type === "plan") return <TodoList title={part.title} items={part.items} />
   if (part.type === "workflow") return <WorkflowCard workflow={part.workflow} onOpen={() => focusNode(part.frameId)} />
   if (part.type === "prototype") return <PrototypeCard frameId={part.frameId} />
+  if (part.type === "visual_research") return <VisualResearchCard part={part} />
   // ask
   const live = isWaiting(part.id)
   const status = part.status === "pending" && !live ? "rejected" : part.status

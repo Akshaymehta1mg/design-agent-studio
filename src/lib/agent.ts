@@ -4,7 +4,7 @@ import type { ActionLog, Attachment, ChatMessage, Conversation, FrameNode, Messa
 import { frameLabel, uid, useStore } from "./store"
 import { getLanguageModel, type KeyedProvider } from "./providers"
 import { addMarks, addNote, addPrototypeScreens, createPrototype, createWireframe, createWorkflow, figmaComment, iteratePrototype, iterateWireframe, type ActionResult } from "./canvas-actions"
-import { addPrototypePart, addWorkflowPart, appendText, askUser, setPlan, upsertPart } from "./message-parts"
+import { addPrototypePart, addVisualResearchPart, addWorkflowPart, appendText, askUser, setPlan, upsertPart } from "./message-parts"
 import { dataUrlParts } from "./files"
 import { allDesignSystems, BUILTIN_DESIGN_SYSTEMS, designSystemDigest } from "./design-systems"
 import { connectorTools } from "./mcp"
@@ -511,7 +511,8 @@ function canvasTools(convId: string, msgId: string, log: (r: ActionResult) => vo
 
 // ───────────────────────── Prism: references, design system, visual research ─────────────────────────
 
-function prismTools(convId: string) {
+function prismTools(convId: string, msgId: string) {
+  const loc = { convId, msgId }
   return {
     prism_reference: tool({
       description: `Load one of Prism's reference documents by name. Available: ${PRISM_DOCS.join(", ")}.`,
@@ -551,6 +552,7 @@ function prismTools(convId: string) {
         const found = await searchVisualResearch({ query, pattern, limit: Math.min(limit ?? 12, 20) })
         const clusters = (await visualResearchPatterns()).join("; ")
         if (!found.length) return `No references matched. Pattern clusters: ${clusters}. If nothing fits, record "no local fit".`
+        addVisualResearchPart(loc, query ?? pattern ?? "visual research", found.map((r) => ({ id: r.id, title: r.title, image: r.image, patterns: r.patterns, description: r.description, pin_url: r.pin_url })))
         return `${found.length} references (page: ${VISUAL_RESEARCH_URL}):\n${found
           .map((r) => `- ${r.id} · ${r.patterns.join(", ") || "unclustered"} · ${r.description}${r.visible_text ? ` · text: ${r.visible_text.slice(0, 120)}` : ""} · source: ${r.pin_url}`)
           .join("\n")}\n\nPattern clusters: ${clusters}`
@@ -719,7 +721,7 @@ export async function runChat(convId: string, userMsg: ChatMessage, opts: { dept
           return `Moving to ${phaseLabel(to)}: ${reason}`
         },
       })
-      const everything: ToolSet = { ...mcp.tools, ...prismTools(convId), ...canvasTools(convId, assistantId, pushAction, figmaOn, markup, controller!.signal), next_phase: nextPhase }
+      const everything: ToolSet = { ...mcp.tools, ...prismTools(convId, assistantId), ...canvasTools(convId, assistantId, pushAction, figmaOn, markup, controller!.signal), next_phase: nextPhase }
       // Each step only gets the tools it needs, so a reply can't run ahead to the prototype.
       const allowed = PHASE_TOOLS[phase]
       const markupNames = markup ? ["annotate", "comment", "add_note"] : []

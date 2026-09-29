@@ -147,6 +147,12 @@ export type MessagePart =
     }
   | { type: "workflow"; id: string; frameId: string; workflow: Workflow }
   | { type: "prototype"; id: string; frameId: string }
+  | {
+      type: "visual_research"
+      id: string
+      query: string
+      results: { id: string; title: string; image: string; patterns: string[]; description: string; pin_url: string }[]
+    }
 
 
 export type Attachment =
