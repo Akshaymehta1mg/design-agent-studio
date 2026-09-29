@@ -11,6 +11,7 @@ import { ChatPanel } from "@/components/chat/chat-panel"
 import { LivePanel, LiveStage } from "@/components/live/live-view"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 import { Button } from "@/components/ui/button"
+import { PrototypePlayer } from "@/components/canvas/prototype-player"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useIsMobile } from "@/hooks/use-mobile"
 
@@ -119,6 +120,7 @@ export function ProjectView() {
 
   return (
     <div className="bg-background flex h-full flex-col">
+      <PrototypePlayer />
       <header className="flex h-14 shrink-0 items-center gap-2 border-b px-3">
         <Button variant="ghost" size="icon" className="size-8 rounded-full" onClick={() => setRoute("home")} aria-label="Back to Home">
           <ArrowLeft />

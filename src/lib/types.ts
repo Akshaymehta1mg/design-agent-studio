@@ -16,8 +16,11 @@ export interface FrameNode {
   source: FrameSource
   /** data: URL or remote URL for image frames */
   src?: string
-  /** HTML fragment for wireframe frames */
+  /** HTML fragment for wireframe frames (for a prototype: its start screen) */
   html?: string
+  /** A prototype: every screen of a flow in one interactive file, linked with data-go */
+  screens?: PrototypeScreen[]
+  startScreen?: string
   /** Graph for workflow frames */
   workflow?: Workflow
   device?: Device
@@ -31,6 +34,12 @@ export interface FrameNode {
   changeSummary?: string
   figma?: { fileKey: string; nodeId?: string }
   createdAt: number
+}
+
+export interface PrototypeScreen {
+  id: string
+  title: string
+  html: string
 }
 
 export interface NoteNode {
@@ -135,6 +144,7 @@ export type MessagePart =
       answers?: { question: string; answer: string }[]
     }
   | { type: "workflow"; id: string; frameId: string; workflow: Workflow }
+  | { type: "prototype"; id: string; frameId: string }
 
 
 export type Attachment =

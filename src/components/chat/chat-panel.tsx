@@ -31,6 +31,7 @@ import type { ActionLog, Attachment, ChatMessage, FrameNode } from "@/lib/types"
 import { frameLabel, uid, useActiveConversation, useStore } from "@/lib/store"
 import { runChat, speak, stopAgent } from "@/lib/agent"
 import { addImageFiles } from "@/lib/canvas-actions"
+import { PrototypeCard } from "@/components/canvas/prototype-player"
 import { formatBytes, isTextFile, readAsDataUrl, readAsText } from "@/lib/files"
 import { cn } from "@/lib/utils"
 import { hasFigmaAccess } from "@/lib/figma"
@@ -85,6 +86,7 @@ function PartView({ part, loc }: { part: MessagePart; loc: { convId: string; msg
   if (part.type === "text") return <Markdown text={part.text} className="text-[14.5px] leading-[1.65]" />
   if (part.type === "plan") return <TodoList title={part.title} items={part.items} />
   if (part.type === "workflow") return <WorkflowCard workflow={part.workflow} onOpen={() => focusNode(part.frameId)} />
+  if (part.type === "prototype") return <PrototypeCard frameId={part.frameId} />
   // ask
   const live = isWaiting(part.id)
   const status = part.status === "pending" && !live ? "rejected" : part.status

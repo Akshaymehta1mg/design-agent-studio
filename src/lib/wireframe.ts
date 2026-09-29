@@ -1,4 +1,4 @@
-import type { Device } from "./types"
+import type { Device, PrototypeScreen } from "./types"
 
 export const DEVICE_SIZES: Record<Device, { w: number; h: number }> = {
   mobile: { w: 390, h: 844 },
@@ -98,3 +98,117 @@ export const PREVIEW_WIREFRAME = `<div class="wf-screen">
 </div>
 <div class="wf-footer"><div class="wf-btn wf-btn-primary wf-btn-block">Primary action</div><div class="wf-btn wf-btn-block">Secondary action</div></div>
 </div>`
+
+// ───────── Prototypes: every screen of a flow in one interactive HTML file ─────────
+
+
+/**
+ * Linking conventions the agent writes (plain attributes; the model never writes scripts):
+ *   data-go="screen-id"  → go to that screen      data-back     → previous screen
+ *   data-open="sheet-id" → show that overlay      data-close    → hide the overlay it's in (or data-close="id")
+ *   data-overlay="id"    → an overlay (sheet, dialog, menu), hidden until opened
+ */
+export const PROTOTYPE_CSS = `
+[data-screen]{min-height:100vh}
+[data-screen][hidden],[data-overlay][hidden]{display:none!important}
+[data-go],[data-back],[data-open],[data-close]{cursor:pointer}
+.wf-overlay{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(0,0,0,.42)}
+.wf-overlay.wf-center{justify-content:center;align-items:center;padding:24px}
+.wf-overlay>.wf-sheet{display:flex;flex-direction:column;gap:12px;padding:8px 16px 24px;max-height:85vh;overflow:auto}
+.wf-overlay.wf-center>.wf-sheet,.wf-overlay.wf-center>.wf-card{width:100%;max-width:360px;border-radius:18px;padding:20px}
+.wf-proto-hint [data-screen]:not([hidden]) :is([data-go],[data-back],[data-open],[data-close]){outline:2px solid rgba(37,99,235,.6);outline-offset:2px;border-radius:6px}
+.wf-proto-nav{position:fixed;left:12px;bottom:12px;z-index:99;font:500 12px/1.3 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.wf-proto-nav summary{list-style:none;cursor:pointer;background:#111;color:#fff;border-radius:999px;padding:7px 12px;box-shadow:0 4px 14px rgba(0,0,0,.2)}
+.wf-proto-nav summary::-webkit-details-marker{display:none}
+.wf-proto-nav div{margin-bottom:6px;background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:4px;box-shadow:0 8px 24px rgba(0,0,0,.14);max-height:60vh;overflow:auto}
+.wf-proto-nav a{display:block;padding:6px 10px;border-radius:8px;color:#111;text-decoration:none}
+.wf-proto-nav a:hover{background:#f2f2f2}
+`
+
+/** Runs inside the sandboxed prototype iframe (scripts allowed, no same-origin). */
+const PROTOTYPE_RUNTIME = `(function(){
+var cur=null,stack=[];
+function q(s){return document.querySelector(s)}
+function esc(v){return String(v).replace(/["\\\\]/g,"\\\\$&")}
+function screen(id){return q('[data-screen="'+esc(id)+'"]')}
+function tell(){try{parent.postMessage({type:"proto:screen",id:cur,canBack:stack.length>0},"*")}catch(e){}}
+function show(id,push){var t=screen(id);if(!t)return;
+document.querySelectorAll("[data-screen]").forEach(function(s){s.hidden=s!==t});
+document.querySelectorAll("[data-overlay]").forEach(function(o){o.hidden=true});
+if(push!==false&&cur&&cur!==id)stack.push(cur);cur=id;window.scrollTo(0,0);tell()}
+function back(){if(stack.length)show(stack.pop(),false)}
+function hint(){document.body.classList.add("wf-proto-hint");clearTimeout(hint.t);hint.t=setTimeout(function(){document.body.classList.remove("wf-proto-hint")},700)}
+document.addEventListener("click",function(e){
+var el=e.target.closest("[data-go],[data-back],[data-open],[data-close],a[href^='#']");
+if(!el){if(!e.target.closest("input,textarea,select,label,summary,.wf-proto-nav"))hint();return}
+e.preventDefault();
+if(el.hasAttribute("data-back"))back();
+else if(el.getAttribute("data-go"))show(el.getAttribute("data-go"));
+else if(el.getAttribute("data-open")){var s=screen(cur),id=esc(el.getAttribute("data-open"));var o=(s&&s.querySelector('[data-overlay="'+id+'"]'))||q('[data-overlay="'+id+'"]');if(o)o.hidden=false}
+else if(el.hasAttribute("data-close")){var n=el.getAttribute("data-close");var o2=n?q('[data-overlay="'+esc(n)+'"]'):el.closest("[data-overlay]");if(o2)o2.hidden=true}
+else if(el.matches("a[href^='#']")){var h=decodeURIComponent(el.getAttribute("href").slice(1));if(screen(h))show(h);if(el.closest(".wf-proto-nav"))el.closest("details").open=false}
+},true);
+document.addEventListener("keydown",function(e){if(e.key==="Escape"){var o=[].slice.call(document.querySelectorAll("[data-overlay]")).filter(function(x){return!x.hidden}).pop();if(o)o.hidden=true;else back()}});
+window.addEventListener("message",function(e){var d=e.data||{};if(d.type==="proto:go")show(d.id);if(d.type==="proto:back")back();if(d.type==="proto:restart"){stack=[];cur=null;show(document.body.getAttribute("data-start"),false)}});
+show(document.body.getAttribute("data-start"),false);
+})();`
+
+const slug = (s: string) =>
+  s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 40) || "screen"
+
+/** Sanitize a screen and hide its overlays until opened (so static thumbnails show the resting state). */
+export function prepareScreenHtml(html: string): string {
+  return sanitizeWireframe(html).replace(/<([a-z][a-z0-9]*)(\s[^>]*?)?\sdata-overlay=/gi, (m, tag: string, attrs = "") => (/\shidden\b/i.test(attrs) ? m : `<${tag}${attrs} hidden data-overlay=`))
+}
+
+/** Normalise the agent's screens: unique slug ids, sanitized HTML, links rewritten to the new ids. */
+export function normalizeScreens(input: { id?: string; title: string; html: string }[]): { screens: PrototypeScreen[]; rename: Map<string, string> } {
+  const rename = new Map<string, string>()
+  const used = new Set<string>()
+  const screens = input.map((s) => {
+    let id = slug(s.id || s.title)
+    for (let n = 2; used.has(id); n++) id = `${slug(s.id || s.title)}-${n}`
+    used.add(id)
+    if (s.id) rename.set(s.id, id)
+    rename.set(s.title, rename.get(s.title) ?? id)
+    return { id, title: s.title.slice(0, 60), html: s.html }
+  })
+  const fix = (v: string) => rename.get(v) ?? rename.get(slug(v)) ?? (used.has(slug(v)) ? slug(v) : v)
+  for (const s of screens) s.html = prepareScreenHtml(s.html).replace(/data-go\s*=\s*(["'])(.*?)\1/gi, (_, q: string, v: string) => `data-go=${q}${fix(v)}${q}`)
+  return { screens, rename }
+}
+
+/** Links that point nowhere and screens nothing links to, so the agent can fix its flow. */
+export function checkPrototype(screens: PrototypeScreen[], start: string) {
+  const ids = new Set(screens.map((s) => s.id))
+  const broken: string[] = []
+  const reached = new Set([start])
+  for (const s of screens) {
+    const overlays = new Set([...s.html.matchAll(/data-overlay\s*=\s*["']([^"']+)["']/gi)].map((m) => m[1]))
+    for (const m of s.html.matchAll(/data-go\s*=\s*["']([^"']+)["']/gi)) (ids.has(m[1]) ? reached.add(m[1]) : broken.push(`${s.id} → ${m[1]}`))
+    for (const m of s.html.matchAll(/data-open\s*=\s*["']([^"']+)["']/gi)) if (!overlays.has(m[1])) broken.push(`${s.id} opens missing overlay ${m[1]}`)
+  }
+  const unreachable = screens.filter((s) => !reached.has(s.id)).map((s) => s.id)
+  return { broken: [...new Set(broken)], unreachable }
+}
+
+/** The whole prototype as one document. `standalone` adds a title and a screen menu for the downloaded file. */
+export function buildPrototypeDoc(screens: PrototypeScreen[], start: string, extraCss = "", opts: { title?: string; standalone?: boolean; width?: number } = {}): string {
+  const imports = (extraCss.match(/@import[^;]+;/g) ?? []).join("")
+  const rest = extraCss.replace(/@import[^;]+;/g, "")
+  const first = screens.some((s) => s.id === start) ? start : screens[0]?.id
+  const frame = opts.standalone && opts.width ? `html{background:#ececec}body{max-width:${opts.width}px;margin:0 auto;box-shadow:0 0 0 1px rgba(0,0,0,.06),0 20px 60px rgba(0,0,0,.12);min-height:100vh}.wf-overlay{left:50%;right:auto;width:100%;max-width:${opts.width}px;transform:translateX(-50%)}` : ""
+  const nav = opts.standalone
+    ? `<details class="wf-proto-nav"><summary>Screens</summary><div>${screens.map((s) => `<a href="#${encodeURIComponent(s.id)}">${escapeHtml(s.title)}</a>`).join("")}</div></details>`
+    : ""
+  const body = screens.map((s) => `<section data-screen="${escapeHtml(s.id)}" data-title="${escapeHtml(s.title)}"${s.id === first ? "" : " hidden"}>${prepareScreenHtml(s.html)}</section>`).join("\n")
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${opts.title ? `<title>${escapeHtml(opts.title)}</title>` : ""}<style>${imports}${WF_BASE_CSS}${PROTOTYPE_CSS}${frame}${rest}</style></head><body data-start="${escapeHtml(first ?? "")}">${body}${nav}<script>${PROTOTYPE_RUNTIME}</script></body></html>`
+}
+
+function escapeHtml(s: string) {
+  return s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!)
+}

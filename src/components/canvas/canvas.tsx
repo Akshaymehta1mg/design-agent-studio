@@ -344,7 +344,7 @@ export function Canvas({ onAskAbout }: { onAskAbout: (f: FrameNode) => void }) {
                 zoom={vp.zoom}
                 offset={moving?.has(n.id) ? offset : undefined}
                 onPointerDown={onNodeDown}
-                onPreview={setPreview}
+                onPreview={(f) => (f.screens?.length ? useStore.getState().playPrototype(f.id) : setPreview(f))}
                 onDelete={deleteNode}
                 onAsk={onAskAbout}
                 activeMark={activeMark}

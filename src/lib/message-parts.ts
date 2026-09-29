@@ -78,3 +78,8 @@ export const isWaiting = (id: string) => waiting.has(id)
 export function addWorkflowPart(loc: Loc, frameId: string, workflow: Workflow) {
   upsertPart(loc, { type: "workflow", id: uid("wf_"), frameId, workflow })
 }
+
+// ───────── prototypes ─────────
+export function addPrototypePart(loc: Loc, frameId: string) {
+  upsertPart(loc, { type: "prototype", id: uid("pr_"), frameId })
+}

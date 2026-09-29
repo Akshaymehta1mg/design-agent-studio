@@ -3,8 +3,8 @@ import { z } from "zod"
 import type { ActionLog, Attachment, ChatMessage, Conversation, FrameNode, MessagePart, ProductLibrary } from "./types"
 import { frameLabel, uid, useStore } from "./store"
 import { getLanguageModel, type KeyedProvider } from "./providers"
-import { addMarks, addNote, createWireframe, createWorkflow, figmaComment, iterateWireframe, type ActionResult } from "./canvas-actions"
-import { addWorkflowPart, appendText, askUser, setPlan, upsertPart } from "./message-parts"
+import { addMarks, addNote, createPrototype, createWireframe, createWorkflow, figmaComment, iteratePrototype, iterateWireframe, type ActionResult } from "./canvas-actions"
+import { addPrototypePart, addWorkflowPart, appendText, askUser, setPlan, upsertPart } from "./message-parts"
 import { dataUrlParts } from "./files"
 import { allDesignSystems, BUILTIN_DESIGN_SYSTEMS } from "./design-systems"
 import { connectorTools } from "./mcp"
@@ -63,7 +63,7 @@ function canvasInventory(c: Conversation): string {
   return frames
     .map((f) => {
       const marks = c.canvas.marks.filter((m) => m.frameId === f.id).length
-      return `- id ${f.id} · ${f.type === "image" ? "screenshot" : f.type} · "${frameLabel(f)}" · ${f.w}×${f.h}${f.changeSummary ? ` · ${f.changeSummary}` : ""}${marks ? ` · ${marks} marks` : ""}`
+      return `- id ${f.id} · ${f.type === "image" ? "screenshot" : f.screens?.length ? `prototype (${f.screens.length} screens)` : f.type} · "${frameLabel(f)}" · ${f.w}×${f.h}${f.changeSummary ? ` · ${f.changeSummary}` : ""}${marks ? ` · ${marks} marks` : ""}`
     })
     .join("\n")
 }
@@ -102,8 +102,10 @@ Studio rules
 - Never ask the designer questions in plain chat text: every question goes through ask_user.
 
 Canvas tools
-- create_wireframe: a new screen or state that doesn't exist yet. Call it once per screen or essential state.
-- iterate_wireframe: revise, try another version, apply feedback or explore a variant. This ALWAYS creates a new version next to the source (V2, V3…); you cannot edit an existing frame. Iterate from the latest version in a lineage unless the designer points at a specific one. You can also iterate from a screenshot.
+- create_prototype: the default whenever the designer asks for a wireframe, screens, a flow or a prototype. ONE call builds every screen and essential state of the flow as ONE interactive HTML file the designer can click through. Link the screens (see Prototype links) so the whole flow works end to end.
+- iterate_prototype: the next version of a prototype (V2, V3…) beside the source. Send every screen again, changed or not. Also use it to turn an existing wireframe into a clickable flow.
+- create_wireframe: only for a single standalone static screen when the designer explicitly asks for one frame, or for exploring layout variants side by side.
+- iterate_wireframe: revise, try another version, apply feedback or explore a variant of a single-screen wireframe. This ALWAYS creates a new version next to the source (V2, V3…); you cannot edit an existing frame. Iterate from the latest version in a lineage unless the designer points at a specific one. You can also iterate from a screenshot.
 ${opts.markup ? `- annotate: mark regions of a frame (x, y, w, h as fractions 0–1 of the frame from its top-left). Keep each label under 30 words; lead with the problem.
 - comment: a pinned point comment on a frame for a single, local remark.
 - add_note: a sticky note on the canvas for summaries, rationale, open questions or next steps.
@@ -118,6 +120,14 @@ Wireframe HTML
 - Width is fixed by the device (mobile ${mobile.w}px, tablet 820px, desktop 1280px); design for that width. Use real, specific copy.
 - Helper classes: wf-screen (root, full height column), wf-status (phone status bar), wf-bar + wf-title (top bar), wf-body (padded column), wf-footer (bottom action area), wf-row, wf-col, wf-grid, wf-between, wf-h1, wf-h2, wf-h3, wf-text, wf-muted, wf-label, wf-card, wf-fill, wf-divider, wf-img, wf-avatar, wf-icon, wf-btn, wf-btn-primary, wf-btn-block, wf-btn-sm, wf-input, wf-chip, wf-chip-on, wf-tag, wf-list, wf-scroll-x, wf-tabbar, wf-sheet, wf-handle, wf-note. Use inline styles to apply the design system's tokens (colours, type, spacing, radii) wherever the helpers don't match it.
 - The canvas applies the design system's accent colour, radius and font to the helpers automatically.
+
+Prototype links (create_prototype / iterate_prototype)
+- Each screen has a short id (e.g. "cart", "address", "payment", "success") and its own HTML fragment built like a wireframe (wf-screen root).
+- Make every tappable element do something: data-go="screen-id" navigates, data-back goes to the previous screen (use it on back arrows), data-open="overlay-id" shows an overlay, data-close hides the overlay it's inside.
+- Overlays (bottom sheets, dialogs, menus, pickers) live inside the screen that opens them: <div class="wf-overlay" data-overlay="coupon"><div class="wf-sheet">…<div class="wf-btn" data-close>Close</div></div></div>. Add wf-center to the overlay for a centred dialog. They start hidden.
+- Represent other states (empty, error, loading, success) as their own screens and link to them from where they'd happen.
+- Real <input>, <select> and <textarea> elements work, so forms can be typed into. No scripts, no onclick; the studio adds the behaviour.
+- Keep markup lean (helper classes, few inline styles) so all screens fit in one call: up to 10 screens.
 ${opts.connectors?.length ? `\nConnected tools\n- You can also use tools from: ${opts.connectors.join(", ")}. Tool names are prefixed with the connector.\n` : ""}
 ${PRISM_ADAPTER}
 
@@ -136,6 +146,10 @@ ${canvasInventory(c)}`
 function frameParts(f: FrameNode, c: Conversation): ModelMessage["content"] {
   const marks = c.canvas.marks.filter((m) => m.frameId === f.id)
   const header = `[Frame ${f.id} · "${frameLabel(f)}" · ${f.type} · ${f.w}×${f.h}]${marks.length ? `\nExisting marks:\n${marks.map((m) => `  ${m.n}. (${m.type}, ${m.author}) ${m.text}`).join("\n")}` : ""}`
+  if (f.type === "wireframe" && f.screens?.length) {
+    const per = Math.floor(30000 / f.screens.length)
+    return [{ type: "text", text: `${header}\nPrototype, starts on "${f.startScreen}". Screens:\n${f.screens.map((s) => `── screen id "${s.id}" · ${s.title} ──\n${s.html.slice(0, per)}`).join("\n")}` }]
+  }
   if (f.type === "wireframe") {
     return [{ type: "text", text: `${header}\nHTML source:\n${(f.html ?? "").slice(0, 14000)}` }]
   }
@@ -212,6 +226,53 @@ function canvasTools(convId: string, msgId: string, log: (r: ActionResult) => vo
     return r.message
   }
   const tools = {
+    create_prototype: tool({
+      description: "Build every screen of a flow as ONE interactive, clickable HTML prototype on the canvas (version 1 of a new lineage).",
+      inputSchema: z.object({
+        title: z.string().describe("Name of the flow, e.g. 'Checkout'"),
+        device: deviceEnum.default("mobile"),
+        summary: z.string().describe("One sentence on the flow and the idea behind it"),
+        start: z.string().describe("Id of the first screen"),
+        screens: z.array(
+          z.object({
+            id: z.string().describe("Short screen id used in links, e.g. 'cart'"),
+            title: z.string().describe("Screen name, e.g. 'Cart'"),
+            html: z.string().describe("HTML fragment for this screen, with data-go / data-back / data-open / data-close links"),
+          }),
+        )
+        .min(1)
+        .max(12),
+      }),
+      execute: async (i) => {
+        const r = createPrototype(convId, i)
+        if (r.frameId) addPrototypePart(loc, r.frameId)
+        return wrap(r)
+      },
+    }),
+    iterate_prototype: tool({
+      description: "Create the NEXT VERSION of a prototype (or turn a wireframe into one) as a new frame beside it. Send every screen, changed or not.",
+      inputSchema: z.object({
+        source_frame_id: z.string(),
+        change_summary: z.string().describe("What changed vs the source and why, one or two sentences"),
+        title: z.string().optional(),
+        device: deviceEnum.optional(),
+        start: z.string().optional(),
+        screens: z.array(
+          z.object({
+            id: z.string().describe("Short screen id used in links, e.g. 'cart'"),
+            title: z.string().describe("Screen name, e.g. 'Cart'"),
+            html: z.string().describe("HTML fragment for this screen, with data-go / data-back / data-open / data-close links"),
+          }),
+        )
+        .min(1)
+        .max(12),
+      }),
+      execute: async (i) => {
+        const r = iteratePrototype(convId, i)
+        if (r.frameId) addPrototypePart(loc, r.frameId)
+        return wrap(r)
+      },
+    }),
     create_wireframe: tool({
       description: "Put a NEW wireframe on the canvas (version 1 of a new lineage).",
       inputSchema: z.object({
@@ -419,6 +480,8 @@ export function stopAgent() {
 }
 
 const ACTIVITY: Record<string, string> = {
+  create_prototype: "Building the prototype…",
+  iterate_prototype: "Building the next version…",
   create_wireframe: "Drawing a wireframe…",
   iterate_wireframe: "Drawing the next version…",
   annotate: "Marking up the frame…",

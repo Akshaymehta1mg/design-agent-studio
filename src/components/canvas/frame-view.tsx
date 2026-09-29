@@ -1,5 +1,6 @@
 import { memo, useEffect, useMemo, useRef } from "react"
-import { Shapes as Figma, ImageIcon, MoreHorizontal, Sparkles, Radio, Package, Workflow as WorkflowIcon } from "@/components/ui/icons"
+import { Shapes as Figma, ImageIcon, MoreHorizontal, Play, Sparkles, Radio, Package, Workflow as WorkflowIcon } from "@/components/ui/icons"
+import { downloadPrototype, prototypeDoc } from "./prototype-player"
 import type { FrameNode, Mark } from "@/lib/types"
 import { buildSrcDoc } from "@/lib/wireframe"
 import { allDesignSystems, wireframeVars } from "@/lib/design-systems"
@@ -61,6 +62,16 @@ export const FrameView = memo(function FrameView({ frame: f, marks, selected, zo
             V{f.version}
           </span>
         ) : null}
+        {f.screens?.length ? (
+          <button
+            className="bg-foreground text-background hover:bg-foreground/85 ml-0.5 inline-flex items-center gap-1 rounded-full px-2 py-px text-[10.5px] font-semibold"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={() => useStore.getState().playPrototype(f.id)}
+            aria-label={`Play ${f.title} prototype`}
+          >
+            <Play className="size-2.5" /> {f.screens.length} screens
+          </button>
+        ) : null}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
@@ -73,8 +84,10 @@ export const FrameView = memo(function FrameView({ frame: f, marks, selected, zo
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-48">
             <DropdownMenuItem onSelect={() => onAsk(f)}>Ask the agent about this</DropdownMenuItem>
-            {f.type === "wireframe" && <DropdownMenuItem onSelect={() => onPreview(f)}>Open preview</DropdownMenuItem>}
-            {f.type === "wireframe" && (
+            {f.screens?.length ? <DropdownMenuItem onSelect={() => useStore.getState().playPrototype(f.id)}>Play prototype</DropdownMenuItem> : null}
+            {f.screens?.length ? <DropdownMenuItem onSelect={() => downloadPrototype(f)}>Download HTML</DropdownMenuItem> : null}
+            {f.type === "wireframe" && !f.screens?.length && <DropdownMenuItem onSelect={() => onPreview(f)}>Open preview</DropdownMenuItem>}
+            {f.type === "wireframe" && !f.screens?.length && (
               <DropdownMenuItem onSelect={() => navigator.clipboard?.writeText(f.html ?? "").catch(() => {})}>Copy HTML</DropdownMenuItem>
             )}
             {f.type === "image" && <DropdownMenuItem onSelect={() => onPreview(f)}>View full size</DropdownMenuItem>}
@@ -193,13 +206,16 @@ function WireframeBody({ frame }: { frame: FrameNode }) {
   const ref = useRef<HTMLIFrameElement>(null)
   const edit = useStore((s) => s.editCanvas)
   const custom = useStore((s) => s.designSystems)
+  const proto = !!frame.screens?.length
   const doc = useMemo(() => {
+    if (frame.screens?.length) return prototypeDoc(frame, allDesignSystems(custom))
     const ds = allDesignSystems(custom).find((d) => d.id === frame.designSystemId)
     return buildSrcDoc(frame.html ?? "", wireframeVars(ds))
-  }, [frame.html, frame.designSystemId, custom])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [frame.html, frame.screens, frame.startScreen, frame.designSystemId, custom])
   useEffect(() => {
     const el = ref.current
-    if (!el) return
+    if (!el || proto) return
     const onLoad = () => {
       try {
         const h = el.contentDocument?.documentElement.scrollHeight ?? 0
@@ -212,13 +228,13 @@ function WireframeBody({ frame }: { frame: FrameNode }) {
     }
     el.addEventListener("load", onLoad)
     return () => el.removeEventListener("load", onLoad)
-  }, [frame.id, frame.h, edit])
+  }, [frame.id, frame.h, edit, proto])
   return (
     <iframe
       ref={ref}
       title={frame.title}
       srcDoc={doc}
-      sandbox="allow-same-origin"
+      sandbox={proto ? "allow-scripts" : "allow-same-origin"}
       className="pointer-events-none block border-0 bg-white"
       style={{ width: frame.w, height: frame.h }}
       tabIndex={-1}

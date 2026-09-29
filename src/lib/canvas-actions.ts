@@ -1,6 +1,6 @@
 import type { ActionLog, FrameNode, Mark, NoteNode, Device } from "./types"
 import { frameLabel, placeNewRow, placeNextVersion, findFreeSpot, uid, useStore } from "./store"
-import { DEVICE_SIZES, sanitizeWireframe } from "./wireframe"
+import { checkPrototype, DEVICE_SIZES, normalizeScreens, sanitizeWireframe } from "./wireframe"
 import { hasFigmaAccess, postComment } from "./figma"
 import { allDesignSystems } from "./design-systems"
 
@@ -55,6 +55,81 @@ export function createWireframe(convId: string, input: { title: string; html: st
   useStore.getState().editCanvas((d) => ({ ...d, nodes: [...d.nodes, frame] }), { convId })
   useStore.getState().focusNode(frame.id)
   return { ok: true, message: `Created ${frameLabel(frame)} (id ${frame.id}).`, log: { id: uid(), label: `Created ${frameLabel(frame)}`, targetId: frame.id, tone: "create" } }
+}
+
+// ───────── prototypes ─────────
+
+type ScreenInput = { id?: string; title: string; html: string }
+
+function prototypeFrame(convId: string, input: { title: string; screens: ScreenInput[]; start?: string; device?: Device; summary?: string }) {
+  const { screens, rename } = normalizeScreens(input.screens)
+  const start = (input.start && (rename.get(input.start) ?? screens.find((s) => s.id === input.start)?.id)) || screens[0].id
+  const device = input.device ?? "mobile"
+  const size = frameSize(convId, device)
+  const frame = {
+    kind: "frame" as const,
+    type: "wireframe" as const,
+    w: size.w,
+    h: size.h,
+    title: input.title.slice(0, 60),
+    html: screens.find((s) => s.id === start)!.html,
+    screens,
+    startScreen: start,
+    device,
+    source: "agent" as const,
+    designSystemId: dsIdFor(convId),
+    changeSummary: input.summary,
+    createdAt: Date.now(),
+  }
+  const { broken, unreachable } = checkPrototype(screens, start)
+  const issues = [
+    broken.length ? `Broken links: ${broken.join("; ")}. Fix them with iterate_prototype.` : "",
+    unreachable.length ? `Nothing links to: ${unreachable.join(", ")}.` : "",
+  ]
+    .filter(Boolean)
+    .join(" ")
+  return { frame, screens, start, issues }
+}
+
+const screenList = (screens: { id: string; title: string }[]) => screens.map((s) => `${s.id} (${s.title})`).join(", ")
+
+/** One interactive prototype holding every screen of the flow. */
+export function createPrototype(convId: string, input: { title: string; screens: ScreenInput[]; start?: string; device?: Device; summary?: string }): ActionResult & { frameId?: string } {
+  if (!input.screens?.length) return { ok: false, message: "A prototype needs at least one screen." }
+  const p = prototypeFrame(convId, input)
+  const nodes = conv(convId)?.canvas.nodes ?? []
+  const frame: FrameNode = { ...p.frame, id: uid("f_"), ...placeNewRow(nodes, p.frame.w, p.frame.h), lineageId: uid("l_"), version: 1 }
+  useStore.getState().editCanvas((d) => ({ ...d, nodes: [...d.nodes, frame] }), { convId })
+  useStore.getState().focusNode(frame.id)
+  return {
+    ok: true,
+    frameId: frame.id,
+    message: `Created prototype ${frameLabel(frame)} (id ${frame.id}) with ${p.screens.length} screens: ${screenList(p.screens)}. Starts on ${p.start}.${p.issues ? ` ${p.issues}` : ""}`,
+    log: { id: uid(), label: `Prototype: ${frame.title} · ${p.screens.length} screens`, targetId: frame.id, tone: "create" },
+  }
+}
+
+/** The next version of a prototype (or a wireframe turned into one), beside the source. */
+export function iteratePrototype(convId: string, input: { source_frame_id: string; change_summary: string; screens: ScreenInput[]; start?: string; title?: string; device?: Device }): ActionResult & { frameId?: string } {
+  const src = findFrame(convId, input.source_frame_id)
+  if (!src) return { ok: false, message: `No frame with id ${input.source_frame_id}. Use create_prototype for a new flow.` }
+  if (!input.screens?.length) return { ok: false, message: "Send every screen of the new version, including unchanged ones." }
+  const nodes = conv(convId)!.canvas.nodes
+  const lineageId = src.lineageId ?? uid("l_")
+  const lineage = nodes.filter((n): n is FrameNode => n.kind === "frame" && n.lineageId === lineageId)
+  const version = src.lineageId ? Math.max(...lineage.map((f) => f.version ?? 1)) + 1 : 2
+  const p = prototypeFrame(convId, { title: input.title ?? src.title, screens: input.screens, start: input.start ?? src.startScreen, device: input.device ?? src.device, summary: input.change_summary })
+  const pos = src.lineageId ? placeNextVersion(nodes, lineageId, p.frame.w, p.frame.h) : findFreeSpot(nodes, { x: src.x + src.w + 120, y: src.y, w: p.frame.w, h: p.frame.h }, "right")
+  const frame: FrameNode = { ...p.frame, id: uid("f_"), ...pos, lineageId, version, parentId: src.id }
+  const patchSrc = src.lineageId ? null : { ...src, lineageId, version: 1 }
+  useStore.getState().editCanvas((d) => ({ ...d, nodes: [...d.nodes.map((n) => (patchSrc && n.id === patchSrc.id ? patchSrc : n)), frame] }), { convId })
+  useStore.getState().focusNode(frame.id)
+  return {
+    ok: true,
+    frameId: frame.id,
+    message: `Created prototype ${frameLabel(frame)} (id ${frame.id}) next to ${frameLabel(src)}, which is unchanged. Screens: ${screenList(p.screens)}.${p.issues ? ` ${p.issues}` : ""}`,
+    log: { id: uid(), label: `Prototype: ${frame.title} · V${version}`, targetId: frame.id, tone: "create" },
+  }
 }
 
 export function iterateWireframe(convId: string, input: { source_frame_id: string; html: string; change_summary: string; title?: string; device?: Device; height?: number }): ActionResult {

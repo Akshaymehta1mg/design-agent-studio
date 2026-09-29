@@ -244,6 +244,9 @@ interface State {
   product: ProductLibrary
   history: Record<string, History>
   focus: { id: string; t: number } | null
+  /** The prototype frame open in the player */
+  playing: string | null
+  playPrototype: (id: string | null) => void
   settingsOpen: boolean
   busy: boolean
 
@@ -305,6 +308,8 @@ export const useStore = create<State>()(
       product: defaultProduct,
       history: {},
       focus: null,
+      playing: null,
+      playPrototype: (id) => set({ playing: id }),
       settingsOpen: false,
       busy: false,
 
