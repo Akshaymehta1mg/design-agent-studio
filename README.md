@@ -61,3 +61,4 @@ The Approval Card, Todo List, agent disclosure, action swap, checkbox, radio and
 - **Figma variables** need an Enterprise plan. Styles and components work on every plan.
 - **Figma image URLs** are converted to data URLs when CORS allows. Otherwise the canvas keeps Figma's temporary URL, which expires after about 30 days.
 - The shadcn components in `src/components/ui` are the stock new-york-v4 sources, copied from the shadcn repo. Only their import paths were changed.
+# design-agent-studio
