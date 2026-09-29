@@ -10,7 +10,8 @@ const DROP = new Set(["host", "x-access-code", "cookie", "origin", "referer", "x
 export default async function handler(req: Request): Promise<Response> {
   const url = new URL(req.url)
   const upstream = url.searchParams.get("upstream") as Upstream | null
-  const path = "/" + (url.searchParams.get("path") ?? "").replace(/^\/+/, "")
+  // Resolve dot segments (including %2e) before the allowlist check, as fetch would afterwards.
+  const path = new URL("/" + (url.searchParams.get("path") ?? "").replace(/^\/+/, ""), "http://proxy.invalid").pathname
   if (!upstream || !(upstream in UPSTREAMS)) return json({ error: { message: "Unknown provider." } }, 404)
 
   const denied = checkAccess(req)
