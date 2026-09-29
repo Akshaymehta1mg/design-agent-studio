@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useShallow } from "zustand/react/shallow"
 import { Hand, ImagePlus, MessageCircle, Minus, MousePointer2, Plus, Redo2, StickyNote, Undo2, Maximize, Upload } from "lucide-react"
 import type { CanvasDoc, CanvasNode, FrameNode, Viewport } from "@/lib/types"
-import { useActiveConversation, useStore, uid, type Tool } from "@/lib/store"
+import { useStore, uid, type Tool } from "@/lib/store"
 import { addImageFiles, addMarks } from "@/lib/canvas-actions"
 import { buildSrcDoc } from "@/lib/wireframe"
 import { allDesignSystems, wireframeVars } from "@/lib/design-systems"
@@ -23,10 +24,15 @@ const MIN_Z = 0.08
 const MAX_Z = 3
 
 export function Canvas({ onAskAbout }: { onAskAbout: (f: FrameNode) => void }) {
-  const conv = useActiveConversation()
-  const doc = conv.canvas
-  const { selection, select, tool, setTool, editCanvas, undo, redo, setViewport, focus } = useStore()
-  const history = useStore((s) => s.history[conv.id])
+  // Subscribe to the canvas only; the conversation object changes with every chat message.
+  const active = (s: ReturnType<typeof useStore.getState>) => s.conversations.find((c) => c.id === s.activeId) ?? s.conversations[0]
+  const convId = useStore((s) => active(s).id)
+  const doc = useStore((s) => active(s).canvas)
+  // Select only what the canvas needs, so streamed chat updates don't re-render it.
+  const { selection, select, tool, setTool, editCanvas, undo, redo, setViewport, focus } = useStore(
+    useShallow((s) => ({ selection: s.selection, select: s.select, tool: s.tool, setTool: s.setTool, editCanvas: s.editCanvas, undo: s.undo, redo: s.redo, setViewport: s.setViewport, focus: s.focus })),
+  )
+  const history = useStore((s) => s.history[convId])
   const wrap = useRef<HTMLDivElement>(null)
   const [vp, setVp] = useState<Viewport>(doc.viewport)
   const [drag, setDrag] = useState<Drag | null>(null)
@@ -42,10 +48,10 @@ export function Canvas({ onAskAbout }: { onAskAbout: (f: FrameNode) => void }) {
 
   // Reset the local viewport when switching conversations.
   useEffect(() => {
-    setVp(conv.canvas.viewport)
+    setVp(doc.viewport)
     setActiveMark(null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conv.id])
+  }, [convId])
 
   // Persist the viewport lazily.
   useEffect(() => {
@@ -123,7 +129,7 @@ export function Canvas({ onAskAbout }: { onAskAbout: (f: FrameNode) => void }) {
         else undo()
       } else if (mod && e.key === "0") {
         e.preventDefault()
-        fitTo(useStore.getState().conversations.find((c) => c.id === conv.id)!.canvas.nodes)
+        fitTo(useStore.getState().conversations.find((c) => c.id === convId)!.canvas.nodes)
       } else if (mod && (e.key === "=" || e.key === "+")) {
         e.preventDefault()
         zoomAt(1.2)
@@ -156,7 +162,7 @@ export function Canvas({ onAskAbout }: { onAskAbout: (f: FrameNode) => void }) {
       window.removeEventListener("keydown", down)
       window.removeEventListener("keyup", up)
     }
-  }, [selection, doc.nodes, conv.id, undo, redo, select, editCanvas, setTool, fitTo, zoomAt])
+  }, [selection, doc.nodes, convId, undo, redo, select, editCanvas, setTool, fitTo, zoomAt])
 
   // Paste images from the clipboard.
   useEffect(() => {
@@ -167,12 +173,12 @@ export function Canvas({ onAskAbout }: { onAskAbout: (f: FrameNode) => void }) {
       const files = [...(e.clipboardData?.files ?? [])].filter((f) => f.type.startsWith("image/"))
       if (files.length) {
         e.preventDefault()
-        addImageFiles(conv.id, files)
+        addImageFiles(convId, files)
       }
     }
     window.addEventListener("paste", onPaste)
     return () => window.removeEventListener("paste", onPaste)
-  }, [conv.id])
+  }, [convId])
 
   const panning = tool === "hand" || space
 
@@ -263,7 +269,7 @@ export function Canvas({ onAskAbout }: { onAskAbout: (f: FrameNode) => void }) {
       toast.error("Drop PNG or JPG images. For documents, use Upload context in the chat.")
       return
     }
-    await addImageFiles(conv.id, files, toWorld(e.clientX, e.clientY))
+    await addImageFiles(convId, files, toWorld(e.clientX, e.clientY))
   }
 
   const deleteNode = useCallback(
@@ -307,7 +313,6 @@ export function Canvas({ onAskAbout }: { onAskAbout: (f: FrameNode) => void }) {
       <div
         ref={wrap}
         className={cn("canvas-grid absolute inset-0 touch-none select-none", panning ? (drag?.kind === "pan" ? "cursor-grabbing" : "cursor-grab") : tool === "note" || tool === "comment" ? "cursor-crosshair" : "cursor-default")}
-        style={{ backgroundSize: `${22 * vp.zoom}px ${22 * vp.zoom}px`, backgroundPosition: `${vp.x}px ${vp.y}px` }}
         onPointerDown={onBackgroundDown}
         onPointerMove={onMove}
         onPointerUp={onUp}
@@ -370,7 +375,7 @@ export function Canvas({ onAskAbout }: { onAskAbout: (f: FrameNode) => void }) {
           at={pendingComment}
           onCancel={() => setPendingComment(null)}
           onSave={(text) => {
-            addMarks(conv.id, pendingComment.frameId, [{ type: "comment", x: pendingComment.x, y: pendingComment.y, text }], "user")
+            addMarks(convId, pendingComment.frameId, [{ type: "comment", x: pendingComment.x, y: pendingComment.y, text }], "user")
             setPendingComment(null)
             setTool("select")
           }}
@@ -436,7 +441,7 @@ export function Canvas({ onAskAbout }: { onAskAbout: (f: FrameNode) => void }) {
         onChange={(e) => {
           const files = [...(e.target.files ?? [])]
           e.target.value = ""
-          if (files.length) addImageFiles(conv.id, files)
+          if (files.length) addImageFiles(convId, files)
         }}
       />
 

@@ -6,7 +6,7 @@ import type { LanguageModel } from "ai"
 import type { ModelInfo, ProviderId, ProviderKeyState } from "./types"
 import { accessHeaders, proxyBase, viaServer } from "./server"
 
-export type KeyedProvider = Exclude<ProviderId, "demo">
+export type KeyedProvider = ProviderId
 
 export const PROVIDERS: Record<KeyedProvider, { name: string; vendor: string; placeholder: string; keyUrl: string; hint: string }> = {
   anthropic: { name: "Claude", vendor: "Anthropic", placeholder: "sk-ant-…", keyUrl: "https://console.anthropic.com/settings/keys", hint: "console.anthropic.com → API keys" },

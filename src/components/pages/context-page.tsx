@@ -68,8 +68,8 @@ export function ContextPage() {
         </header>
 
         <Section title="What is it, and who is it for?">
-          <Textarea id="about" value={product.about} onChange={(e) => patch({ about: e.target.value })} placeholder="A flow for booking a table from a restaurant's page in our delivery app…" className="min-h-20 text-[14px]" />
-          <Field id="audience" label="Who uses it" value={product.audience} onChange={(v) => patch({ audience: v })} placeholder="Existing customers, mostly on mobile, deciding same day" />
+          <Textarea id="about" value={product.about} onChange={(e) => patch({ about: e.target.value })} placeholder="What the product does, and the part of it you're designing…" className="min-h-20 text-[14px]" />
+          <Field id="audience" label="Who uses it" value={product.audience} onChange={(v) => patch({ audience: v })} placeholder="Who they are, what device they use, what they're trying to get done" />
           <Saved />
         </Section>
 
@@ -222,8 +222,10 @@ function ScreenDialog({ screen, onClose, onReread }: { screen: ProductScreen | n
                 </Button>
                 <Button
                   onClick={async () => {
-                    await addImages(activeId, [{ src: screen.src, w: 1170, h: 2532, title: screen.name }], "product")
-                    openProject(activeId)
+                    const s = useStore.getState()
+                    const id = s.conversations.some((c) => c.id === activeId) ? activeId : s.newConversation()
+                    await addImages(id, [{ src: screen.src, w: 1170, h: 2532, title: screen.name }], "product")
+                    openProject(id)
                     onClose()
                     window.dispatchEvent(new CustomEvent("das:compose", { detail: { text: `What would you change on ${screen.name}?` } }))
                   }}

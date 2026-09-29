@@ -486,7 +486,6 @@ export function ProjectCollection({ limit, showHeader = true, title = "Recents" 
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-[14px] font-semibold">{c.title}</div>
                   <div className="text-muted-foreground text-[12px]">
-                    {c.example ? "Example · " : ""}
                     {projectMeta(c)}
                   </div>
                 </div>

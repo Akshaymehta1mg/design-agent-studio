@@ -89,7 +89,7 @@ export const FrameView = memo(function FrameView({ frame: f, marks, selected, zo
       <div
         className={cn(
           "relative h-full w-full overflow-hidden",
-          f.type === "workflow" ? "canvas-grid rounded-[16px] [background-size:18px_18px]" : "bg-card",
+          f.type === "workflow" ? "canvas-grid rounded-[16px]" : "bg-card",
           f.type === "wireframe" ? "rounded-[18px]" : f.type === "image" ? "rounded-[6px]" : "",
         )}
         style={{

@@ -1,5 +1,5 @@
 import { create } from "zustand"
-import { persist, createJSONStorage, type StateStorage } from "zustand/middleware"
+import { persist, type PersistStorage, type StorageValue } from "zustand/middleware"
 import { get as idbGet, set as idbSet, del as idbDel } from "idb-keyval"
 import { nanoid } from "nanoid"
 import type {
@@ -8,9 +8,7 @@ import type {
   ChatMessage,
   Conversation,
   FrameNode,
-  Mark,
   Mode,
-  NoteNode,
   Page,
   DesignSystem,
   Connector,
@@ -20,29 +18,58 @@ import type {
   Settings,
   Viewport,
 } from "./types"
-import { DEVICE_SIZES, EXAMPLE_WIREFRAMES } from "./wireframe"
 
 export const uid = (p = "") => p + nanoid(7)
 
 // ───────── storage: IndexedDB with an in-memory fallback (private windows, sandboxes) ─────────
+// Writes are debounced: the persisted state holds every screenshot as a data URL, so serialising
+// it on each store update (every streamed token) exhausts memory and crashes the tab.
 const memory = new Map<string, string>()
-const safeStorage: StateStorage = {
-  getItem: async (k) => {
-    try {
-      return ((await idbGet(k)) as string | undefined) ?? memory.get(k) ?? null
-    } catch {
-      return memory.get(k) ?? null
-    }
-  },
-  setItem: async (k, v) => {
-    memory.set(k, v)
-    try {
-      await idbSet(k, v)
-    } catch {
+const WRITE_DELAY = 800
+const pending = new Map<string, unknown>()
+let writeTimer = 0
+
+function flushWrites() {
+  clearTimeout(writeTimer)
+  writeTimer = 0
+  for (const [k, v] of pending) {
+    const text = JSON.stringify(v)
+    memory.set(k, text)
+    idbSet(k, text).catch(() => {
       /* stay in memory */
+    })
+  }
+  pending.clear()
+}
+
+/** Drop queued writes, e.g. before clearing storage and reloading. */
+export function discardPendingWrites() {
+  clearTimeout(writeTimer)
+  writeTimer = 0
+  pending.clear()
+}
+
+if (typeof window !== "undefined") {
+  window.addEventListener("pagehide", flushWrites)
+  document.addEventListener("visibilitychange", () => document.visibilityState === "hidden" && flushWrites())
+}
+
+const safeStorage: PersistStorage<unknown> = {
+  getItem: async (k) => {
+    let text: string | null
+    try {
+      text = ((await idbGet(k)) as string | undefined) ?? memory.get(k) ?? null
+    } catch {
+      text = memory.get(k) ?? null
     }
+    return text ? (JSON.parse(text) as StorageValue<unknown>) : null
+  },
+  setItem: (k, v) => {
+    pending.set(k, v)
+    if (!writeTimer) writeTimer = window.setTimeout(flushWrites, WRITE_DELAY)
   },
   removeItem: async (k) => {
+    pending.delete(k)
     memory.delete(k)
     try {
       await idbDel(k)
@@ -69,7 +96,7 @@ export const defaultSettings: Settings = {
     custom: emptyProvider({ baseUrl: "", label: "Custom" }),
   },
   figmaToken: "",
-  selectedModel: { provider: "demo", id: "demo", name: "Demo agent (offline)" },
+  selectedModel: { provider: "anthropic", id: "", name: "No model selected" },
   speakReplies: false,
   theme: "system",
   profileName: "Aksh",
@@ -77,124 +104,66 @@ export const defaultSettings: Settings = {
 
 export const emptyCanvas = (): CanvasDoc => ({ nodes: [], marks: [], viewport: { x: 80, y: 80, zoom: 0.6 } })
 
-function exampleConversation(): Conversation {
-  const now = Date.now()
-  const lineageId = uid("l_")
-  const { w, h } = DEVICE_SIZES.mobile
-  const v1: FrameNode = {
-    id: "f_example1",
-    kind: "frame",
-    type: "wireframe",
-    x: 0,
-    y: 0,
-    w,
-    h,
-    title: EXAMPLE_WIREFRAMES[0].title,
-    html: EXAMPLE_WIREFRAMES[0].html,
-    device: "mobile",
-    source: "agent",
-    lineageId,
-    version: 1,
-    changeSummary: EXAMPLE_WIREFRAMES[0].summary,
-    createdAt: now - 60_000,
-  }
-  const v2: FrameNode = {
-    ...v1,
-    id: "f_example2",
-    x: w + 120,
-    html: EXAMPLE_WIREFRAMES[1].html,
-    version: 2,
-    parentId: v1.id,
-    changeSummary: EXAMPLE_WIREFRAMES[1].summary,
-    createdAt: now - 30_000,
-  }
-  const marks: Mark[] = [
-    { id: uid("m_"), frameId: v1.id, type: "annotation", x: 0.04, y: 0.5, w: 0.92, h: 0.2, text: "Eight identical time chips with no grouping. People scan for a sitting (early or late), not a list of clock times.", severity: "major", author: "agent", n: 1, createdAt: now },
-    { id: uid("m_"), frameId: v1.id, type: "annotation", x: 0.04, y: 0.895, w: 0.92, h: 0.075, text: "'Continue' hides the commitment. Say what happens: 'Reserve 6:15 pm'.", severity: "minor", author: "agent", n: 2, createdAt: now },
-    { id: uid("m_"), frameId: v1.id, type: "comment", x: 0.5, y: 0.815, text: "The partner disclaimer is the only place the booking provider shows up. Surface it with the cancellation policy instead.", severity: "minor", author: "agent", n: 3, createdAt: now },
-  ]
-  const note: NoteNode = {
-    id: uid("n_"),
-    kind: "note",
-    x: 2 * (w + 120),
-    y: 0,
-    w: 260,
-    h: 190,
-    title: "V1 → V2",
-    text: "• Group times by sitting and show scarcity\n• Seating preference before commit\n• CTA names the slot\n\nNext: test a one-tap 'best match' variant for repeat diners.",
-    author: "agent",
-    createdAt: now,
-  }
-  const messages: ChatMessage[] = [
-    {
-      id: uid("c_"),
-      role: "user",
-      text: "Wireframe the reserve-a-table step for Stella, then critique it.",
-      createdAt: now - 70_000,
-      status: "done",
-      attachments: [{ kind: "product", title: "Context file" }],
-    },
-    {
-      id: uid("c_"),
-      role: "assistant",
-      text: "I put a baseline on the canvas as **V1** and marked it up. The biggest issue is the time grid: eight identical chips with no grouping, so people scan for a sitting rather than read clock times.",
-      parts: [
-        {
-          type: "plan",
-          id: "plan_example",
-          title: "Wireframe and critique",
-          items: [
-            { id: "t0", title: "Pull constraints from the Context file", status: "completed" },
-            { id: "t1", title: "Draft the reserve step as V1", status: "completed" },
-            { id: "t2", title: "Mark up the riskiest parts", status: "completed" },
-          ],
-        },
-        { type: "text", id: "p_example1", text: "I put a baseline on the canvas as **V1** and marked it up. The biggest issue is the time grid: eight identical chips with no grouping, so people scan for a sitting rather than read clock times." },
-      ],
-      createdAt: now - 60_000,
-      status: "done",
-      model: "Demo agent (offline)",
-      actions: [
-        { id: uid(), label: "Created Reserve a table · V1", targetId: v1.id, tone: "create" },
-        { id: uid(), label: "3 marks on V1", targetId: v1.id, tone: "mark" },
-      ],
-    },
-    { id: uid("c_"), role: "user", text: "Iterate on it.", createdAt: now - 40_000, status: "done", attachments: [{ kind: "frame", frameId: v1.id, title: "Reserve a table · V1" }] },
-    {
-      id: uid("c_"),
-      role: "assistant",
-      text: "Added **V2** next to V1 and left V1 untouched. Times are grouped by sitting with scarcity cues, seating is chosen before commit, and the CTA names the slot.",
-      createdAt: now - 30_000,
-      status: "done",
-      model: "Demo agent (offline)",
-      actions: [
-        { id: uid(), label: "Created Reserve a table · V2", targetId: v2.id, tone: "create" },
-        { id: uid(), label: "Note: V1 → V2", targetId: note.id, tone: "note" },
-      ],
-    },
-  ]
-  return {
-    id: "conv_example",
-    title: "Reservation flow crit",
-    createdAt: now - 70_000,
-    updatedAt: now - 30_000,
-    messages,
-    canvas: { nodes: [v1, v2, note], marks, viewport: { x: 60, y: 70, zoom: 0.62 } },
-    example: true,
-  }
-}
-
 const defaultProduct: ProductLibrary = {
-  about: "A flow for booking a reservation on the restaurant dine-out page of a food delivery app.",
-  audience: "Existing delivery customers who want to eat in, often deciding same day, on mobile.",
-  goals: "Increase completed reservations from the restaurant page; keep the booking partner invisible but trustworthy.",
-  constraints: "Availability comes from a white-labelled booking partner. Native iOS and Android.",
-  voice: "Short, confident, friendly. Sentence case.",
+  about: "",
+  audience: "",
+  goals: "",
+  constraints: "",
+  voice: "",
   screens: [],
   designSystem: { source: "screens", status: "idle" },
   useInConversations: true,
   brief: "",
   docs: [],
+}
+
+// Earlier versions seeded a sample project and a sample Context file. They leaked into every
+// real model's prompt, so migration 1 → 2 removes them from browsers that saved them.
+const LEGACY_SAMPLE_PRODUCT: Partial<Record<keyof ProductLibrary, string>> = {
+  about: "A flow for booking a reservation on the restaurant dine-out page of a food delivery app.",
+  audience: "Existing delivery customers who want to eat in, often deciding same day, on mobile.",
+  goals: "Increase completed reservations from the restaurant page; keep the booking partner invisible but trustworthy.",
+  constraints: "Availability comes from a white-labelled booking partner. Native iOS and Android.",
+  voice: "Short, confident, friendly. Sentence case.",
+}
+
+function migrate(persisted: unknown, version: number) {
+  const p = (persisted ?? {}) as Record<string, unknown> & Partial<State>
+  if (version < 2) {
+    const convs = ((p.conversations ?? []) as (Conversation & { example?: boolean })[]).filter((c) => !c.example && c.id !== "conv_example")
+    // Drop the offline demo agent's replies and everything they put on the canvas: the canvas is
+    // sent to real models, so its sample wireframes would keep steering them.
+    p.conversations = convs.map(({ example: _example, ...c }) => {
+      const demo = c.messages.filter((m) => m.role === "assistant" && m.model === "Demo agent (offline)")
+      if (!demo.length) return c
+      const drop = new Set(demo.flatMap((m) => (m.actions ?? []).map((a) => a.targetId)).filter((id): id is string => !!id))
+      for (const m of demo) for (const pt of m.parts ?? []) if (pt.type === "workflow") drop.add(pt.frameId)
+      const demoIds = new Set(demo.map((m) => m.id))
+      // Only remove what the agent created; the designer's own screenshots just lose the agent's marks.
+      const agentMade = new Set(c.canvas.nodes.filter((n) => drop.has(n.id) && (n.kind === "note" ? n.author === "agent" : n.source === "agent")).map((n) => n.id))
+      return {
+        ...c,
+        messages: c.messages.filter((m) => !demoIds.has(m.id)),
+        canvas: {
+          ...c.canvas,
+          nodes: c.canvas.nodes.filter((n) => !agentMade.has(n.id)),
+          marks: c.canvas.marks.filter((m) => !agentMade.has(m.frameId) && !(drop.has(m.frameId) && m.author === "agent")),
+        },
+      }
+    })
+    if (!convs.some((c) => c.id === p.activeId)) {
+      p.activeId = convs[0]?.id ?? ""
+      if (p.route === "project" && !convs.length) p.route = "home"
+    }
+    if (p.product) {
+      const product = { ...p.product }
+      for (const [k, v] of Object.entries(LEGACY_SAMPLE_PRODUCT)) if ((product as Record<string, unknown>)[k] === v) (product as Record<string, unknown>)[k] = ""
+      p.product = product
+    }
+    const sel = p.settings?.selectedModel as { provider: string } | undefined
+    if (p.settings && sel?.provider === "demo") p.settings = { ...p.settings, selectedModel: defaultSettings.selectedModel }
+  }
+  return p
 }
 
 // ───────── placement helpers ─────────
@@ -293,11 +262,9 @@ interface State {
   patchMessage: (id: string, patch: Partial<ChatMessage> | ((m: ChatMessage) => Partial<ChatMessage>), convId?: string) => void
 
   patchSettings: (patch: Partial<Settings>) => void
-  patchProvider: (id: Exclude<ProviderId, "demo">, patch: Partial<ProviderKeyState>) => void
+  patchProvider: (id: ProviderId, patch: Partial<ProviderKeyState>) => void
   patchProduct: (patch: Partial<ProductLibrary> | ((p: ProductLibrary) => Partial<ProductLibrary>)) => void
 }
-
-const example = exampleConversation()
 
 export const useStore = create<State>()(
   persist(
@@ -321,8 +288,8 @@ export const useStore = create<State>()(
       patchConnector: (id, patch) => set((s) => ({ connectors: s.connectors.map((x) => (x.id === id ? { ...x, ...patch } : x)) })),
       deleteConnector: (id) => set((s) => ({ connectors: s.connectors.filter((x) => x.id !== id) })),
       mode: "canvas",
-      conversations: [example],
-      activeId: example.id,
+      conversations: [],
+      activeId: "",
       selection: [],
       tool: "select",
       settings: defaultSettings,
@@ -348,10 +315,7 @@ export const useStore = create<State>()(
       deleteConversation: (id) =>
         set((s) => {
           const rest = s.conversations.filter((c) => c.id !== id)
-          if (!rest.length) {
-            const c: Conversation = { id: uid("conv_"), title: "New conversation", createdAt: Date.now(), updatedAt: Date.now(), messages: [], canvas: emptyCanvas() }
-            return { conversations: [c], activeId: c.id, selection: [], route: s.route === "project" ? "home" : s.route }
-          }
+          if (!rest.length) return { conversations: [], activeId: "", selection: [], route: s.route === "project" ? "home" : s.route }
           return { conversations: rest, activeId: s.activeId === id ? rest[0].id : s.activeId, selection: [], route: s.route === "project" && s.activeId === id ? "home" : s.route }
         }),
       updateConversation: (id, fn) =>
@@ -433,8 +397,9 @@ export const useStore = create<State>()(
     }),
     {
       name: "design-agent-studio",
-      version: 1,
-      storage: createJSONStorage(() => safeStorage),
+      version: 2,
+      migrate: migrate as (p: unknown, v: number) => Partial<State>,
+      storage: safeStorage as PersistStorage<Partial<State>>,
       partialize: (s) => ({
         conversations: s.conversations,
         activeId: s.activeId,

@@ -60,6 +60,7 @@ export default function App() {
   useCreateActions()
   const route = useStore((s) => s.route)
   const hydrated = useStore((s) => s.hydrated)
+  const hasProject = useStore((s) => s.conversations.length > 0)
 
   // On Vercel, find out which keys the server provides and load their models.
   useEffect(() => {
@@ -68,11 +69,11 @@ export default function App() {
   const [search, setSearch] = useState(false)
 
   const page =
-    route === "home" ? <HomePage /> : route === "files" ? <FilesPage /> : route === "connectors" ? <ConnectorsPage /> : route === "context" ? <ContextPage /> : route === "design-systems" ? <DesignSystemsPage /> : <SettingsPage />
+    route === "home" ? <HomePage /> : route === "files" ? <FilesPage /> : route === "connectors" ? <ConnectorsPage /> : route === "context" ? <ContextPage /> : route === "design-systems" ? <DesignSystemsPage /> : route === "settings" ? <SettingsPage /> : <HomePage />
 
   return (
     <TooltipProvider delayDuration={300}>
-      {!hydrated ? null : route === "project" ? (
+      {!hydrated ? null : route === "project" && hasProject ? (
         <ProjectView />
       ) : (
         <SidebarProvider style={{ "--sidebar-width": "16.5rem" } as React.CSSProperties} className="h-full min-h-0">

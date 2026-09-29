@@ -54,7 +54,8 @@ export async function loadFigmaIntoConversation(convId: string, url: string, all
 }
 
 export function FigmaDialog({ open, onOpenChange, onPick }: { open: boolean; onOpenChange: (o: boolean) => void; onPick?: (url: string, allowComments: boolean) => void }) {
-  const conv = useActiveConversation()
+  // Home uses this dialog (with onPick) before any project exists.
+  const conv = useActiveConversation() as ReturnType<typeof useActiveConversation> | undefined
   const token = useStore((s) => (hasFigmaAccess(s.settings.figmaToken) ? s.settings.figmaToken || "server" : ""))
   const openSettings = useStore((s) => s.setSettingsOpen)
   const update = useStore((s) => s.updateConversation)
@@ -63,10 +64,10 @@ export function FigmaDialog({ open, onOpenChange, onPick }: { open: boolean; onO
   const [loading, setLoading] = useState(false)
   useEffect(() => {
     if (open) {
-      setUrl(onPick ? "" : conv.figma?.url ?? "")
-      setAllow(onPick ? false : conv.figma?.allowComments ?? false)
+      setUrl(onPick ? "" : conv?.figma?.url ?? "")
+      setAllow(onPick ? false : conv?.figma?.allowComments ?? false)
     }
-  }, [open, conv.figma, onPick])
+  }, [open, conv?.figma, onPick])
 
   const load = async () => {
     if (onPick) {
@@ -77,6 +78,7 @@ export function FigmaDialog({ open, onOpenChange, onPick }: { open: boolean; onO
     }
     setLoading(true)
     try {
+      if (!conv) return
       const n = await loadFigmaIntoConversation(conv.id, url, allow)
       if (n) toast.success(`Added ${n} frame${n === 1 ? "" : "s"} from Figma`)
       onOpenChange(false)
@@ -128,7 +130,7 @@ export function FigmaDialog({ open, onOpenChange, onPick }: { open: boolean; onO
               checked={allow}
               onCheckedChange={(v) => {
                 setAllow(v)
-                if (conv.figma && !onPick) update(conv.id, (c) => ({ ...c, figma: c.figma ? { ...c.figma, allowComments: v } : c.figma }))
+                if (conv?.figma && !onPick) update(conv.id, (c) => ({ ...c, figma: c.figma ? { ...c.figma, allowComments: v } : c.figma }))
               }}
             />
             <Label htmlFor="figma-comments" className="text-[13.5px] font-normal">

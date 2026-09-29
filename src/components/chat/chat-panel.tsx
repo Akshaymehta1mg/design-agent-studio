@@ -103,7 +103,7 @@ function PartView({ part, loc }: { part: MessagePart; loc: { convId: string; msg
 const SUGGESTIONS = [
   "Critique the selected screens",
   "Wireframe the first step of this flow",
-  "Map the booking flow as a workflow",
+  "Map this flow as a workflow",
   "Iterate on the latest wireframe",
 ]
 
@@ -148,7 +148,6 @@ export function ChatPanel() {
           <EmptyChat />
         ) : (
           <div className="mx-auto flex max-w-[760px] flex-col gap-6 px-4 pt-5 pb-44">
-            {conv.example && <div className="text-muted-foreground text-center text-[12px]">Example conversation. Start a new one from the sidebar, or keep going here.</div>}
             {conv.messages.map((m) => (
               <motion.div key={m.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: EASE_OUT }}>
                 {m.role === "user" ? <UserMessage m={m} /> : <AssistantMessage m={m} convId={conv.id} />}
@@ -353,10 +352,11 @@ function AssistantMessage({ m, convId }: { m: ChatMessage; convId: string }) {
                 key={a.id}
                 disabled={!a.targetId}
                 onClick={() => a.targetId && focusNode(a.targetId)}
-                className={cn("hover:bg-accent inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-[12.5px] font-medium transition-colors disabled:cursor-default", a.tone === "error" && "text-destructive")}
+                title={a.label}
+                className={cn("hover:bg-accent inline-flex h-8 max-w-full min-w-0 items-center gap-1.5 rounded-full border px-3 text-[12.5px] font-medium transition-colors disabled:cursor-default", a.tone === "error" && "text-destructive")}
               >
-                <Icon className={cn("size-3.5", a.tone === "create" ? "text-ember" : "text-muted-foreground")} />
-                {a.label}
+                <Icon className={cn("size-3.5 shrink-0", a.tone === "create" ? "text-ember" : "text-muted-foreground")} />
+                <span className="min-w-0 truncate">{a.label}</span>
               </button>
             )
           })}
@@ -537,16 +537,18 @@ function Composer({ busy }: { busy: boolean }) {
         {(selectedFrames.length > 0 || files.length > 0 || productReady || conv.figma) && (
           <div className="flex flex-wrap gap-1.5 px-3 pt-3">
             {selectedFrames.length > 0 && (
-              <span className="bg-muted inline-flex h-7 items-center gap-1.5 rounded-full pr-1 pl-1 text-[12px] font-medium">
-                <span className="flex -space-x-1.5">
+              <span className="bg-muted inline-flex h-7 max-w-full min-w-0 items-center gap-1.5 rounded-full pr-1 pl-1 text-[12px] font-medium">
+                <span className="flex shrink-0 -space-x-1.5">
                   {selectedFrames.slice(0, 3).map((f) => (
                     <span key={f.id} className="bg-card ring-muted relative size-5 overflow-hidden rounded-full ring-2">
                       {f.src ? <img src={f.src} alt="" className="h-full w-full object-cover object-top" /> : <LayoutGrid className="text-muted-foreground m-0.5 size-4" />}
                     </span>
                   ))}
                 </span>
-                {selectedFrames.length === 1 ? frameLabel(selectedFrames[0]) : `${selectedFrames.length} frames selected`}
-                <button className="hover:bg-background rounded-full p-0.5" onClick={() => select([])} aria-label="Clear selection">
+                <span className="min-w-0 truncate" title={selectedFrames.length === 1 ? frameLabel(selectedFrames[0]) : undefined}>
+                  {selectedFrames.length === 1 ? frameLabel(selectedFrames[0]) : `${selectedFrames.length} frames selected`}
+                </span>
+                <button className="hover:bg-background shrink-0 rounded-full p-0.5" onClick={() => select([])} aria-label="Clear selection">
                   <X className="size-3" />
                 </button>
               </span>
