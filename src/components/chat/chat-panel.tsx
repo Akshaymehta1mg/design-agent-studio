@@ -61,6 +61,7 @@ import { TodoList } from "@/components/agents/todo-list"
 import { ApprovalCard, type ApprovalCardAnswers } from "@/components/agents/approval-card"
 import { WorkflowCard } from "@/components/agents/workflow-graph"
 import { answerAsk, isWaiting } from "@/lib/message-parts"
+import { legacyAnswers } from "@/lib/decisions"
 
 type AskPart = Extract<MessagePart, { type: "ask" }>
 
@@ -78,19 +79,6 @@ function answerList(part: AskPart, answers: ApprovalCardAnswers) {
 const answerText = (list: { question: string; answer: string }[]) =>
   list.length === 1 ? list[0].answer : list.map((x) => `${x.question}: ${x.answer}`).join(" · ")
 
-/** Cards answered before answers were stored separately only have the joined text; split it back up. */
-function legacyAnswers(part: AskPart) {
-  if (!part.result || !part.questions?.length) return undefined
-  if (part.questions.length === 1) return [{ question: part.questions[0].title, answer: part.result }]
-  const out = part.questions.flatMap((q, i) => {
-    const start = part.result!.indexOf(`${q.title}: `)
-    if (start < 0) return []
-    const from = start + q.title.length + 2
-    const next = part.questions!.slice(i + 1).map((n) => part.result!.indexOf(` · ${n.title}: `, from)).find((x) => x >= 0)
-    return [{ question: q.title, answer: part.result!.slice(from, next ?? undefined).trim() }]
-  })
-  return out.length ? out : undefined
-}
 
 function PartView({ part, loc }: { part: MessagePart; loc: { convId: string; msgId: string } }) {
   const focusNode = useStore((s) => s.focusNode)

@@ -9,6 +9,9 @@ import { dataUrlParts } from "./files"
 import { allDesignSystems, BUILTIN_DESIGN_SYSTEMS } from "./design-systems"
 import { connectorTools } from "./mcp"
 import { askUserInput, MAX_QUESTIONS, normalizeAsk } from "./ask-input"
+import { answeredDecisions, legacyAnswers, sameQuestion, type Decision } from "./decisions"
+
+const MAX_ASKS_PER_TURN = 2
 import { loadPrismDoc, PRISM_ADAPTER, PRISM_CORE, PRISM_DOCS, RX_FALLBACK_IMAGE, searchDesignSystemReference, searchVisualResearch, TATA_1MG_ASSET_BASE, VISUAL_RESEARCH_URL, visualResearchPatterns } from "./prism"
 import { DEVICE_SIZES } from "./wireframe"
 import { imageForModel } from "./relay"
@@ -79,6 +82,13 @@ function latestPerLineage(c: Conversation): FrameNode[] {
 const MARKUP_REQUEST = /annotat|critique|\bcrit\b|review|feedback|mark ?(it |this |them )?up|markup|\bmarks?\b|comment|audit|what do you think|what'?s wrong|issues?\b|problems?\b|\bnotes?\b|sticky/i
 export const wantsMarkup = (text: string) => MARKUP_REQUEST.test(text)
 
+/** Everything the designer has already decided in this project, so it's never asked again. */
+function decisionsSection(c: Conversation) {
+  const list = answeredDecisions(c)
+  if (!list.length) return ""
+  return `Decisions the designer has already made in this project (never ask these again; build on them)\n${list.map((d) => `- ${d.question} → ${d.answer}`).join("\n")}\n\n`
+}
+
 export function systemPrompt(c: Conversation, product: ProductLibrary, opts: { figma: boolean; connectors?: string[]; markup?: boolean }): string {
   const ctx = productContext(product)
   const ds = designSystemFor(c)
@@ -117,7 +127,7 @@ ${PRISM_CORE}
 Design system for this project: ${ds.name}${ds.referenceUrl ? " (component reference searchable with read_design_system)" : ""}
 ${ds.profile}
 
-${ctx ? `Product context\n${ctx}\n\n` : ""}Canvas right now
+${decisionsSection(c)}${ctx ? `Product context\n${ctx}\n\n` : ""}Canvas right now
 ${canvasInventory(c)}`
 }
 
@@ -167,7 +177,11 @@ function toModelMessages(c: Conversation, current: ChatMessage): ModelMessage[] 
       const acts = m.actions?.length ? `\n[Canvas actions: ${m.actions.map((a) => a.label).join("; ")}]` : ""
       const asks = (m.parts ?? [])
         .filter((p) => p.type === "ask")
-        .map((p) => (p.type === "ask" ? `\n[Asked: ${p.title} → ${p.result ?? p.status}]` : ""))
+        .map((p) => {
+          if (p.type !== "ask") return ""
+          const qa = p.answers ?? legacyAnswers(p)
+          return qa?.length ? `\n[Asked "${p.title}" and the designer answered: ${qa.map((d) => `${d.question} → ${d.answer}`).join("; ")}]` : `\n[Asked: ${p.title} → ${p.result ?? p.status}]`
+        })
         .join("")
       return { role: "assistant", content: m.text + acts + asks }
     }
@@ -190,6 +204,7 @@ const deviceEnum = z.enum(["mobile", "tablet", "desktop"])
 
 function canvasTools(convId: string, msgId: string, log: (r: ActionResult) => void, figma: boolean, markup: boolean, signal?: AbortSignal) {
   const loc = { convId, msgId }
+  let asks = 0
   const wrap = (r: ActionResult) => {
     log(r)
     return r.message
@@ -259,8 +274,28 @@ function canvasTools(convId: string, msgId: string, log: (r: ActionResult) => vo
       description: "Ask the designer for a decision or approval, and wait for the answer. The only way to ask the designer anything.",
       inputSchema: askUserInput,
       execute: async (input) => {
-        const answer = await askUser(loc, normalizeAsk(input), signal)
-        return `Designer's answer: ${answer}`
+        // Guard against re-asking: at most MAX_ASKS_PER_TURN cards per reply, and never a question already answered.
+        if (asks >= MAX_ASKS_PER_TURN) return `You've already asked ${asks} times in this reply. Don't ask again now: proceed with the answers you have, state any assumption, and let the designer correct you.`
+        const conv = useStore.getState().conversations.find((x) => x.id === convId)
+        const known = conv ? answeredDecisions(conv) : []
+        const ask = normalizeAsk(input)
+        const repeats: Decision[] = []
+        if (ask.questions) {
+          ask.questions = ask.questions.filter((q) => {
+            const hit = known.find((d) => sameQuestion(d.question, q.title))
+            if (hit) repeats.push(hit)
+            return !hit
+          })
+          if (!ask.questions.length) ask.questions = undefined
+        }
+        const earlier = repeats.length ? `Already answered earlier (don't ask again): ${repeats.map((d) => `${d.question} → ${d.answer}`).join("; ")}` : ""
+        if (!ask.questions && (repeats.length || known.some((d) => sameQuestion(d.question, ask.title)))) {
+          const same = known.find((d) => sameQuestion(d.question, ask.title))
+          return earlier || `Already answered earlier (don't ask again): ${same!.question} → ${same!.answer}`
+        }
+        asks++
+        const answer = await askUser(loc, ask, signal)
+        return `Designer's answer: ${answer}${earlier ? `\n${earlier}` : ""}`
       },
     }),
   }
@@ -521,7 +556,8 @@ export async function runChat(convId: string, userMsg: ChatMessage) {
           history = [...history, ...first.messages, { role: "user", content: ASK_INSTEAD }]
           const forced = await pass(history, { tools: { ask_user: tools.ask_user }, toolChoice: { type: "tool", toolName: "ask_user" }, steps: 1, onAskStart: () => trimQuestions(loc) })
           history = [...history, ...forced.messages]
-          if (asked()) await pass(history)
+          // Continue with the answers (or with the reminder that they were already given).
+          await pass(history)
         } catch (e) {
           if (signal.aborted) throw e
           // Couldn't convert: keep the questions as the model wrote them.
