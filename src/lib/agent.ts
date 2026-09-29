@@ -8,6 +8,7 @@ import { addWorkflowPart, appendText, askUser, setPlan } from "./message-parts"
 import { dataUrlParts } from "./files"
 import { allDesignSystems, BUILTIN_DESIGN_SYSTEMS } from "./design-systems"
 import { connectorTools } from "./mcp"
+import { askUserInput, MAX_QUESTIONS, normalizeAsk } from "./ask-input"
 import { hasFigmaAccess } from "./figma"
 import { viaServer, type ServerUpstream } from "./server"
 
@@ -94,7 +95,8 @@ ${opts.markup ? `- annotate: mark regions of a frame (x, y, w, h as fractions 0�
 
 Working with the designer
 - update_plan: for multi-step work (several screens, a flow plus wireframes, a review then an iteration), call it first with your plan, then again as you go, marking items in-progress and completed. Skip it for single quick actions.
-- ask_user: when a decision genuinely changes what you'll make (direction, scope, which variant) or before something the designer might not want (posting to Figma, replacing many items). Offer 2–4 short options and allowCustom. Without questions it becomes an approve / request changes / reject card. It waits for the answer; don't ask more than one per turn.${opts.figma ? "\n- figma_comment: post a comment into the linked Figma file. Only when the designer asks for Figma comments, or when they've enabled it and you're giving critique on Figma frames." : ""}
+- ask_user: when a decision genuinely changes what you'll make (direction, scope, which variant) or before something the designer might not want (posting to Figma, replacing many items). Put every question in one ask_user call (up to ${MAX_QUESTIONS}), each with 2–4 short options and allowCustom. Without questions it becomes an approve / request changes / reject card. It waits for the answer.
+- Never ask the designer questions in plain chat text. If you need their input, call ask_user; otherwise make a sensible call, say what you assumed, and carry on.${opts.figma ? "\n- figma_comment: post a comment into the linked Figma file. Only when the designer asks for Figma comments, or when they've enabled it and you're giving critique on Figma frames." : ""}
 
 Wireframe HTML
 - Write an HTML fragment for the page body. No <script>, no external images or fonts, no <html>/<head>. Placeholder images: <div class="wf-img" style="height:160px"></div>.
@@ -244,27 +246,10 @@ function canvasTools(convId: string, msgId: string, log: (r: ActionResult) => vo
       },
     }),
     ask_user: tool({
-      description: "Ask the designer a question (with options) or for approval, and wait for the answer.",
-      inputSchema: z.object({
-        title: z.string().describe("The question, or what needs approval"),
-        description: z.string().optional(),
-        approve_label: z.string().optional().describe("Button label for approval cards, e.g. 'Post 3 comments'"),
-        questions: z
-          .array(
-            z.object({
-              id: z.string(),
-              title: z.string(),
-              description: z.string().optional(),
-              options: z.array(z.object({ value: z.string(), label: z.string() })).max(6).optional(),
-              multiple: z.boolean().optional(),
-              allowCustom: z.boolean().optional(),
-            }),
-          )
-          .max(4)
-          .optional(),
-      }),
-      execute: async ({ approve_label, ...i }) => {
-        const answer = await askUser(loc, { ...i, approveLabel: approve_label }, signal)
+      description: "Ask the designer for a decision or approval, and wait for the answer. The only way to ask the designer anything.",
+      inputSchema: askUserInput,
+      execute: async (input) => {
+        const answer = await askUser(loc, normalizeAsk(input), signal)
         return `Designer's answer: ${answer}`
       },
     }),
@@ -384,6 +369,9 @@ export async function runChat(convId: string, userMsg: ChatMessage) {
             useStore.getState().patchMessage(assistantId, { activity: ACTIVITY[part.toolName] ?? "Working…" }, convId)
           } else if (part.type === "start-step" && text) {
             buffered += "\n\n"
+          } else if (part.type === "tool-error") {
+            flush()
+            pushAction({ ok: false, message: "", log: { id: uid(), label: `${part.toolName.replace(/_/g, " ")} failed`, tone: "error" } })
           } else if (part.type === "error") {
             throw part.error
           }
