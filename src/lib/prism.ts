@@ -9,8 +9,10 @@
  */
 import PRISM_SKILL from "@/prism/core/SKILL.md?raw"
 import TATA_1MG_GUIDE from "@/prism/design-system/tata-1mg-development-design-system.md?raw"
+import TATA_1MG_TOKENS_RAW from "@/prism/design-system/tata-1mg.tokens.md?raw"
 
 export { TATA_1MG_GUIDE }
+export const TATA_1MG_TOKENS = TATA_1MG_TOKENS_RAW
 
 const stripFrontMatter = (md: string) => md.replace(/^---\n[\s\S]*?\n---\n+/, "")
 

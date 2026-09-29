@@ -167,6 +167,13 @@ export function prepareScreenHtml(html: string): string {
 
 export const screenSlug = (s: string) => slug(s)
 
+function minifyHtml(html: string): string {
+  return html
+    .replace(/<!--[\s\S]*?-->/g, "")
+    .replace(/\s{2,}/g, " ")
+    .trim()
+}
+
 /**
  * Normalise a batch of the agent's screens: unique slug ids, sanitized HTML, links rewritten to the ids.
  * `known` are ids of screens already built or planned, so links to them resolve too.
@@ -180,7 +187,7 @@ export function normalizeScreens(input: { id?: string; title: string; html: stri
     used.add(id)
     if (s.id) rename.set(s.id, id)
     rename.set(s.title, rename.get(s.title) ?? id)
-    return { id, title: s.title.slice(0, 60), html: s.html }
+    return { id, title: s.title.slice(0, 60), html: minifyHtml(s.html) }
   })
   const all = new Set([...used, ...known])
   const fix = (v: string) => rename.get(v) ?? rename.get(slug(v)) ?? (all.has(slug(v)) ? slug(v) : v)

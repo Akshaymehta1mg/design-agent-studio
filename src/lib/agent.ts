@@ -12,7 +12,7 @@ import { askUserInput, MAX_QUESTIONS, normalizeAsk } from "./ask-input"
 import { answeredDecisions, legacyAnswers, sameQuestion, type Decision } from "./decisions"
 
 const MAX_ASKS_PER_TURN = 2
-import { loadPrismDoc, PRISM_ADAPTER, PRISM_CORE, PRISM_CORE_COMPACT, PRISM_DOCS, RX_FALLBACK_IMAGE, searchDesignSystemReference, searchVisualResearch, TATA_1MG_ASSET_BASE, VISUAL_RESEARCH_URL, visualResearchPatterns } from "./prism"
+import { loadPrismDoc, PRISM_ADAPTER, PRISM_CORE, PRISM_CORE_COMPACT, PRISM_DOCS, RX_FALLBACK_IMAGE, searchDesignSystemReference, searchVisualResearch, TATA_1MG_ASSET_BASE, TATA_1MG_TOKENS, VISUAL_RESEARCH_URL, visualResearchPatterns } from "./prism"
 import { DEVICE_SIZES } from "./wireframe"
 import { imageForModel } from "./relay"
 import { editsSummary, loadDesignReference, referenceIndex, referenceKeys, referenceSection } from "./design-reference"
@@ -201,17 +201,24 @@ ${PRISM_CORE}
 ══════════ end of Prism core ══════════
 
 Design system for this project: ${ds.name}${ds.referenceUrl ? " (component reference searchable with read_design_system)" : ""}
-${ds.profile}
+${ds.id === "tata-1mg-development" ? TATA_1MG_TOKENS : designSystemDigest(ds, 2000)}
 ${edits ? `\nTeam edits to this design system (these override the guide above and the original reference)\n${edits}\n` : ""}
 
 ${decisionsSection(c)}${ctx ? `Product context\n${ctx}\n\n` : ""}Canvas right now
 ${canvasInventory(c)}`
 }
 
-function frameParts(f: FrameNode, c: Conversation, compact = false): ModelMessage["content"] {
+function frameParts(f: FrameNode, c: Conversation, compact = false, building = false): ModelMessage["content"] {
   const marks = c.canvas.marks.filter((m) => m.frameId === f.id)
   const header = `[Frame ${f.id} · "${frameLabel(f)}" · ${f.type} · ${f.w}×${f.h}]${marks.length ? `\nExisting marks:\n${marks.map((m) => `  ${m.n}. (${m.type}, ${m.author}) ${m.text}`).join("\n")}` : ""}`
   if (f.type === "wireframe" && f.screens?.length) {
+    if (building) {
+      // Model already wrote this HTML — send a manifest to avoid re-paying the token cost
+      const manifest = f.screens.map((s) => `"${s.id}" (${s.title})`).join(", ")
+      const pending = (f.plannedScreens ?? []).filter((p) => !f.screens!.some((s) => s.id === p.id))
+      const pendingStr = pending.length ? ` | Still to build: ${pending.map((p) => `"${p.id}" (${p.title})`).join(", ")}` : ""
+      return [{ type: "text", text: `${header}\nPrototype in progress — ${f.screens.length} screens built: ${manifest}${pendingStr}` }]
+    }
     const per = Math.floor((compact ? 12000 : 30000) / f.screens.length)
     return [{ type: "text", text: `${header}\nPrototype, starts on "${f.startScreen}". Screens:\n${f.screens.map((s) => `── screen id "${s.id}" · ${s.title} ──\n${s.html.slice(0, per)}`).join("\n")}` }]
   }
@@ -230,12 +237,12 @@ function frameParts(f: FrameNode, c: Conversation, compact = false): ModelMessag
   return parts as ModelMessage["content"]
 }
 
-function attachmentParts(atts: Attachment[], c: Conversation, compact = false) {
+function attachmentParts(atts: Attachment[], c: Conversation, compact = false, buildingFrameIds?: Set<string>) {
   const parts: { type: string; [k: string]: unknown }[] = []
   for (const a of atts) {
     if (a.kind === "frame") {
       const f = c.canvas.nodes.find((n) => n.id === a.frameId)
-      if (f?.kind === "frame") parts.push(...((frameParts(f, c, compact) as unknown) as typeof parts))
+      if (f?.kind === "frame") parts.push(...((frameParts(f, c, compact, buildingFrameIds?.has(f.id) ?? false) as unknown) as typeof parts))
     } else if (a.kind === "file") {
       if (a.text) parts.push({ type: "text", text: `[File: ${a.name}]\n${a.text.slice(0, compact ? 8000 : 60000)}` })
       else if (a.dataUrl) {
@@ -254,6 +261,12 @@ function attachmentParts(atts: Attachment[], c: Conversation, compact = false) {
 const clip = (t: string, n: number) => (t.length > n ? `${t.slice(0, n)}…` : t)
 
 function toModelMessages(c: Conversation, current: ChatMessage, compact = false): ModelMessage[] {
+  // Detect prototypes currently being built (planned but not yet fully built)
+  const buildingFrameIds = new Set(
+    c.canvas.nodes
+      .filter((n): n is FrameNode => n.kind === "frame" && n.type === "wireframe" && !!n.screens?.length && !!n.plannedScreens?.length && n.plannedScreens.some((p) => !n.screens!.some((s) => s.id === p.id)))
+      .map((n) => n.id),
+  )
   const history = c.messages.filter((m) => m.id !== current.id && m.status !== "error" && (m.text.trim() || m.parts?.length)).slice(compact ? -6 : -16)
   const msgs: ModelMessage[] = history.map((m) => {
     if (m.role === "assistant") {
@@ -271,11 +284,11 @@ function toModelMessages(c: Conversation, current: ChatMessage, compact = false)
     const att = m.attachments?.filter((a) => a.kind === "frame").map((a) => (a as { title: string }).title)
     return { role: "user", content: (compact ? clip(m.text, 1500) : m.text) + (att?.length ? `\n[Attached: ${att.join(", ")}]` : "") }
   })
-  const parts = attachmentParts(current.attachments ?? [], c, compact)
+  const parts = attachmentParts(current.attachments ?? [], c, compact, buildingFrameIds)
   // If nothing is attached but the designer is iterating, give the model the latest wireframes' source.
   const iterating = /iterat|another|version|revis|variant|again|improve|tweak|change/i.test(current.text)
   if (!current.attachments?.some((a) => a.kind === "frame") && iterating) {
-    for (const f of latestPerLineage(c).slice(compact ? -1 : -2)) parts.push(...((frameParts(f, c, compact) as unknown) as typeof parts))
+    for (const f of latestPerLineage(c).slice(compact ? -1 : -2)) parts.push(...((frameParts(f, c, compact, buildingFrameIds.has(f.id)) as unknown) as typeof parts))
   }
   msgs.push({ role: "user", content: [...parts, { type: "text", text: current.text }] as never })
   return msgs
@@ -732,7 +745,7 @@ export async function runChat(convId: string, userMsg: ChatMessage, opts: { dept
           toolChoice: opts.toolChoice,
           stopWhen: [stepCountIs(opts.steps ?? 14), ...stopAt],
           abortSignal: signal,
-          maxOutputTokens: compact ? 4096 : 16000,
+          maxOutputTokens: compact ? (phase === "build" ? 8000 : 4096) : (phase === "build" ? 8000 : 16000),
           // Rate-limited plans ask callers to wait (retry-after); the SDK honours it, so allow a few more tries.
           maxRetries: compact ? 4 : 2,
           // Text-only models reject images anywhere in the history, including tool results.
@@ -798,7 +811,7 @@ export async function runChat(convId: string, userMsg: ChatMessage, opts: { dept
       if (!text.trim() && !mine?.parts?.some((p) => p.type === "ask") && mine?.actions?.length) appendText(loc, "Done. The changes are on the canvas.")
     }
 
-    const compact = wantsCompactPrompt()
+    const compact = (phase === "build" || phase === "refine") ? promptSizeSetting() !== "full" : wantsCompactPrompt()
     try {
       await turn(compact)
     } catch (e) {
