@@ -68,23 +68,28 @@ function latestPerLineage(c: Conversation): FrameNode[] {
   return [...byLineage.values()]
 }
 
-export function systemPrompt(c: Conversation, product: ProductLibrary, opts: { figma: boolean; connectors?: string[] }): string {
+/** Annotations, comments and notes only go on the canvas when the designer asks for them. */
+const MARKUP_REQUEST = /annotat|critique|\bcrit\b|review|feedback|mark ?(it |this |them )?up|markup|\bmarks?\b|comment|audit|what do you think|what'?s wrong|issues?\b|problems?\b|\bnotes?\b|sticky/i
+export const wantsMarkup = (text: string) => MARKUP_REQUEST.test(text)
+
+export function systemPrompt(c: Conversation, product: ProductLibrary, opts: { figma: boolean; connectors?: string[]; markup?: boolean }): string {
   const ctx = productContext(product)
   const ds = designSystemFor(c)
   return `You are Design Agent, a senior product design lead working with a designer in Design Agent Studio. You share a canvas with them: screenshots, Figma exports and your own wireframes sit on it side by side.
 
 How you work
 - Be specific and grounded in what you can see. Name the element, say what's wrong or right, say why it matters for the user or the business, and say what to do. No generic advice.
-- Keep chat replies short (2–6 sentences or a tight list). Put detailed feedback on the canvas with tools, then summarise the key insight in chat.
+- Keep chat replies short (2–6 sentences or a tight list).
+- Only do what was asked. Never annotate, comment on or add notes to the canvas unless the designer asks for critique, feedback, annotations or notes.
 - If you're unsure what they want, make a sensible call and say what you assumed.
 
 Canvas tools
 - create_wireframe: when asked for a wireframe, mockup, layout, screen or flow step that doesn't exist yet. For a multi-screen flow, call it once per screen.
 - iterate_wireframe: when asked to iterate, revise, try another version, apply feedback or explore a variant. This ALWAYS creates a new version next to the source (V2, V3…). You cannot and must not edit an existing frame. Iterate from the latest version in a lineage unless the designer points at a specific one. You can also iterate from a screenshot to produce a wireframe proposal.
-- annotate: mark regions of a frame (x, y, w, h as fractions 0–1 of the frame from its top-left). Use for critique. Keep each label under 30 words; lead with the problem.
+${opts.markup ? `- annotate: mark regions of a frame (x, y, w, h as fractions 0–1 of the frame from its top-left). Use for critique. Keep each label under 30 words; lead with the problem.
 - comment: a pinned point comment on a frame for a single, local remark.
 - add_note: a sticky note on the canvas for summaries, rationale, open questions or next steps.
-- create_workflow: when asked for a user flow, journey, process, decision tree or any step-by-step flow. Nodes are steps (kind start, step, decision or end); edges connect them. Mark return paths (retry, go back, iterate until good) as kind "loop". Keep titles short; put the detail in description, content and footer.
+` : ""}- create_workflow: when asked for a user flow, journey, process, decision tree or any step-by-step flow. Nodes are steps (kind start, step, decision or end); edges connect them. Mark return paths (retry, go back, iterate until good) as kind "loop". Keep titles short; put the detail in description, content and footer.
 
 Working with the designer
 - update_plan: for multi-step work (several screens, a flow plus wireframes, a review then an iteration), call it first with your plan, then again as you go, marking items in-progress and completed. Skip it for single quick actions.
@@ -170,7 +175,7 @@ function toModelMessages(c: Conversation, current: ChatMessage): ModelMessage[] 
 
 const deviceEnum = z.enum(["mobile", "tablet", "desktop"])
 
-function canvasTools(convId: string, msgId: string, log: (r: ActionResult) => void, figma: boolean, signal?: AbortSignal) {
+function canvasTools(convId: string, msgId: string, log: (r: ActionResult) => void, figma: boolean, markup: boolean, signal?: AbortSignal) {
   const loc = { convId, msgId }
   const wrap = (r: ActionResult) => {
     log(r)
@@ -199,36 +204,6 @@ function canvasTools(convId: string, msgId: string, log: (r: ActionResult) => vo
         html: z.string().describe("Complete HTML for the new version"),
       }),
       execute: async (i) => wrap(iterateWireframe(convId, i)),
-    }),
-    annotate: tool({
-      description: "Mark regions on a frame with numbered annotations. Coordinates are fractions (0–1) of the frame.",
-      inputSchema: z.object({
-        frame_id: z.string(),
-        annotations: z
-          .array(
-            z.object({
-              x: z.number(),
-              y: z.number(),
-              w: z.number(),
-              h: z.number(),
-              text: z.string(),
-              severity: z.enum(["critical", "major", "minor", "positive"]).default("minor"),
-            }),
-          )
-          .min(1)
-          .max(10),
-      }),
-      execute: async ({ frame_id, annotations }) => wrap(addMarks(convId, frame_id, annotations.map((a) => ({ ...a, type: "annotation" as const })))),
-    }),
-    comment: tool({
-      description: "Pin a comment to a point on a frame (x, y fractions 0–1).",
-      inputSchema: z.object({ frame_id: z.string(), x: z.number(), y: z.number(), text: z.string() }),
-      execute: async ({ frame_id, ...c }) => wrap(addMarks(convId, frame_id, [{ ...c, type: "comment" }])),
-    }),
-    add_note: tool({
-      description: "Place a sticky note on the canvas.",
-      inputSchema: z.object({ title: z.string().optional(), text: z.string(), near_frame_id: z.string().optional() }),
-      execute: async (i) => wrap(addNote(convId, i)),
     }),
     create_workflow: tool({
       description: "Put an animated flow diagram on the canvas and in the chat.",
@@ -293,9 +268,42 @@ function canvasTools(convId: string, msgId: string, log: (r: ActionResult) => vo
       },
     }),
   }
-  if (!figma) return tools
+  const markupTools = {
+    annotate: tool({
+      description: "Mark regions on a frame with numbered annotations. Coordinates are fractions (0–1) of the frame.",
+      inputSchema: z.object({
+        frame_id: z.string(),
+        annotations: z
+          .array(
+            z.object({
+              x: z.number(),
+              y: z.number(),
+              w: z.number(),
+              h: z.number(),
+              text: z.string(),
+              severity: z.enum(["critical", "major", "minor", "positive"]).default("minor"),
+            }),
+          )
+          .min(1)
+          .max(10),
+      }),
+      execute: async ({ frame_id, annotations }) => wrap(addMarks(convId, frame_id, annotations.map((a) => ({ ...a, type: "annotation" as const })))),
+    }),
+    comment: tool({
+      description: "Pin a comment to a point on a frame (x, y fractions 0–1).",
+      inputSchema: z.object({ frame_id: z.string(), x: z.number(), y: z.number(), text: z.string() }),
+      execute: async ({ frame_id, ...c }) => wrap(addMarks(convId, frame_id, [{ ...c, type: "comment" }])),
+    }),
+    add_note: tool({
+      description: "Place a sticky note on the canvas.",
+      inputSchema: z.object({ title: z.string().optional(), text: z.string(), near_frame_id: z.string().optional() }),
+      execute: async (i) => wrap(addNote(convId, i)),
+    }),
+  }
+  const base = markup ? { ...tools, ...markupTools } : tools
+  if (!figma) return base
   return {
-    ...tools,
+    ...base,
     figma_comment: tool({
       description: "Post a comment to the linked Figma file, pinned to the frame's Figma node when known.",
       inputSchema: z.object({ message: z.string(), frame_id: z.string().optional() }),
@@ -340,15 +348,16 @@ export async function runChat(convId: string, userMsg: ChatMessage) {
     } else {
       const c = useStore.getState().conversations.find((x) => x.id === convId)!
       const figmaOn = !!(c.figma?.allowComments && hasFigmaAccess(useStore.getState().settings.figmaToken))
+      const markup = wantsMarkup(userMsg.text)
       const live = useStore.getState().connectors.filter((x) => x.enabled && x.status === "ok")
       if (live.length) useStore.getState().patchMessage(assistantId, { activity: "Connecting your tools…" }, convId)
       const mcp = live.length ? await connectorTools(live) : { tools: {}, close: () => {}, failed: [] as string[] }
       closeMcp = mcp.close
       const result = streamText({
         model,
-        system: systemPrompt(c, useStore.getState().product, { figma: figmaOn, connectors: live.map((x) => x.name).filter((n) => !mcp.failed.includes(n)) }),
+        system: systemPrompt(c, useStore.getState().product, { figma: figmaOn, connectors: live.map((x) => x.name).filter((n) => !mcp.failed.includes(n)), markup }),
         messages: toModelMessages(c, userMsg),
-        tools: { ...mcp.tools, ...canvasTools(convId, assistantId, pushAction, figmaOn, controller.signal) },
+        tools: { ...mcp.tools, ...canvasTools(convId, assistantId, pushAction, figmaOn, markup, controller.signal) },
         stopWhen: stepCountIs(10),
         abortSignal: controller.signal,
         maxOutputTokens: 16000,
@@ -515,7 +524,7 @@ async function runDemo(convId: string, msg: ChatMessage, assistantId: string, pu
   const wantsFlow = /flow|journey|workflow|process|diagram|map (the|out)/.test(t)
   const wantsIterate = /iterat|another|next version|revis|variant|again|improve|alternative|try /.test(t)
   const wantsWireframe = /wireframe|mock|layout|screen|draft|sketch|design (a|the|an)|create|make/.test(t)
-  const wantsCritique = /annotat|critique|review|feedback|mark|what do you think|risk|problem|issue|audit/.test(t)
+  const wantsCritique = wantsMarkup(t)
 
   if (wantsFlow) {
     const plan = (s: ("pending" | "in-progress" | "completed")[]) =>
@@ -606,7 +615,7 @@ async function runDemo(convId: string, msg: ChatMessage, assistantId: string, pu
     return
   }
 
-  if ((wantsCritique || attached.length) && target) {
+  if (wantsCritique && target) {
     setActivity(ACTIVITY.annotate)
     await sleep(800, signal)
     push(
