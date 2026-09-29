@@ -174,6 +174,8 @@ export interface ChatMessage {
   status?: "streaming" | "done" | "error"
   /** what the agent is doing right now, shown while streaming */
   activity?: string
+  /** The Prism step this reply covered */
+  phase?: "discover" | "research" | "directions" | "build" | "refine"
   error?: string
   createdAt: number
 }
@@ -196,6 +198,8 @@ export interface Conversation {
   figma?: FigmaLink
   /** Design system this project designs with */
   designSystemId?: string
+  /** Which step of Prism's loop the agent is on (see src/lib/phases.ts) */
+  phase?: "discover" | "research" | "directions" | "build" | "refine"
 }
 
 // ───────────────────────────── Product library ─────────────────────────────

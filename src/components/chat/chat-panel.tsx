@@ -32,6 +32,7 @@ import { frameLabel, uid, useActiveConversation, useStore } from "@/lib/store"
 import { runChat, speak, stopAgent } from "@/lib/agent"
 import { addImageFiles } from "@/lib/canvas-actions"
 import { PrototypeCard } from "@/components/canvas/prototype-player"
+import { PHASES, phaseLabel } from "@/lib/phases"
 import { formatBytes, isTextFile, readAsDataUrl, readAsText } from "@/lib/files"
 import { cn } from "@/lib/utils"
 import { hasFigmaAccess } from "@/lib/figma"
@@ -309,6 +310,19 @@ function IconAction({ label, onClick, children }: { label: string; onClick: () =
   )
 }
 
+/** Which step of the Prism loop a reply covered. */
+function StepChip({ phase }: { phase: NonNullable<ChatMessage["phase"]> }) {
+  const i = PHASES.findIndex((p) => p.id === phase)
+  return (
+    <div className="mb-2 flex items-center gap-1.5" aria-label={`Step: ${phaseLabel(phase)}`}>
+      {PHASES.slice(0, 4).map((p, j) => (
+        <span key={p.id} className={cn("h-1 w-5 rounded-full", phase === "refine" || j <= i ? "bg-ember" : "bg-muted")} />
+      ))}
+      <span className="text-muted-foreground ml-1 text-[11.5px] font-medium">{phase === "refine" ? "Refine" : `Step ${i + 1} of 4 · ${phaseLabel(phase)}`}</span>
+    </div>
+  )
+}
+
 function AssistantMessage({ m, convId }: { m: ChatMessage; convId: string }) {
   const focusNode = useStore((s) => s.focusNode)
   const [copied, setCopied] = useState(false)
@@ -330,6 +344,7 @@ function AssistantMessage({ m, convId }: { m: ChatMessage; convId: string }) {
   }
   return (
     <div className="group/msg min-w-0">
+      {m.phase && <StepChip phase={m.phase} />}
       {m.parts?.length ? (
         <div className="flex flex-col gap-4">
           {m.parts.map((p) => (

@@ -1,4 +1,4 @@
-import { streamText, generateText, tool, stepCountIs, type ModelMessage, type LanguageModel, type ToolChoice, type ToolSet } from "ai"
+import { streamText, generateText, tool, stepCountIs, hasToolCall, type ModelMessage, type LanguageModel, type ToolChoice, type ToolSet } from "ai"
 import { z } from "zod"
 import type { ActionLog, Attachment, ChatMessage, Conversation, FrameNode, MessagePart, ProductLibrary } from "./types"
 import { frameLabel, uid, useStore } from "./store"
@@ -18,6 +18,7 @@ import { imageForModel } from "./relay"
 import { editsSummary, loadDesignReference, referenceIndex, referenceKeys, referenceSection } from "./design-reference"
 import DS_ASSETS from "@/prism/design-system/assets.json"
 import { hasFigmaAccess } from "./figma"
+import { CONNECTORS_IN, currentPhase, GATED, NEXT, PHASE_TOOLS, PHASES, phaseLabel, phasePrompt, type Phase } from "./phases"
 import { viaServer, type ServerUpstream } from "./server"
 
 // ───────────────────────── model access ─────────────────────────
@@ -147,8 +148,12 @@ ${decisionsSection(c)}${ctx ? `Product context\n${ctx.slice(0, 1200)}\n\n` : ""}
 ${inventory.slice(-12).join("\n")}`
 }
 
-export function systemPrompt(c: Conversation, product: ProductLibrary, opts: { figma: boolean; connectors?: string[]; markup?: boolean; compact?: boolean }): string {
-  if (opts.compact) return compactSystemPrompt(c, product, opts)
+export function systemPrompt(c: Conversation, product: ProductLibrary, opts: { figma: boolean; connectors?: string[]; markup?: boolean; compact?: boolean; phase?: Phase }): string {
+  const step = opts.phase ? `\n\n══════════ This reply ══════════\n${phasePrompt(opts.phase)}` : ""
+  return (opts.compact ? compactSystemPrompt(c, product, opts) : fullSystemPrompt(c, product, opts)) + step
+}
+
+function fullSystemPrompt(c: Conversation, product: ProductLibrary, opts: { figma: boolean; connectors?: string[]; markup?: boolean }): string {
   const ctx = productContext(product)
   const ds = designSystemFor(c)
   const mobile = ds.viewport ?? DEVICE_SIZES.mobile
@@ -656,12 +661,21 @@ export function isSizeLimitError(e: unknown): boolean {
   return SIZE_LIMIT.test(text)
 }
 
-export async function runChat(convId: string, userMsg: ChatMessage) {
+/**
+ * One reply. Replies follow Prism's loop in steps (understand → research → directions → prototype → refine):
+ * a reply does one step and stops at its checkpoint; answering it starts the next step as a new reply.
+ */
+export async function runChat(convId: string, userMsg: ChatMessage, opts: { depth?: number } = {}) {
   let closeMcp = () => {}
+  let continueWith: Phase | null = null
   const store = useStore.getState()
   const { model, label } = currentModel()
   const assistantId = uid("c_")
-  store.addMessage({ id: assistantId, role: "assistant", text: "", status: "streaming", model: label, actions: [], createdAt: Date.now(), activity: "Thinking…" }, convId)
+  const startConv = store.conversations.find((x) => x.id === convId)
+  const phase: Phase = startConv ? currentPhase(startConv) : "discover"
+  /** Set by next_phase, or by an answered checkpoint: the step the next reply works on. */
+  let advanceTo: Phase | null = null
+  store.addMessage({ id: assistantId, role: "assistant", text: "", status: "streaming", model: label, actions: [], createdAt: Date.now(), activity: "Thinking…", phase }, convId)
   store.setBusy(true)
   const pushAction = (r: ActionResult) => {
     if (r.log) useStore.getState().patchMessage(assistantId, (m) => ({ actions: [...(m.actions ?? []), r.log as ActionLog] }), convId)
@@ -681,9 +695,29 @@ export async function runChat(convId: string, userMsg: ChatMessage) {
       const mcp = live.length ? await connectorTools(live) : { tools: {}, close: () => {}, failed: [] as string[] }
       closeMcp = mcp.close
       const loc = { convId, msgId: assistantId }
-      const allTools: ToolSet = { ...mcp.tools, ...prismTools(convId), ...canvasTools(convId, assistantId, pushAction, figmaOn, markup, controller!.signal) }
-      const tools: ToolSet = compact ? Object.fromEntries(Object.entries(allTools).filter(([k]) => COMPACT_TOOLS.has(k))) : allTools
-      const system = systemPrompt(c, useStore.getState().product, { figma: figmaOn, connectors: live.map((x) => x.name).filter((n) => !mcp.failed.includes(n)), markup, compact })
+      const nextPhase = tool({
+        description: "Move to another step of the loop without a checkpoint: skip a step that can't change the decision, jump ahead when the designer asks, or restart at discover for a new brief. Ends this reply; the next step starts as a new reply.",
+        inputSchema: z.object({ to: z.enum(["discover", "research", "directions", "build"]), reason: z.string().describe("One line on why") }),
+        execute: async ({ to, reason }) => {
+          advanceTo = to
+          // Say why in the reply, so a skipped step isn't an empty message.
+          const loc = { convId, msgId: assistantId }
+          if (!getMessage(loc)?.text.trim()) appendText(loc, `_Moving on to ${phaseLabel(to).toLowerCase()}: ${reason.replace(/\.$/, "")}._`)
+          return `Moving to ${phaseLabel(to)}: ${reason}`
+        },
+      })
+      const everything: ToolSet = { ...mcp.tools, ...prismTools(convId), ...canvasTools(convId, assistantId, pushAction, figmaOn, markup, controller!.signal), next_phase: nextPhase }
+      // Each step only gets the tools it needs, so a reply can't run ahead to the prototype.
+      const allowed = PHASE_TOOLS[phase]
+      const markupNames = markup ? ["annotate", "comment", "add_note"] : []
+      const allTools: ToolSet =
+        allowed === "all"
+          ? everything
+          : Object.fromEntries(Object.entries(everything).filter(([k]) => allowed.includes(k) || markupNames.includes(k) || (CONNECTORS_IN.has(phase) && k in mcp.tools)))
+      const tools: ToolSet = compact ? Object.fromEntries(Object.entries(allTools).filter(([k]) => COMPACT_TOOLS.has(k) || k === "next_phase")) : allTools
+      const system = systemPrompt(c, useStore.getState().product, { figma: figmaOn, connectors: live.map((x) => x.name).filter((n) => !mcp.failed.includes(n)), markup, compact, phase })
+      // A step ends at its checkpoint (a question or approval) or when it hands over to another step.
+      const stopAt = [hasToolCall("next_phase"), ...(GATED.has(phase) ? [hasToolCall("ask_user")] : [])]
       const signal = controller!.signal
       const readsImages = currentModelReadsImages()
       let text = ""
@@ -696,7 +730,7 @@ export async function runChat(convId: string, userMsg: ChatMessage) {
           messages,
           tools: opts.tools ?? tools,
           toolChoice: opts.toolChoice,
-          stopWhen: stepCountIs(opts.steps ?? 14),
+          stopWhen: [stepCountIs(opts.steps ?? 14), ...stopAt],
           abortSignal: signal,
           maxOutputTokens: compact ? 4096 : 16000,
           // Rate-limited plans ask callers to wait (retry-after); the SDK honours it, so allow a few more tries.
@@ -751,15 +785,17 @@ export async function runChat(convId: string, userMsg: ChatMessage) {
           history = [...history, ...first.messages, { role: "user", content: ASK_INSTEAD }]
           const forced = await pass(history, { tools: { ask_user: tools.ask_user }, toolChoice: { type: "tool", toolName: "ask_user" }, steps: 1, onAskStart: () => trimQuestions(loc) })
           history = [...history, ...forced.messages]
-          // Continue with the answers (or with the reminder that they were already given).
-          await pass(history)
+          // Continue with the answers (or with the reminder that they were already given); in a step,
+          // the answer starts the next step as its own reply instead.
+          if (!GATED.has(phase)) await pass(history)
         } catch (e) {
           if (signal.aborted) throw e
           // Couldn't convert: keep the questions as the model wrote them.
           if (before) useStore.getState().patchMessage(assistantId, { parts: before, text: textOf(before) }, convId)
         }
       }
-      if (!text.trim()) appendText(loc, "Done. The changes are on the canvas.")
+      const mine = getMessage(loc)
+      if (!text.trim() && !mine?.parts?.some((p) => p.type === "ask") && mine?.actions?.length) appendText(loc, "Done. The changes are on the canvas.")
     }
 
     const compact = wantsCompactPrompt()
@@ -778,6 +814,13 @@ export async function runChat(convId: string, userMsg: ChatMessage) {
       await turn(true)
     }
     useStore.getState().patchMessage(assistantId, { status: "done", activity: undefined }, convId)
+    // Decide the next step: an explicit hand-over, an answered checkpoint, or refine after the prototype.
+    const mine = getMessage({ convId, msgId: assistantId })
+    const passed = mine?.parts?.some((p) => p.type === "ask" && (p.status === "answered" || p.status === "approved"))
+    const handed = advanceTo as Phase | null
+    const next: Phase = handed ?? (GATED.has(phase) && passed ? NEXT[phase] : phase === "build" ? "refine" : phase)
+    useStore.getState().updateConversation(convId, (c) => ({ ...c, phase: next }))
+    if (next !== phase && next !== "refine") continueWith = next
     const final = useStore.getState().conversations.find((x) => x.id === convId)?.messages.find((m) => m.id === assistantId)
     if (final && useStore.getState().settings.speakReplies) speak(final.text)
   } catch (e) {
@@ -788,6 +831,13 @@ export async function runChat(convId: string, userMsg: ChatMessage) {
     closeMcp()
     useStore.getState().setBusy(false)
     controller = null
+  }
+  // The next step is its own reply, so each part of the loop arrives on its own.
+  const depth = opts.depth ?? 0
+  if (continueWith && depth < 4) {
+    const n = PHASES.findIndex((p) => p.id === continueWith) + 1
+    const cont: ChatMessage = { id: uid("c_"), role: "user", text: `Continue with step ${n} of 4 · ${phaseLabel(continueWith)}.`, createdAt: Date.now(), status: "done" }
+    setTimeout(() => runChat(convId, cont, { depth: depth + 1 }), 0)
   }
 }
 
