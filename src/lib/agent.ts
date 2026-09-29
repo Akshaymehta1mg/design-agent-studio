@@ -5,7 +5,6 @@ import { frameLabel, uid, useStore } from "./store"
 import { getLanguageModel, type KeyedProvider } from "./providers"
 import { addMarks, addNote, createWireframe, createWorkflow, figmaComment, iterateWireframe, type ActionResult } from "./canvas-actions"
 import { addWorkflowPart, appendText, askUser, setPlan } from "./message-parts"
-import { EXAMPLE_WIREFRAMES } from "./wireframe"
 import { dataUrlParts } from "./files"
 import { allDesignSystems, BUILTIN_DESIGN_SYSTEMS } from "./design-systems"
 import { connectorTools } from "./mcp"
@@ -14,13 +13,15 @@ import { viaServer, type ServerUpstream } from "./server"
 
 // ───────────────────────── model access ─────────────────────────
 
-export function currentModel(): { model: LanguageModel | null; label: string; demo: boolean } {
+export const NO_MODEL = "No model is set up yet. Open Settings, add an API key, and pick a model."
+
+/** The selected model, or null when no key or model is set up. */
+export function currentModel(): { model: LanguageModel | null; label: string } {
   const { settings } = useStore.getState()
   const sel = settings.selectedModel
-  if (sel.provider === "demo") return { model: null, label: sel.name, demo: true }
   const p = settings.providers[sel.provider as KeyedProvider]
-  if (!p || (!p.apiKey && sel.provider !== "custom" && !viaServer(sel.provider as ServerUpstream))) return { model: null, label: "Demo agent (offline)", demo: true }
-  return { model: getLanguageModel(sel.provider as KeyedProvider, sel.id, p), label: sel.name, demo: false }
+  if (!sel.id || !p || (!p.apiKey && sel.provider !== "custom" && !viaServer(sel.provider as ServerUpstream))) return { model: null, label: sel.name }
+  return { model: getLanguageModel(sel.provider as KeyedProvider, sel.id, p), label: sel.name }
 }
 
 // ───────────────────────── context ─────────────────────────
@@ -334,7 +335,7 @@ const ACTIVITY: Record<string, string> = {
 export async function runChat(convId: string, userMsg: ChatMessage) {
   let closeMcp = () => {}
   const store = useStore.getState()
-  const { model, label, demo } = currentModel()
+  const { model, label } = currentModel()
   const assistantId = uid("c_")
   store.addMessage({ id: assistantId, role: "assistant", text: "", status: "streaming", model: label, actions: [], createdAt: Date.now(), activity: "Thinking…" }, convId)
   store.setBusy(true)
@@ -343,8 +344,8 @@ export async function runChat(convId: string, userMsg: ChatMessage) {
   }
   controller = new AbortController()
   try {
-    if (demo || !model) {
-      await runDemo(convId, userMsg, assistantId, pushAction, controller.signal)
+    if (!model) {
+      throw new Error(NO_MODEL)
     } else {
       const c = useStore.getState().conversations.find((x) => x.id === convId)!
       const figmaOn = !!(c.figma?.allowComments && hasFigmaAccess(useStore.getState().settings.figmaToken))
@@ -438,11 +439,8 @@ export function speak(text: string) {
 // ───────────────────────── one-shot helpers (library) ─────────────────────────
 
 export async function describeImage(src: string, instruction: string): Promise<string> {
-  const { model, demo } = currentModel()
-  if (demo || !model) {
-    await sleep(700)
-    return "Example summary (demo agent): a mobile screen with a hero image, a title block, a primary action pinned to the bottom and a short list of options. Add a key in Settings for a real read."
-  }
+  const { model } = currentModel()
+  if (!model) throw new Error(NO_MODEL)
   const d = dataUrlParts(src)
   const res = await generateText({
     model,
@@ -453,11 +451,8 @@ export async function describeImage(src: string, instruction: string): Promise<s
 }
 
 export async function generate(prompt: string, system?: string, images: string[] = []): Promise<string> {
-  const { model, demo } = currentModel()
-  if (demo || !model) {
-    await sleep(900)
-    return ""
-  }
+  const { model } = currentModel()
+  if (!model) throw new Error(NO_MODEL)
   const content = [
     ...images.slice(0, 6).map((src) => {
       const d = dataUrlParts(src)
@@ -467,182 +462,4 @@ export async function generate(prompt: string, system?: string, images: string[]
   ]
   const res = await generateText({ model, system, messages: [{ role: "user", content: content as never }], maxOutputTokens: 2500 })
   return res.text.trim()
-}
-
-// ───────────────────────── offline demo agent ─────────────────────────
-
-const sleep = (ms: number, signal?: AbortSignal) =>
-  new Promise<void>((res, rej) => {
-    const t = setTimeout(res, ms)
-    signal?.addEventListener("abort", () => {
-      clearTimeout(t)
-      rej(Object.assign(new Error("aborted"), { name: "AbortError" }))
-    })
-  })
-
-async function typeOut(loc: { convId: string; msgId: string }, text: string, signal: AbortSignal) {
-  for (const word of text.split(/(\s+)/)) {
-    if (signal.aborted) throw Object.assign(new Error("aborted"), { name: "AbortError" })
-    appendText(loc, word)
-    await sleep(12)
-  }
-}
-
-const DEMO_NOTE = "\n\nI'm the offline demo agent, so this comes from a small set of examples. Add a key in Settings and pick a model for real work."
-
-const DEMO_WORKFLOW: import("./types").Workflow = {
-  title: "Reserve a table",
-  description: "From the restaurant page to a confirmed booking, with a retry loop when the slot is taken.",
-  nodes: [
-    { id: "page", title: "Restaurant page", description: "Entry", content: "Diner taps Reserve on Stella", footer: "Screen: Store · Dine-out tab", kind: "start" },
-    { id: "slot", title: "Pick a time", description: "Party size, date, slot", content: "Grouped by sitting, best match pre-selected", footer: "Screen: Reserve sheet" },
-    { id: "details", title: "Confirm details", description: "Name, phone, requests", content: "Prefilled from the account", footer: "Screen: Your details" },
-    { id: "check", title: "Slot still free?", description: "Partner availability", content: "Hold for 5 minutes while confirming", footer: "Booking partner API", kind: "decision" },
-    { id: "taken", title: "Offer nearby times", description: "Recover", content: "Show 3 closest slots, keep the details", footer: "Sheet: Slot taken" },
-    { id: "done", title: "Booked", description: "Confirmation", content: "Add to calendar, directions, cancel link", footer: "Screen: Confirmation", kind: "end" },
-  ],
-  edges: [
-    { from: "page", to: "slot" },
-    { from: "slot", to: "details" },
-    { from: "details", to: "check" },
-    { from: "check", to: "done", label: "Yes" },
-    { from: "check", to: "taken", label: "No" },
-    { from: "taken", to: "slot", label: "Pick again", kind: "loop" },
-  ],
-}
-
-async function runDemo(convId: string, msg: ChatMessage, assistantId: string, push: (r: ActionResult) => void, signal: AbortSignal) {
-  const loc = { convId, msgId: assistantId }
-  const t = msg.text.toLowerCase()
-  const c = () => useStore.getState().conversations.find((x) => x.id === convId)!
-  const attached = (msg.attachments ?? []).filter((a) => a.kind === "frame").map((a) => (a as { frameId: string }).frameId)
-  const frames = c().canvas.nodes.filter((n): n is FrameNode => n.kind === "frame")
-  const target = frames.find((f) => f.id === attached[0]) ?? [...frames].reverse().find((f) => f.type !== "workflow")
-  const setActivity = (activity: string) => useStore.getState().patchMessage(assistantId, { activity }, convId)
-  await sleep(450, signal)
-
-  const wantsFlow = /flow|journey|workflow|process|diagram|map (the|out)/.test(t)
-  const wantsIterate = /iterat|another|next version|revis|variant|again|improve|alternative|try /.test(t)
-  const wantsWireframe = /wireframe|mock|layout|screen|draft|sketch|design (a|the|an)|create|make/.test(t)
-  const wantsCritique = wantsMarkup(t)
-
-  if (wantsFlow) {
-    const plan = (s: ("pending" | "in-progress" | "completed")[]) =>
-      setPlan(loc, "Map the reservation flow", [
-        { title: "Find the entry point and the goal", status: s[0] },
-        { title: "Lay out the happy path", status: s[1] },
-        { title: "Add the slot-taken recovery loop", status: s[2] },
-        { title: "Put the flow on the canvas", status: s[3] ?? "pending" },
-      ])
-    plan(["in-progress", "pending", "pending"])
-    await sleep(700, signal)
-    plan(["completed", "in-progress", "pending"])
-    await sleep(700, signal)
-    plan(["completed", "completed", "in-progress"])
-    setActivity(ACTIVITY.create_workflow)
-    await sleep(700, signal)
-    const r = createWorkflow(convId, DEMO_WORKFLOW)
-    push(r)
-    if (r.frameId) addWorkflowPart(loc, r.frameId, DEMO_WORKFLOW)
-    setPlan(loc, "Map the reservation flow", [
-      { title: "Find the entry point and the goal", status: "completed" },
-      { title: "Lay out the happy path", status: "completed" },
-      { title: "Add the slot-taken recovery loop", status: "completed" },
-      { title: "Put the flow on the canvas", status: "completed" },
-    ])
-    await typeOut(loc, "The flow is six steps with one recovery loop: if the slot is gone at confirm time, offer the three nearest times and keep what they typed. That loop is where most booking flows lose people." + DEMO_NOTE, signal)
-    return
-  }
-
-  if (wantsIterate && target) {
-    const answer = await askUser(
-      loc,
-      {
-        title: "What should the next version focus on?",
-        questions: [
-          {
-            id: "focus",
-            title: "What should the next version focus on?",
-            description: `I'll add it beside ${frameLabel(target)} and leave that one as it is.`,
-            options: [
-              { value: "choice", label: "Fewer choices, smarter default" },
-              { value: "grouping", label: "Group times by sitting" },
-              { value: "trust", label: "Show policy and trust signals" },
-            ],
-            allowCustom: true,
-          },
-        ],
-      },
-      signal,
-    )
-    const lineage = frames.filter((f) => target.lineageId && f.lineageId === target.lineageId)
-    const source = lineage.length ? lineage.reduce((a, b) => ((b.version ?? 0) > (a.version ?? 0) ? b : a)) : target
-    const nextV = lineage.length ? Math.max(...lineage.map((f) => f.version ?? 1)) + 1 : 2
-    const tpl = /choice|default/.test(answer) ? EXAMPLE_WIREFRAMES[2] : EXAMPLE_WIREFRAMES[(nextV - 1) % EXAMPLE_WIREFRAMES.length]
-    setPlan(loc, `Build V${nextV}`, [
-      { title: `Read ${frameLabel(source)}`, status: "completed" },
-      { title: "Rework the layout", status: "in-progress" },
-      { title: "Place it beside the source", status: "pending" },
-    ])
-    setActivity(ACTIVITY.iterate_wireframe)
-    await sleep(900, signal)
-    push(iterateWireframe(convId, { source_frame_id: source.id, html: tpl.html, change_summary: tpl.summary, title: source.title, device: "mobile" }))
-    setPlan(loc, `Build V${nextV}`, [
-      { title: `Read ${frameLabel(source)}`, status: "completed" },
-      { title: "Rework the layout", status: "completed" },
-      { title: "Place it beside the source", status: "completed" },
-    ])
-    await typeOut(loc, `Added **V${nextV}** beside ${frameLabel(source)}. ${tpl.summary}` + DEMO_NOTE, signal)
-    return
-  }
-
-  if (wantsWireframe) {
-    const tpl = EXAMPLE_WIREFRAMES[0]
-    setPlan(loc, "Wireframe the reserve step", [
-      { title: "Pull constraints from the Context file", status: "completed" },
-      { title: "Draft the layout", status: "in-progress" },
-      { title: "Place V1 on the canvas", status: "pending" },
-    ])
-    setActivity(ACTIVITY.create_wireframe)
-    await sleep(1000, signal)
-    push(createWireframe(convId, { title: tpl.title, html: tpl.html, summary: tpl.summary, device: "mobile" }))
-    setPlan(loc, "Wireframe the reserve step", [
-      { title: "Pull constraints from the Context file", status: "completed" },
-      { title: "Draft the layout", status: "completed" },
-      { title: "Place V1 on the canvas", status: "completed" },
-    ])
-    await typeOut(loc, `A first pass is on the canvas as **V1**: ${tpl.summary.toLowerCase()} Ask me to iterate and I'll add V2 next to it.` + DEMO_NOTE, signal)
-    return
-  }
-
-  if (wantsCritique && target) {
-    setActivity(ACTIVITY.annotate)
-    await sleep(800, signal)
-    push(
-      addMarks(convId, target.id, [
-        { type: "annotation", x: 0.04, y: 0.06, w: 0.92, h: 0.16, text: "Top of the screen doesn't say what I can do here. Lead with the task, not the brand.", severity: "major" },
-        { type: "annotation", x: 0.04, y: 0.42, w: 0.92, h: 0.22, text: "Options have equal weight. Pre-select the likely choice so most people can go straight to the CTA.", severity: "minor" },
-        { type: "comment", x: 0.5, y: 0.92, text: "Primary action is clear and thumb-reachable. Keep it.", severity: "positive" },
-      ]),
-    )
-    await typeOut(loc, `I marked up **${frameLabel(target)}**. The main risk is decision load: everything has equal weight, so the eye has nowhere to land.`, signal)
-    const answer = await askUser(
-      loc,
-      { title: "Pin a crit summary next to the frame?", description: "A sticky note with the three points and one open question.", approveLabel: "Add the note" },
-      signal,
-    )
-    if (/approved/i.test(answer)) {
-      push(addNote(convId, { title: "Crit summary", text: "• Clarify the task in the header\n• Reduce choice with a smart default\n• Keep the pinned CTA\n\nOpen question: is this a same-day decision for most people?", near_frame_id: target.id }))
-      await typeOut(loc, "\n\nPinned it beside the frame." + DEMO_NOTE, signal)
-    } else {
-      await typeOut(loc, "\n\nNo note then. Ask me to iterate when you're ready." + DEMO_NOTE, signal)
-    }
-    return
-  }
-
-  await typeOut(
-    loc,
-    "I'm running as the **offline demo agent**, so I can only show how the studio works. Try:\n- \"Wireframe a checkout screen\"\n- \"Iterate on it\" (I'll ask what to focus on, then add the next version)\n- \"Map the booking flow\" (an animated workflow)\n- Select a frame and ask \"Critique this\"\n\nTo talk to a real model, open **Settings**, add an Anthropic, OpenAI, Gemini or OpenRouter key and pick a model from the menu under the message box.",
-    signal,
-  )
 }

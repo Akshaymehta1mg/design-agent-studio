@@ -5,6 +5,7 @@ import { useActiveConversation, useStore } from "@/lib/store"
 import { readAsDataUrl } from "@/lib/files"
 import { cn } from "@/lib/utils"
 import { hasFigmaAccess } from "@/lib/figma"
+import { currentModel } from "@/lib/agent"
 import { getSpeechRecognition } from "@/hooks/use-dictation"
 import { useLive, media, startScreenShare, startWithImage, endSession, toggleMute, snapshotToCanvas, runLiveTurn } from "./live-store"
 import { loadFigmaIntoConversation } from "@/components/chat/figma-popover"
@@ -45,7 +46,7 @@ function LiveSetup() {
   const [url, setUrl] = useState("")
   const [loading, setLoading] = useState(false)
   const imgInput = useRef<HTMLInputElement>(null)
-  const hasKey = settings.selectedModel.provider !== "demo"
+  const hasKey = !!currentModel().model
   const voice = !!getSpeechRecognition() && "speechSynthesis" in window
   const canShare = !!navigator.mediaDevices?.getDisplayMedia
 
@@ -68,7 +69,7 @@ function LiveSetup() {
               )
             }
           >
-            {hasKey ? <>Using {settings.selectedModel.name}</> : "Add an API key (demo agent until then)"}
+            {hasKey ? <>Using {settings.selectedModel.name}</> : "Add an API key and pick a model"}
           </Check3>
           <Check3 ok={voice}>{voice ? "Voice works in this browser" : "Voice isn't supported here; you can type"}</Check3>
           <Check3

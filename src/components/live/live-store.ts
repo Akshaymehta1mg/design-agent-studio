@@ -2,7 +2,7 @@ import { create } from "zustand"
 import { generateText, tool, stepCountIs, type ModelMessage } from "ai"
 import { z } from "zod"
 import { uid, useStore, getActive } from "@/lib/store"
-import { currentModel, friendlyError, productContext } from "@/lib/agent"
+import { currentModel, friendlyError, NO_MODEL, productContext } from "@/lib/agent"
 import { hasFigmaAccess, postComment } from "@/lib/figma"
 import { addImages, addMarks } from "@/lib/canvas-actions"
 import { dataUrlParts } from "@/lib/files"
@@ -298,22 +298,15 @@ export async function runLiveTurn(text: string, auto = false) {
   if (!auto) addTurn({ who: "you", text })
   useLive.setState({ phase: "thinking" })
   const frame = captureFrame()
-  const { model, demo } = currentModel()
+  const { model } = currentModel()
   const conv = getActive()
   const token = useStore.getState().settings.figmaToken
   const figmaOn = useLive.getState().figmaComments && !!conv.figma && hasFigmaAccess(token)
   let marks: LiveMark[] = []
   let reply = ""
   try {
-    if (demo || !model) {
-      await new Promise((r) => setTimeout(r, 800))
-      marks = [
-        { id: uid(), n: 1, x: 0.08, y: 0.1, w: 0.4, h: 0.12, label: "Header competes with the content" },
-        { id: uid(), n: 2, x: 0.55, y: 0.72, w: 0.35, h: 0.12, label: "Primary action needs more weight" },
-      ]
-      reply = auto
-        ? "That change helps. The layout breathes more, but the primary action still reads as secondary."
-        : "Two things jump out. The header is louder than the task, and the main action down here doesn't read as the main action. I'm the offline demo agent, so add a key in Settings for a real read of your screen."
+    if (!model) {
+      throw new Error(NO_MODEL)
     } else {
       const history: ModelMessage[] = useLive
         .getState()

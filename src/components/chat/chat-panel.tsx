@@ -103,7 +103,7 @@ function PartView({ part, loc }: { part: MessagePart; loc: { convId: string; msg
 const SUGGESTIONS = [
   "Critique the selected screens",
   "Wireframe the first step of this flow",
-  "Map the booking flow as a workflow",
+  "Map this flow as a workflow",
   "Iterate on the latest wireframe",
 ]
 
@@ -148,7 +148,6 @@ export function ChatPanel() {
           <EmptyChat />
         ) : (
           <div className="mx-auto flex max-w-[760px] flex-col gap-6 px-4 pt-5 pb-44">
-            {conv.example && <div className="text-muted-foreground text-center text-[12px]">Example conversation. Start a new one from the sidebar, or keep going here.</div>}
             {conv.messages.map((m) => (
               <motion.div key={m.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: EASE_OUT }}>
                 {m.role === "user" ? <UserMessage m={m} /> : <AssistantMessage m={m} convId={conv.id} />}

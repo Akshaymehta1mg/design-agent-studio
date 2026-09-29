@@ -5,8 +5,8 @@ import { toast } from "sonner"
 import type { DesignSystem } from "@/lib/types"
 import { uid, useStore } from "@/lib/store"
 import { allDesignSystems, wireframeVars } from "@/lib/design-systems"
-import { buildSrcDoc, EXAMPLE_WIREFRAMES } from "@/lib/wireframe"
-import { currentModel, friendlyError, generate } from "@/lib/agent"
+import { buildSrcDoc, PREVIEW_WIREFRAME } from "@/lib/wireframe"
+import { friendlyError, generate } from "@/lib/agent"
 import { fetchDesignSystem, hasFigmaAccess, parseFigmaUrl } from "@/lib/figma"
 import { readAsText } from "@/lib/files"
 import { EASE_OUT } from "@/lib/ease"
@@ -212,9 +212,8 @@ function DesignSystemEditor({ ds, onBack, onOpen }: { ds: DesignSystem; onBack: 
       } else {
         throw new Error("Write the profile below, or pick a source to sync from.")
       }
-      const { demo } = currentModel()
       let profile = await generate(`Build the profile from this source material.\n\n${raw.slice(0, 40000)}`, PROFILE_SYSTEM, images)
-      if (!profile) profile = demo ? `(Demo agent: add a key in Settings to turn this into a profile.)\n\n${raw.slice(0, 3000)}` : raw.slice(0, 4000)
+      if (!profile) profile = raw.slice(0, 4000)
       upsert({ ...ds, ...patch, profile, status: "idle", updatedAt: Date.now() })
       toast.success("Design system synced")
     } catch (e) {
@@ -222,7 +221,7 @@ function DesignSystemEditor({ ds, onBack, onOpen }: { ds: DesignSystem; onBack: 
     }
   }
 
-  const previewDoc = useMemo(() => buildSrcDoc(EXAMPLE_WIREFRAMES[1].html, wireframeVars(ds)), [ds])
+  const previewDoc = useMemo(() => buildSrcDoc(PREVIEW_WIREFRAME, wireframeVars(ds)), [ds])
 
   return (
     <div className="h-full overflow-y-auto" data-scrollable>

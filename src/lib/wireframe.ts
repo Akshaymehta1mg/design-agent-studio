@@ -76,76 +76,22 @@ export function sanitizeWireframe(html: string): string {
     .replace(/<\/?(html|head|body)[^>]*>/gi, "")
 }
 
-// ───────── Example wireframes (used for the seeded example and the offline demo agent) ─────────
+// ───────── Neutral specimen for the design-system preview (never sent to the model) ─────────
 
-const status = `<div class="wf-status"><span>9:41</span><span>●●● ▲ ▮</span></div>`
-
-export const EXAMPLE_WIREFRAMES: { title: string; summary: string; html: string }[] = [
-  {
-    title: "Reserve a table",
-    summary: "Baseline: party size, date and time slots in one bottom sheet.",
-    html: `<div class="wf-screen">${status}
-<div class="wf-img" style="height:210px;border-radius:0"></div>
-<div class="wf-body" style="position:relative;margin-top:-26px;background:#fff;border-radius:18px 18px 0 0">
-  <div class="wf-col" style="gap:4px"><div class="wf-h1">Stella</div><div class="wf-text">Italian · $$ · Burlingame Ave · 0.8 mi</div></div>
-  <div class="wf-row"><span class="wf-tag">4.7 ★ (1.2k)</span><span class="wf-tag">Outdoor seating</span></div>
-  <div class="wf-divider"></div>
-  <div class="wf-h3">Find a reservation</div>
-  <div class="wf-grid" style="grid-template-columns:1fr 1fr">
-    <div class="wf-input" style="color:#1d1d1f">👤 2 guests</div>
-    <div class="wf-input" style="color:#1d1d1f">📅 Sat, Mar 29</div>
-  </div>
-  <div class="wf-label">Available times</div>
-  <div class="wf-grid" style="grid-template-columns:repeat(4,1fr)">
-    <span class="wf-chip">5:30</span><span class="wf-chip">6:00</span><span class="wf-chip wf-chip-on">6:15</span><span class="wf-chip">7:45</span>
-    <span class="wf-chip">8:00</span><span class="wf-chip">8:30</span><span class="wf-chip">9:00</span><span class="wf-chip">9:15</span>
-  </div>
-  <div class="wf-muted">Reservations powered by our booking partner</div>
-</div>
-<div class="wf-footer"><div class="wf-btn wf-btn-primary wf-btn-block">Continue</div></div>
-</div>`,
-  },
-  {
-    title: "Reserve a table",
-    summary: "Time slots grouped by sitting; seating preference and deposit shown before commit.",
-    html: `<div class="wf-screen">${status}
-<div class="wf-bar"><div class="wf-icon"></div><div class="wf-title">Stella · Reserve</div><div class="wf-icon"></div></div>
+export const PREVIEW_WIREFRAME = `<div class="wf-screen">
+<div class="wf-status"><span>9:41</span><span>●●● ▲ ▮</span></div>
+<div class="wf-bar"><div class="wf-icon"></div><div class="wf-title">Title</div><div class="wf-icon"></div></div>
 <div class="wf-body">
-  <div class="wf-card wf-row" style="gap:12px"><div class="wf-img" style="width:56px;height:56px;min-height:0"></div><div class="wf-col" style="gap:2px"><div class="wf-h3">Stella</div><div class="wf-muted">Italian · Burlingame Ave · Free cancellation until 4 pm</div></div></div>
-  <div class="wf-col" style="gap:8px"><div class="wf-label">Party size</div>
-    <div class="wf-scroll-x"><span class="wf-chip">1</span><span class="wf-chip wf-chip-on">2</span><span class="wf-chip">3</span><span class="wf-chip">4</span><span class="wf-chip">5</span><span class="wf-chip">6+</span></div></div>
-  <div class="wf-col" style="gap:8px"><div class="wf-label">Date</div>
-    <div class="wf-scroll-x"><span class="wf-chip">Today</span><span class="wf-chip">Fri 28</span><span class="wf-chip wf-chip-on">Sat 29</span><span class="wf-chip">Sun 30</span><span class="wf-chip">📅 More</span></div></div>
-  <div class="wf-col" style="gap:10px"><div class="wf-between"><div class="wf-label">Early evening</div><span class="wf-muted">3 left</span></div>
-    <div class="wf-grid" style="grid-template-columns:repeat(3,1fr)"><span class="wf-chip">5:30 pm</span><span class="wf-chip">6:00 pm</span><span class="wf-chip wf-chip-on">6:15 pm</span></div>
-    <div class="wf-between"><div class="wf-label">Late</div><span class="wf-muted">Filling fast</span></div>
-    <div class="wf-grid" style="grid-template-columns:repeat(3,1fr)"><span class="wf-chip">8:00 pm</span><span class="wf-chip">8:30 pm</span><span class="wf-chip">9:15 pm</span></div></div>
-  <div class="wf-fill wf-between"><div class="wf-col" style="gap:2px"><div class="wf-h3">Seating</div><div class="wf-muted">Indoor · Patio · Bar</div></div><span class="wf-chip">Indoor ▾</span></div>
-</div>
-<div class="wf-footer"><div class="wf-between"><span class="wf-muted">Sat 29 · 6:15 pm · 2 guests</span><span class="wf-muted">No deposit</span></div><div class="wf-btn wf-btn-primary wf-btn-block">Reserve 6:15 pm</div></div>
-</div>`,
-  },
-  {
-    title: "Reserve a table",
-    summary: "Smart default: next best slot pre-selected, one-tap confirm, details collapsed.",
-    html: `<div class="wf-screen">${status}
-<div class="wf-img" style="height:150px;border-radius:0"></div>
-<div class="wf-body">
-  <div class="wf-between"><div class="wf-col" style="gap:2px"><div class="wf-h2">Stella</div><div class="wf-muted">Italian · 0.8 mi · 4.7 ★</div></div><span class="wf-tag">Dine-out deal −15%</span></div>
-  <div class="wf-card wf-col" style="gap:10px;border-width:2px;border-color:#1d1d1f">
-    <div class="wf-label">Best match for you</div>
-    <div class="wf-between"><div class="wf-h1">6:15 pm</div><div class="wf-col" style="gap:0;text-align:right"><span class="wf-h3">Tonight</span><span class="wf-muted">2 guests · Indoor</span></div></div>
-    <div class="wf-btn wf-btn-primary wf-btn-block">Reserve in one tap</div>
-    <div class="wf-muted" style="text-align:center">Uses your saved name and phone</div>
-  </div>
-  <div class="wf-col" style="gap:8px"><div class="wf-label">Other times tonight</div>
-    <div class="wf-scroll-x"><span class="wf-chip">5:30</span><span class="wf-chip">6:00</span><span class="wf-chip">7:45</span><span class="wf-chip">8:30</span><span class="wf-chip">9:15</span></div></div>
+  <div class="wf-col" style="gap:4px"><div class="wf-h1">Heading</div><div class="wf-text">Supporting text sits under the heading.</div></div>
+  <div class="wf-img" style="height:150px"></div>
+  <div class="wf-col" style="gap:8px"><div class="wf-label">Options</div>
+    <div class="wf-scroll-x"><span class="wf-chip wf-chip-on">Selected</span><span class="wf-chip">Option</span><span class="wf-chip">Option</span></div></div>
+  <div class="wf-card wf-col" style="gap:8px"><div class="wf-h3">Card title</div><div class="wf-muted">Card body text</div></div>
+  <div class="wf-input">Input field</div>
   <div class="wf-list">
-    <div class="wf-between"><span>Change date or party size</span><span class="wf-muted">›</span></div>
-    <div class="wf-between"><span>Special requests</span><span class="wf-muted">›</span></div>
-    <div class="wf-between"><span>Cancellation policy</span><span class="wf-muted">Free until 4 pm ›</span></div>
+    <div class="wf-between"><span>List item</span><span class="wf-muted">›</span></div>
+    <div class="wf-between"><span>List item</span><span class="wf-muted">›</span></div>
   </div>
 </div>
-</div>`,
-  },
-]
+<div class="wf-footer"><div class="wf-btn wf-btn-primary wf-btn-block">Primary action</div><div class="wf-btn wf-btn-block">Secondary action</div></div>
+</div>`

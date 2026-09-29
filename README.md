@@ -12,7 +12,7 @@ npm run build        # static build in dist/
 
 **Deploying to Vercel:** see [DEPLOY.md](DEPLOY.md). The `/api` folder adds a small proxy, so you can give the deployment its own API keys (behind an access code) and people don't need their own.
 
-With no key, the app runs a scripted **demo agent** so you can try the canvas tools. Open **Settings**, add a key, click **Connect**, and the model menu fills with every model that key can use.
+The agent needs a model: open **Settings**, add a key, click **Connect**, and the model menu fills with every model that key can use.
 
 ## How it's put together
 

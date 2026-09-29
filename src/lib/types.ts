@@ -170,7 +170,6 @@ export interface Conversation {
   messages: ChatMessage[]
   canvas: CanvasDoc
   figma?: FigmaLink
-  example?: boolean
   /** Design system this project designs with */
   designSystemId?: string
 }
@@ -223,7 +222,7 @@ export interface ProductLibrary {
 
 // ───────────────────────────── Settings / models ─────────────────────────────
 
-export type ProviderId = "anthropic" | "openai" | "google" | "openrouter" | "custom" | "demo"
+export type ProviderId = "anthropic" | "openai" | "google" | "openrouter" | "custom"
 
 export interface ModelInfo {
   id: string
@@ -246,8 +245,9 @@ export interface ProviderKeyState {
 }
 
 export interface Settings {
-  providers: Record<Exclude<ProviderId, "demo">, ProviderKeyState>
+  providers: Record<ProviderId, ProviderKeyState>
   figmaToken: string
+  /** An empty id means no model has been picked yet. */
   selectedModel: { provider: ProviderId; id: string; name: string }
   speakReplies: boolean
   theme: "system" | "light" | "dark"

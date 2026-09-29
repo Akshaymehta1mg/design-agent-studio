@@ -23,8 +23,8 @@ export async function connectProvider(p: KeyedProvider, quiet = false) {
     const models = await fetchModels(p, state)
     if (!models.length) throw new Error("The key works, but no chat models came back.")
     patchProvider(p, { status: "ok", models, fetchedAt: Date.now(), server })
-    // Switch off the demo agent automatically the first time a key connects.
-    if (useStore.getState().settings.selectedModel.provider === "demo") {
+    // Pick a model automatically the first time a key connects.
+    if (!useStore.getState().settings.selectedModel.id) {
       const m = pickDefaultModel(models)
       if (m) patchSettings({ selectedModel: { provider: p, id: m.id, name: m.name } })
     }
@@ -162,7 +162,7 @@ export function SettingsPage() {
           <div className="text-muted-foreground flex items-center gap-2 text-[12.5px]">
             Using
             <Badge variant="secondary" className="font-mono text-[11px]">
-              {settings.selectedModel.provider === "demo" ? "Demo agent (offline)" : settings.selectedModel.id}
+              {settings.selectedModel.id || "No model selected"}
             </Badge>
           </div>
         </Card>
