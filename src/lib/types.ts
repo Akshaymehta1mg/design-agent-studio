@@ -21,6 +21,8 @@ export interface FrameNode {
   /** A prototype: every screen of a flow in one interactive file, linked with data-go */
   screens?: PrototypeScreen[]
   startScreen?: string
+  /** Every screen the agent planned, including ones it hasn't added yet */
+  plannedScreens?: { id: string; title: string }[]
   /** Graph for workflow frames */
   workflow?: Workflow
   device?: Device

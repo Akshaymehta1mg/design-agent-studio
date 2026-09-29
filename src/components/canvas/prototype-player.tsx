@@ -159,6 +159,7 @@ export function PrototypeCard({ frameId }: { frameId: string }) {
   const play = useStore((s) => s.playPrototype)
   const focusNode = useStore((s) => s.focusNode)
   if (!f) return null
+  const pending = (f.plannedScreens ?? []).filter((p) => !f.screens!.some((s) => s.id === p.id))
   return (
     <div className="bg-card overflow-hidden rounded-2xl border">
       <div className="flex items-center gap-2.5 px-3.5 pt-3">
@@ -170,12 +171,20 @@ export function PrototypeCard({ frameId }: { frameId: string }) {
             {f.title}
             {f.version && f.version > 1 ? ` · V${f.version}` : ""}
           </div>
-          <div className="text-muted-foreground text-[12px]">Interactive prototype · {f.screens!.length} screens</div>
+          <div className="text-muted-foreground text-[12px]">
+            Interactive prototype · {f.screens!.length}
+            {pending.length ? ` of ${f.screens!.length + pending.length}` : ""} screens
+          </div>
         </div>
       </div>
       <div className="flex flex-wrap gap-1 px-3.5 pt-2.5">
         {f.screens!.map((s) => (
           <span key={s.id} className="bg-muted text-muted-foreground max-w-[160px] truncate rounded-full px-2 py-0.5 text-[11.5px]">
+            {s.title}
+          </span>
+        ))}
+        {pending.map((s) => (
+          <span key={s.id} className="text-muted-foreground/70 max-w-[160px] truncate rounded-full border border-dashed px-2 py-0.5 text-[11.5px]" title="Not built yet">
             {s.title}
           </span>
         ))}

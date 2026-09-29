@@ -1,6 +1,6 @@
-import type { ActionLog, FrameNode, Mark, NoteNode, Device } from "./types"
+import type { ActionLog, FrameNode, Mark, NoteNode, Device, PrototypeScreen } from "./types"
 import { frameLabel, placeNewRow, placeNextVersion, findFreeSpot, uid, useStore } from "./store"
-import { checkPrototype, DEVICE_SIZES, normalizeScreens, sanitizeWireframe } from "./wireframe"
+import { checkPrototype, DEVICE_SIZES, normalizeScreens, sanitizeWireframe, screenSlug } from "./wireframe"
 import { hasFigmaAccess, postComment } from "./figma"
 import { allDesignSystems } from "./design-systems"
 
@@ -58,76 +58,166 @@ export function createWireframe(convId: string, input: { title: string; html: st
 }
 
 // ───────── prototypes ─────────
+// A prototype is built over a few calls: create_prototype plans every screen and builds the first few,
+// add_prototype_screens builds the rest into the same frame, so no single model response has to hold the whole flow.
 
 type ScreenInput = { id?: string; title: string; html: string }
+type PlanInput = { id: string; title: string }[]
 
-function prototypeFrame(convId: string, input: { title: string; screens: ScreenInput[]; start?: string; device?: Device; summary?: string }) {
-  const { screens, rename } = normalizeScreens(input.screens)
-  const start = (input.start && (rename.get(input.start) ?? screens.find((s) => s.id === input.start)?.id)) || screens[0].id
-  const device = input.device ?? "mobile"
-  const size = frameSize(convId, device)
-  const frame = {
-    kind: "frame" as const,
-    type: "wireframe" as const,
-    w: size.w,
-    h: size.h,
-    title: input.title.slice(0, 60),
-    html: screens.find((s) => s.id === start)!.html,
-    screens,
-    startScreen: start,
-    device,
-    source: "agent" as const,
-    designSystemId: dsIdFor(convId),
-    changeSummary: input.summary,
-    createdAt: Date.now(),
+/** Replace screens with the same id, append new ones. */
+function mergeScreens(base: PrototypeScreen[], incoming: PrototypeScreen[]) {
+  const out = [...base]
+  for (const s of incoming) {
+    const i = out.findIndex((x) => x.id === s.id)
+    if (i >= 0) out[i] = s
+    else out.push(s)
   }
-  const { broken, unreachable } = checkPrototype(screens, start)
-  const issues = [
-    broken.length ? `Broken links: ${broken.join("; ")}. Fix them with iterate_prototype.` : "",
-    unreachable.length ? `Nothing links to: ${unreachable.join(", ")}.` : "",
+  return out
+}
+
+function normalizePlan(plan: PlanInput | undefined, screens: PrototypeScreen[]) {
+  const list = (plan ?? []).map((p) => ({ id: screenSlug(p.id || p.title), title: p.title.slice(0, 60) }))
+  // Built screens are always part of the plan, in plan order first.
+  for (const s of screens) if (!list.some((p) => p.id === s.id)) list.push({ id: s.id, title: s.title })
+  return list
+}
+
+/** What the agent is told after each call: what's built, what's still to build, and any broken links. */
+function prototypeReport(f: FrameNode) {
+  const screens = f.screens ?? []
+  const planned = f.plannedScreens ?? []
+  const todo = planned.filter((p) => !screens.some((s) => s.id === p.id))
+  const { broken, unreachable } = checkPrototype(screens, f.startScreen ?? "", planned.map((p) => p.id))
+  return [
+    `Built ${screens.length}${planned.length > screens.length ? ` of ${planned.length}` : ""} screens: ${screenList(screens)}. Starts on ${f.startScreen}.`,
+    todo.length ? `Still to build: ${screenList(todo)}. Call add_prototype_screens with frame_id ${f.id} for the next 2–4 of them.` : "",
+    broken.length ? `Broken links: ${broken.join("; ")}. Fix them by re-sending those screens with add_prototype_screens.` : "",
+    !todo.length && unreachable.length ? `Nothing links to: ${unreachable.join(", ")}.` : "",
   ]
     .filter(Boolean)
     .join(" ")
-  return { frame, screens, start, issues }
 }
 
 const screenList = (screens: { id: string; title: string }[]) => screens.map((s) => `${s.id} (${s.title})`).join(", ")
 
-/** One interactive prototype holding every screen of the flow. */
-export function createPrototype(convId: string, input: { title: string; screens: ScreenInput[]; start?: string; device?: Device; summary?: string }): ActionResult & { frameId?: string } {
+/** Screens in plan order (the order the flow reads in), unplanned ones last; also picks the start screen. */
+function withStart(frame: FrameNode, start?: string): FrameNode {
+  const order = new Map((frame.plannedScreens ?? []).map((p, i) => [p.id, i]))
+  const screens = [...(frame.screens ?? [])].sort((a, b) => (order.get(a.id) ?? 1e3) - (order.get(b.id) ?? 1e3))
+  frame = { ...frame, screens }
+  const id = (start && screens.find((s) => s.id === screenSlug(start) || s.id === start)?.id) || (frame.startScreen && screens.some((s) => s.id === frame.startScreen) ? frame.startScreen : screens[0]?.id)
+  return { ...frame, startScreen: id, html: screens.find((s) => s.id === id)?.html ?? "" }
+}
+
+/** A new prototype: the plan for the whole flow and its first screens. */
+export function createPrototype(convId: string, input: { title: string; screens: ScreenInput[]; plan?: PlanInput; start?: string; device?: Device; summary?: string }): ActionResult & { frameId?: string } {
   if (!input.screens?.length) return { ok: false, message: "A prototype needs at least one screen." }
-  const p = prototypeFrame(convId, input)
+  const known = (input.plan ?? []).map((p) => screenSlug(p.id || p.title))
+  const { screens } = normalizeScreens(input.screens, known)
+  const device = input.device ?? "mobile"
+  const size = frameSize(convId, device)
   const nodes = conv(convId)?.canvas.nodes ?? []
-  const frame: FrameNode = { ...p.frame, id: uid("f_"), ...placeNewRow(nodes, p.frame.w, p.frame.h), lineageId: uid("l_"), version: 1 }
+  const frame = withStart(
+    {
+      id: uid("f_"),
+      kind: "frame",
+      type: "wireframe",
+      ...placeNewRow(nodes, size.w, size.h),
+      w: size.w,
+      h: size.h,
+      title: input.title.slice(0, 60),
+      screens,
+      plannedScreens: normalizePlan(input.plan, screens),
+      device,
+      source: "agent",
+      designSystemId: dsIdFor(convId),
+      lineageId: uid("l_"),
+      version: 1,
+      changeSummary: input.summary,
+      createdAt: Date.now(),
+    },
+    input.start,
+  )
   useStore.getState().editCanvas((d) => ({ ...d, nodes: [...d.nodes, frame] }), { convId })
   useStore.getState().focusNode(frame.id)
   return {
     ok: true,
     frameId: frame.id,
-    message: `Created prototype ${frameLabel(frame)} (id ${frame.id}) with ${p.screens.length} screens: ${screenList(p.screens)}. Starts on ${p.start}.${p.issues ? ` ${p.issues}` : ""}`,
-    log: { id: uid(), label: `Prototype: ${frame.title} · ${p.screens.length} screens`, targetId: frame.id, tone: "create" },
+    message: `Created prototype ${frameLabel(frame)} (id ${frame.id}). ${prototypeReport(frame)}`,
+    log: { id: uid(), label: `Prototype: ${frame.title}`, targetId: frame.id, tone: "create" },
   }
 }
 
-/** The next version of a prototype (or a wireframe turned into one), beside the source. */
-export function iteratePrototype(convId: string, input: { source_frame_id: string; change_summary: string; screens: ScreenInput[]; start?: string; title?: string; device?: Device }): ActionResult & { frameId?: string } {
+/** Add or replace screens in a prototype that's being built in this turn. */
+export function addPrototypeScreens(convId: string, input: { frame_id: string; screens: ScreenInput[]; start?: string }, building: Set<string>): ActionResult {
+  const src = findFrame(convId, input.frame_id)
+  if (!src?.screens) return { ok: false, message: `No prototype with id ${input.frame_id}.` }
+  if (!building.has(src.id)) return { ok: false, message: `Prototype ${src.id} is finished; use iterate_prototype to make its next version.` }
+  if (!input.screens?.length) return { ok: false, message: "Send at least one screen." }
+  const known = [...src.screens.map((s) => s.id), ...(src.plannedScreens ?? []).map((p) => p.id)]
+  const { screens } = normalizeScreens(input.screens, known)
+  const merged = mergeScreens(src.screens, screens)
+  const frame = withStart({ ...src, screens: merged, plannedScreens: normalizePlan(src.plannedScreens, merged) }, input.start)
+  useStore.getState().editCanvas((d) => ({ ...d, nodes: d.nodes.map((n) => (n.id === frame.id ? frame : n)) }), { convId, record: false })
+  return { ok: true, message: `Added ${screenList(screens)} to ${frameLabel(frame)}. ${prototypeReport(frame)}` }
+}
+
+/**
+ * The next version of a prototype (or a wireframe turned into one), beside the source.
+ * Unchanged screens carry over; send only new or changed ones, and add more with add_prototype_screens.
+ */
+export function iteratePrototype(
+  convId: string,
+  input: { source_frame_id: string; change_summary: string; screens: ScreenInput[]; remove?: string[]; plan?: PlanInput; start?: string; title?: string; device?: Device },
+): ActionResult & { frameId?: string } {
   const src = findFrame(convId, input.source_frame_id)
   if (!src) return { ok: false, message: `No frame with id ${input.source_frame_id}. Use create_prototype for a new flow.` }
-  if (!input.screens?.length) return { ok: false, message: "Send every screen of the new version, including unchanged ones." }
+  if (!input.screens?.length && !input.remove?.length) return { ok: false, message: "Send the new or changed screens (unchanged ones carry over)." }
   const nodes = conv(convId)!.canvas.nodes
   const lineageId = src.lineageId ?? uid("l_")
   const lineage = nodes.filter((n): n is FrameNode => n.kind === "frame" && n.lineageId === lineageId)
   const version = src.lineageId ? Math.max(...lineage.map((f) => f.version ?? 1)) + 1 : 2
-  const p = prototypeFrame(convId, { title: input.title ?? src.title, screens: input.screens, start: input.start ?? src.startScreen, device: input.device ?? src.device, summary: input.change_summary })
-  const pos = src.lineageId ? placeNextVersion(nodes, lineageId, p.frame.w, p.frame.h) : findFreeSpot(nodes, { x: src.x + src.w + 120, y: src.y, w: p.frame.w, h: p.frame.h }, "right")
-  const frame: FrameNode = { ...p.frame, id: uid("f_"), ...pos, lineageId, version, parentId: src.id }
+  const removed = new Set((input.remove ?? []).map(screenSlug))
+  // A plain wireframe becomes the first screen of the new prototype.
+  const base = (src.screens ?? (src.type === "wireframe" && src.html ? [{ id: screenSlug(src.title), title: src.title, html: src.html }] : [])).filter((s) => !removed.has(s.id))
+  const known = [...base.map((s) => s.id), ...(input.plan ?? src.plannedScreens ?? []).map((p) => screenSlug(p.id || p.title))]
+  const { screens } = normalizeScreens(input.screens ?? [], known)
+  const merged = mergeScreens(base, screens)
+  if (!merged.length) return { ok: false, message: "The new version would have no screens." }
+  const device = input.device ?? src.device ?? "mobile"
+  const size = frameSize(convId, device)
+  const pos = src.lineageId ? placeNextVersion(nodes, lineageId, size.w, size.h) : findFreeSpot(nodes, { x: src.x + src.w + 120, y: src.y, w: size.w, h: size.h }, "right")
+  const plan = normalizePlan((input.plan ?? src.plannedScreens)?.filter((p) => !removed.has(screenSlug(p.id || p.title))), merged)
+  const frame = withStart(
+    {
+      id: uid("f_"),
+      kind: "frame",
+      type: "wireframe",
+      ...pos,
+      w: size.w,
+      h: size.h,
+      title: (input.title ?? src.title).slice(0, 60),
+      screens: merged,
+      plannedScreens: plan,
+      startScreen: src.startScreen,
+      device,
+      source: "agent",
+      designSystemId: dsIdFor(convId),
+      lineageId,
+      version,
+      parentId: src.id,
+      changeSummary: input.change_summary,
+      createdAt: Date.now(),
+    },
+    input.start,
+  )
   const patchSrc = src.lineageId ? null : { ...src, lineageId, version: 1 }
   useStore.getState().editCanvas((d) => ({ ...d, nodes: [...d.nodes.map((n) => (patchSrc && n.id === patchSrc.id ? patchSrc : n)), frame] }), { convId })
   useStore.getState().focusNode(frame.id)
   return {
     ok: true,
     frameId: frame.id,
-    message: `Created prototype ${frameLabel(frame)} (id ${frame.id}) next to ${frameLabel(src)}, which is unchanged. Screens: ${screenList(p.screens)}.${p.issues ? ` ${p.issues}` : ""}`,
+    message: `Created prototype ${frameLabel(frame)} (id ${frame.id}) next to ${frameLabel(src)}, which is unchanged. ${prototypeReport(frame)}`,
     log: { id: uid(), label: `Prototype: ${frame.title} · V${version}`, targetId: frame.id, tone: "create" },
   }
 }

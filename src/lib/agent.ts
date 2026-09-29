@@ -3,7 +3,7 @@ import { z } from "zod"
 import type { ActionLog, Attachment, ChatMessage, Conversation, FrameNode, MessagePart, ProductLibrary } from "./types"
 import { frameLabel, uid, useStore } from "./store"
 import { getLanguageModel, type KeyedProvider } from "./providers"
-import { addMarks, addNote, createPrototype, createWireframe, createWorkflow, figmaComment, iteratePrototype, iterateWireframe, type ActionResult } from "./canvas-actions"
+import { addMarks, addNote, addPrototypeScreens, createPrototype, createWireframe, createWorkflow, figmaComment, iteratePrototype, iterateWireframe, type ActionResult } from "./canvas-actions"
 import { addPrototypePart, addWorkflowPart, appendText, askUser, setPlan, upsertPart } from "./message-parts"
 import { dataUrlParts } from "./files"
 import { allDesignSystems, BUILTIN_DESIGN_SYSTEMS } from "./design-systems"
@@ -127,8 +127,9 @@ Studio rules
 - Never ask the designer questions in plain chat text: every question goes through ask_user.
 
 Canvas tools
-- create_prototype: the default whenever the designer asks for a wireframe, screens, a flow or a prototype. ONE call builds every screen and essential state of the flow as ONE interactive HTML file the designer can click through. Link the screens (see Prototype links) so the whole flow works end to end.
-- iterate_prototype: the next version of a prototype (V2, V3…) beside the source. Send every screen again, changed or not. Also use it to turn an existing wireframe into a clickable flow.
+- create_prototype: the default whenever the designer asks for a wireframe, screens, a flow or a prototype. It makes ONE interactive HTML file holding every screen and essential state, which the designer clicks through. Build it in 2–3 smaller calls, never one huge one: create_prototype with the plan (every screen id and title) and the first 2–4 screens, then add_prototype_screens with the next 2–4 until the plan is built. Link the screens (see Prototype links) so the whole flow works end to end; links to planned screens you haven't built yet are fine.
+- add_prototype_screens: add the next screens to the prototype you're building in this turn (or re-send a screen to fix it). The result says what's still to build.
+- iterate_prototype: the next version of a prototype (V2, V3…) beside the source. Send only new or changed screens (up to 4); unchanged ones carry over, and remove drops screens. Add further screens with add_prototype_screens. Also turns an existing wireframe into a clickable flow.
 - create_wireframe: only for a single standalone static screen when the designer explicitly asks for one frame, or for exploring layout variants side by side.
 - iterate_wireframe: revise, try another version, apply feedback or explore a variant of a single-screen wireframe. This ALWAYS creates a new version next to the source (V2, V3…); you cannot edit an existing frame. Iterate from the latest version in a lineage unless the designer points at a specific one. You can also iterate from a screenshot.
 ${opts.markup ? `- annotate: mark regions of a frame (x, y, w, h as fractions 0–1 of the frame from its top-left). Keep each label under 30 words; lead with the problem.
@@ -152,7 +153,7 @@ Prototype links (create_prototype / iterate_prototype)
 - Overlays (bottom sheets, dialogs, menus, pickers) live inside the screen that opens them: <div class="wf-overlay" data-overlay="coupon"><div class="wf-sheet">…<div class="wf-btn" data-close>Close</div></div></div>. Add wf-center to the overlay for a centred dialog. They start hidden.
 - Represent other states (empty, error, loading, success) as their own screens and link to them from where they'd happen.
 - Real <input>, <select> and <textarea> elements work, so forms can be typed into. No scripts, no onclick; the studio adds the behaviour.
-- Keep markup lean (helper classes, few inline styles) so all screens fit in one call: up to 10 screens.
+- Keep markup lean (helper classes, few inline styles). At most 4 screens per call; up to 12 screens in a prototype.
 ${opts.connectors?.length ? `\nConnected tools\n- You can also use tools from: ${opts.connectors.join(", ")}. Tool names are prefixed with the connector.\n` : ""}
 ${PRISM_ADAPTER}
 
@@ -242,59 +243,78 @@ function toModelMessages(c: Conversation, current: ChatMessage): ModelMessage[] 
 // ───────────────────────── tools ─────────────────────────
 
 const deviceEnum = z.enum(["mobile", "tablet", "desktop"])
+const screensInput = z
+  .array(
+    z.object({
+      id: z.string().describe("Short screen id used in links, e.g. 'cart'"),
+      title: z.string().describe("Screen name, e.g. 'Cart'"),
+      html: z.string().describe("HTML fragment for this screen, with data-go / data-back / data-open / data-close links"),
+    }),
+  )
+  .min(1)
+  .max(4)
+  .describe("2–4 screens per call")
+const planInput = z
+  .array(z.object({ id: z.string(), title: z.string() }))
+  .max(12)
+  .describe("Every screen of the flow in order (id and title), including ones you'll add in later calls")
 
 function canvasTools(convId: string, msgId: string, log: (r: ActionResult) => void, figma: boolean, markup: boolean, signal?: AbortSignal) {
   const loc = { convId, msgId }
   let asks = 0
+  /** Prototypes started in this turn, which add_prototype_screens may extend. */
+  const building = new Set<string>()
   const wrap = (r: ActionResult) => {
     log(r)
     return r.message
   }
   const tools = {
     create_prototype: tool({
-      description: "Build every screen of a flow as ONE interactive, clickable HTML prototype on the canvas (version 1 of a new lineage).",
+      description: "Start ONE interactive, clickable HTML prototype on the canvas (version 1 of a new lineage): the plan for every screen, and the first 2–4 screens. Add the rest with add_prototype_screens.",
       inputSchema: z.object({
         title: z.string().describe("Name of the flow, e.g. 'Checkout'"),
         device: deviceEnum.default("mobile"),
         summary: z.string().describe("One sentence on the flow and the idea behind it"),
+        plan: planInput.optional().describe("Every screen of the flow in order (id and title), including ones you'll add in later calls. Leave out only when all screens are in this call."),
         start: z.string().describe("Id of the first screen"),
-        screens: z.array(
-          z.object({
-            id: z.string().describe("Short screen id used in links, e.g. 'cart'"),
-            title: z.string().describe("Screen name, e.g. 'Cart'"),
-            html: z.string().describe("HTML fragment for this screen, with data-go / data-back / data-open / data-close links"),
-          }),
-        )
-        .min(1)
-        .max(12),
+        screens: screensInput,
       }),
       execute: async (i) => {
         const r = createPrototype(convId, i)
-        if (r.frameId) addPrototypePart(loc, r.frameId)
+        if (r.frameId) {
+          building.add(r.frameId)
+          addPrototypePart(loc, r.frameId)
+        }
         return wrap(r)
       },
     }),
+    add_prototype_screens: tool({
+      description: "Add the next 2–4 screens to the prototype you're building in this turn, or re-send a screen (same id) to replace it.",
+      inputSchema: z.object({
+        frame_id: z.string(),
+        screens: screensInput,
+        start: z.string().optional().describe("Change the first screen"),
+      }),
+      execute: async (i) => wrap(addPrototypeScreens(convId, i, building)),
+    }),
     iterate_prototype: tool({
-      description: "Create the NEXT VERSION of a prototype (or turn a wireframe into one) as a new frame beside it. Send every screen, changed or not.",
+      description: "Create the NEXT VERSION of a prototype (or turn a wireframe into one) as a new frame beside it. Send only new or changed screens (up to 4); unchanged ones carry over. Add more with add_prototype_screens.",
       inputSchema: z.object({
         source_frame_id: z.string(),
         change_summary: z.string().describe("What changed vs the source and why, one or two sentences"),
         title: z.string().optional(),
         device: deviceEnum.optional(),
         start: z.string().optional(),
-        screens: z.array(
-          z.object({
-            id: z.string().describe("Short screen id used in links, e.g. 'cart'"),
-            title: z.string().describe("Screen name, e.g. 'Cart'"),
-            html: z.string().describe("HTML fragment for this screen, with data-go / data-back / data-open / data-close links"),
-          }),
-        )
-        .min(1)
-        .max(12),
+        plan: planInput.optional().describe("The full screen list if it changes (new screens you'll add later)"),
+        remove: z.array(z.string()).optional().describe("Ids of screens to drop"),
+        screens: screensInput,
       }),
       execute: async (i) => {
         const r = iteratePrototype(convId, i)
-        if (r.frameId) addPrototypePart(loc, r.frameId)
+        if (r.frameId) {
+          building.add(r.frameId)
+          addPrototypePart(loc, r.frameId)
+        }
         return wrap(r)
       },
     }),
@@ -507,6 +527,7 @@ export function stopAgent() {
 const ACTIVITY: Record<string, string> = {
   create_prototype: "Building the prototype…",
   iterate_prototype: "Building the next version…",
+  add_prototype_screens: "Adding screens…",
   create_wireframe: "Drawing a wireframe…",
   iterate_wireframe: "Drawing the next version…",
   annotate: "Marking up the frame…",
@@ -596,7 +617,7 @@ export async function runChat(convId: string, userMsg: ChatMessage) {
           messages,
           tools: opts.tools ?? tools,
           toolChoice: opts.toolChoice,
-          stopWhen: stepCountIs(opts.steps ?? 10),
+          stopWhen: stepCountIs(opts.steps ?? 14),
           abortSignal: signal,
           maxOutputTokens: 16000,
           // Text-only models reject images anywhere in the history, including tool results.

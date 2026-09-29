@@ -165,8 +165,13 @@ export function prepareScreenHtml(html: string): string {
   return sanitizeWireframe(html).replace(/<([a-z][a-z0-9]*)(\s[^>]*?)?\sdata-overlay=/gi, (m, tag: string, attrs = "") => (/\shidden\b/i.test(attrs) ? m : `<${tag}${attrs} hidden data-overlay=`))
 }
 
-/** Normalise the agent's screens: unique slug ids, sanitized HTML, links rewritten to the new ids. */
-export function normalizeScreens(input: { id?: string; title: string; html: string }[]): { screens: PrototypeScreen[]; rename: Map<string, string> } {
+export const screenSlug = (s: string) => slug(s)
+
+/**
+ * Normalise a batch of the agent's screens: unique slug ids, sanitized HTML, links rewritten to the ids.
+ * `known` are ids of screens already built or planned, so links to them resolve too.
+ */
+export function normalizeScreens(input: { id?: string; title: string; html: string }[], known: string[] = []): { screens: PrototypeScreen[]; rename: Map<string, string> } {
   const rename = new Map<string, string>()
   const used = new Set<string>()
   const screens = input.map((s) => {
@@ -177,19 +182,24 @@ export function normalizeScreens(input: { id?: string; title: string; html: stri
     rename.set(s.title, rename.get(s.title) ?? id)
     return { id, title: s.title.slice(0, 60), html: s.html }
   })
-  const fix = (v: string) => rename.get(v) ?? rename.get(slug(v)) ?? (used.has(slug(v)) ? slug(v) : v)
+  const all = new Set([...used, ...known])
+  const fix = (v: string) => rename.get(v) ?? rename.get(slug(v)) ?? (all.has(slug(v)) ? slug(v) : v)
   for (const s of screens) s.html = prepareScreenHtml(s.html).replace(/data-go\s*=\s*(["'])(.*?)\1/gi, (_, q: string, v: string) => `data-go=${q}${fix(v)}${q}`)
   return { screens, rename }
 }
 
-/** Links that point nowhere and screens nothing links to, so the agent can fix its flow. */
-export function checkPrototype(screens: PrototypeScreen[], start: string) {
+/** Links that point nowhere and screens nothing links to, so the agent can fix its flow. Links to planned screens count as pending. */
+export function checkPrototype(screens: PrototypeScreen[], start: string, planned: string[] = []) {
   const ids = new Set(screens.map((s) => s.id))
+  const later = new Set(planned.filter((p) => !ids.has(p)))
   const broken: string[] = []
   const reached = new Set([start])
   for (const s of screens) {
     const overlays = new Set([...s.html.matchAll(/data-overlay\s*=\s*["']([^"']+)["']/gi)].map((m) => m[1]))
-    for (const m of s.html.matchAll(/data-go\s*=\s*["']([^"']+)["']/gi)) (ids.has(m[1]) ? reached.add(m[1]) : broken.push(`${s.id} → ${m[1]}`))
+    for (const m of s.html.matchAll(/data-go\s*=\s*["']([^"']+)["']/gi)) {
+      if (ids.has(m[1])) reached.add(m[1])
+      else if (!later.has(m[1])) broken.push(`${s.id} → ${m[1]}`)
+    }
     for (const m of s.html.matchAll(/data-open\s*=\s*["']([^"']+)["']/gi)) if (!overlays.has(m[1])) broken.push(`${s.id} opens missing overlay ${m[1]}`)
   }
   const unreachable = screens.filter((s) => !reached.has(s.id)).map((s) => s.id)
