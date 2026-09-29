@@ -297,6 +297,32 @@ export interface DesignSystem {
   error?: string
 }
 
+/** The team's edits on top of a design system's extracted reference (the original files stay untouched). */
+export interface DesignEdits {
+  /** "paletteId:stop" → hex */
+  palettes?: Record<string, string>
+  /** semantic token name → hex */
+  semantic?: Record<string, string>
+  /** brand colour name → hex */
+  brand?: Record<string, string>
+  /** type style name → "size / weight / line height" */
+  type?: Record<string, string>
+  /** "tabKey:token name" → value, for spacing, radius, shadow and gradient tokens */
+  tokens?: Record<string, string>
+  /** Changes made to a component or page through Prism */
+  components?: Record<string, ComponentEdit>
+}
+
+export interface ComponentEdit {
+  /** One line, shown in the list of changes */
+  summary: string
+  /** The component's updated rules, in Markdown; overrides the original where they differ */
+  spec: string
+  /** Visual adjustments applied to the component's demo specimens */
+  specimens?: { match: string; style: Record<string, string> }[]
+  updatedAt: number
+}
+
 // ───────────────────────────── Connectors (MCP) ─────────────────────────────
 
 export interface Connector {

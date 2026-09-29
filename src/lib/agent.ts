@@ -15,7 +15,7 @@ const MAX_ASKS_PER_TURN = 2
 import { loadPrismDoc, PRISM_ADAPTER, PRISM_CORE, PRISM_DOCS, RX_FALLBACK_IMAGE, searchDesignSystemReference, searchVisualResearch, TATA_1MG_ASSET_BASE, VISUAL_RESEARCH_URL, visualResearchPatterns } from "./prism"
 import { DEVICE_SIZES } from "./wireframe"
 import { imageForModel } from "./relay"
-import { loadDesignReference, referenceIndex, referenceKeys, referenceSection } from "./design-reference"
+import { editsSummary, loadDesignReference, referenceIndex, referenceKeys, referenceSection } from "./design-reference"
 import DS_ASSETS from "@/prism/design-system/assets.json"
 import { hasFigmaAccess } from "./figma"
 import { viaServer, type ServerUpstream } from "./server"
@@ -93,6 +93,7 @@ export function systemPrompt(c: Conversation, product: ProductLibrary, opts: { f
   const ctx = productContext(product)
   const ds = designSystemFor(c)
   const mobile = ds.viewport ?? DEVICE_SIZES.mobile
+  const edits = editsSummary(useStore.getState().designEdits[ds.id])
   return `You are Prism, the design agent in Design Agent Studio, working with a designer on a shared canvas: screenshots, Figma exports and your own wireframes sit on it side by side. Prism core (below) governs how you work on every brief.
 
 Studio rules
@@ -126,6 +127,7 @@ ${PRISM_CORE}
 
 Design system for this project: ${ds.name}${ds.referenceUrl ? " (component reference searchable with read_design_system)" : ""}
 ${ds.profile}
+${edits ? `\nTeam edits to this design system (these override the guide above and the original reference)\n${edits}\n` : ""}
 
 ${decisionsSection(c)}${ctx ? `Product context\n${ctx}\n\n` : ""}Canvas right now
 ${canvasInventory(c)}`
@@ -362,7 +364,7 @@ function prismTools(convId: string) {
         const hasReference = ds.id === "ds_tata1mg"
         if (section?.trim()) {
           if (!hasReference) return `${ds.name} has no reference sections. Use its guide instead.`
-          return (await referenceSection(section)) ?? `No section "${section}". Sections: colors, ${(await referenceKeys()).join(", ")}.`
+          return (await referenceSection(section, useStore.getState().designEdits[ds.id])) ?? `No section "${section}". Sections: colors, ${(await referenceKeys()).join(", ")}.`
         }
         if (query?.trim()) {
           if (!ds.referenceUrl) return `${ds.name} has no component reference to search. Use its guide instead.`

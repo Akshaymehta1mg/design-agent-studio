@@ -11,6 +11,7 @@ import type {
   Mode,
   Page,
   DesignSystem,
+  DesignEdits,
   Connector,
   ProductLibrary,
   ProviderId,
@@ -227,6 +228,9 @@ interface State {
   upsertDesignSystem: (ds: DesignSystem) => void
   deleteDesignSystem: (id: string) => void
   setDefaultDesignSystem: (id: string) => void
+  /** Edits layered on a design system's extracted reference, by design system id */
+  designEdits: Record<string, DesignEdits>
+  patchDesignEdits: (dsId: string, fn: (e: DesignEdits) => DesignEdits) => void
   connectors: Connector[]
   upsertConnector: (c: Connector) => void
   patchConnector: (id: string, patch: Partial<Connector>) => void
@@ -286,6 +290,8 @@ export const useStore = create<State>()(
           defaultDesignSystemId: s.defaultDesignSystemId === id ? DEFAULT_DESIGN_SYSTEM_ID : s.defaultDesignSystemId,
         })),
       setDefaultDesignSystem: (defaultDesignSystemId) => set({ defaultDesignSystemId }),
+      designEdits: {},
+      patchDesignEdits: (dsId, fn) => set((s) => ({ designEdits: { ...s.designEdits, [dsId]: fn(s.designEdits[dsId] ?? {}) } })),
       connectors: [],
       upsertConnector: (c) => set((s) => ({ connectors: s.connectors.some((x) => x.id === c.id) ? s.connectors.map((x) => (x.id === c.id ? c : x)) : [...s.connectors, c] })),
       patchConnector: (id, patch) => set((s) => ({ connectors: s.connectors.map((x) => (x.id === id ? { ...x, ...patch } : x)) })),
@@ -411,6 +417,7 @@ export const useStore = create<State>()(
         route: s.route,
         designSystems: s.designSystems,
         defaultDesignSystemId: s.defaultDesignSystemId,
+        designEdits: s.designEdits,
         connectors: s.connectors.map((c) => ({ ...c, status: c.status === "checking" ? ("untested" as const) : c.status })),
       }),
       merge: (persisted, current) => {

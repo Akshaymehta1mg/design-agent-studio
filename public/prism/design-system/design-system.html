@@ -16089,7 +16089,10 @@ function SearchPage(){const terms=["'medicines'","'lab tests and packages'","'sh
 function SCP({title,desc,ic,pv,td,tc,sections}){return <><PH label="Component"title={title}desc={desc}/>{ic&&<div className="ir">{ic.map(([l,v],i)=><div className="ic"key={i}><div className="il">{l}</div><div className="iv">{v}</div></div>)}</div>}{pv&&<div className="pb">{pv}</div>}{td&&<Table dataSource={td}pagination={false}size="small"bordered columns={tc}style={{marginBottom:16}}/>}{sections&&sections.map((s,i)=><div key={i}>{s.title&&<ST ch={s.title}/>}{s.desc&&<p className="sd">{s.desc}</p>}{s.pv&&<div className="pb">{s.pv}</div>}{s.td&&<Table dataSource={s.td}pagination={false}size="small"bordered columns={s.tc}style={{marginBottom:16}}/>}</div>)}</>}
 
 function App(){
-const[pg,setPg]=useState('overview');
+// Design Agent Studio: #<tab> opens that tab; ?embed shows only the tab content (no menu or header).
+const EMBED=new URLSearchParams(location.search).has('embed');
+const[pg,setPg]=useState(()=>decodeURIComponent(location.hash.slice(1))||'overview');
+React.useEffect(()=>{const f=()=>setPg(decodeURIComponent(location.hash.slice(1))||'overview');window.addEventListener('hashchange',f);return()=>window.removeEventListener('hashchange',f)},[]);
 const all={overview:'Overview',...FP,...CP};
 const mi=[{key:'overview',label:'Overview'},{key:'f',label:'Foundations',type:'group',children:Object.entries(FP).map(([k,v])=>({key:k,label:v}))},{key:'c',label:'Components',type:'group',children:Object.entries(CP).map(([k,v])=>({key:k,label:v}))}];
 
@@ -16171,6 +16174,7 @@ case'search':return <SearchPage/>;
 case'navigation':return <SCP title="Navigation"desc="Chevrons + arrows. 2 weights × 4 directions."td={[{key:'1',i:'Chevron',b:'Bold / Regular',d:'Left, Right, Up, Down'},{key:'2',i:'Arrow',b:'Bold / Regular',d:'Left, Right'}]}tc={[{title:'Icon',dataIndex:'i',width:100},{title:'Weight',dataIndex:'b'},{title:'Directions',dataIndex:'d'}]}/>;
 default:return null}};
 
+if(EMBED)return <ConfigProvider theme={{token:{colorPrimary:'#181a1f',fontFamily:"'Figtree',-apple-system,sans-serif",borderRadius:6}}}><div style={{background:'#fff',minHeight:'100vh'}}><div className="ca">{rp()}</div></div></ConfigProvider>;
 return <ConfigProvider theme={{token:{colorPrimary:'#181a1f',fontFamily:"'Figtree',-apple-system,sans-serif",borderRadius:6}}}>
 <Layout style={{minHeight:'100vh'}}>
 <Sider width={250}theme="light"style={{position:'fixed',left:0,top:0,bottom:0,overflow:'auto',zIndex:100,borderRight:'1px solid #eef1f5'}}breakpoint="lg"collapsedWidth="0">
