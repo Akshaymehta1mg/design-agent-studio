@@ -121,7 +121,19 @@ export type AskStatus = "pending" | "submitting" | "approved" | "rejected" | "ch
 export type MessagePart =
   | { type: "text"; id: string; text: string }
   | { type: "plan"; id: string; title: string; items: { id: string; title: string; status: PlanStatus }[] }
-  | { type: "ask"; id: string; title: string; description?: string; questions?: AskQuestion[]; approveLabel?: string; status: AskStatus; result?: string }
+  | {
+      type: "ask"
+      id: string
+      title: string
+      description?: string
+      questions?: AskQuestion[]
+      approveLabel?: string
+      status: AskStatus
+      /** What the model is told */
+      result?: string
+      /** Each question with the answer given, for the answered card */
+      answers?: { question: string; answer: string }[]
+    }
   | { type: "workflow"; id: string; frameId: string; workflow: Workflow }
 
 

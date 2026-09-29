@@ -63,9 +63,9 @@ export function askUser(
 }
 
 /** Called by the approval card. */
-export function answerAsk(loc: Loc, id: string, status: AskStatus, result: string) {
+export function answerAsk(loc: Loc, id: string, status: AskStatus, result: string, answers?: { question: string; answer: string }[]) {
   const part = getPart(loc, id)
-  if (part?.type === "ask") upsertPart(loc, { ...part, status, result })
+  if (part?.type === "ask") upsertPart(loc, { ...part, status, result, answers })
   useStore.getState().patchMessage(loc.msgId, { activity: "Thinking…" }, loc.convId)
   const resolve = waiting.get(id)
   waiting.delete(id)

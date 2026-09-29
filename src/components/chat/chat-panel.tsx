@@ -62,17 +62,34 @@ import { ApprovalCard, type ApprovalCardAnswers } from "@/components/agents/appr
 import { WorkflowCard } from "@/components/agents/workflow-graph"
 import { answerAsk, isWaiting } from "@/lib/message-parts"
 
-function formatAnswers(part: Extract<MessagePart, { type: "ask" }>, answers: ApprovalCardAnswers) {
-  return (part.questions ?? [])
-    .map((q) => {
-      const a = answers[q.id]
-      if (!a) return null
-      const labels = a.selected.map((v) => q.options?.find((o) => o.value === v)?.label ?? v)
-      if (a.custom?.trim()) labels.push(a.custom.trim())
-      return part.questions!.length > 1 ? `${q.title}: ${labels.join(", ")}` : labels.join(", ")
-    })
-    .filter(Boolean)
-    .join(" · ")
+type AskPart = Extract<MessagePart, { type: "ask" }>
+
+function answerList(part: AskPart, answers: ApprovalCardAnswers) {
+  return (part.questions ?? []).flatMap((q) => {
+    const a = answers[q.id]
+    if (!a) return []
+    const labels = a.selected.map((v) => q.options?.find((o) => o.value === v)?.label ?? v)
+    if (a.custom?.trim()) labels.push(a.custom.trim())
+    return labels.length ? [{ question: q.title, answer: labels.join(", ") }] : []
+  })
+}
+
+/** The text the model gets back. */
+const answerText = (list: { question: string; answer: string }[]) =>
+  list.length === 1 ? list[0].answer : list.map((x) => `${x.question}: ${x.answer}`).join(" · ")
+
+/** Cards answered before answers were stored separately only have the joined text; split it back up. */
+function legacyAnswers(part: AskPart) {
+  if (!part.result || !part.questions?.length) return undefined
+  if (part.questions.length === 1) return [{ question: part.questions[0].title, answer: part.result }]
+  const out = part.questions.flatMap((q, i) => {
+    const start = part.result!.indexOf(`${q.title}: `)
+    if (start < 0) return []
+    const from = start + q.title.length + 2
+    const next = part.questions!.slice(i + 1).map((n) => part.result!.indexOf(` · ${n.title}: `, from)).find((x) => x >= 0)
+    return [{ question: q.title, answer: part.result!.slice(from, next ?? undefined).trim() }]
+  })
+  return out.length ? out : undefined
 }
 
 function PartView({ part, loc }: { part: MessagePart; loc: { convId: string; msgId: string } }) {
@@ -83,7 +100,7 @@ function PartView({ part, loc }: { part: MessagePart; loc: { convId: string; msg
   // ask
   const live = isWaiting(part.id)
   const status = part.status === "pending" && !live ? "rejected" : part.status
-  const done = (s: typeof part.status, result: string) => answerAsk(loc, part.id, s, result)
+  const done = (s: typeof part.status, result: string, answers?: { question: string; answer: string }[]) => answerAsk(loc, part.id, s, result, answers)
   return (
     <ApprovalCard
       title={part.title}
@@ -91,8 +108,12 @@ function PartView({ part, loc }: { part: MessagePart; loc: { convId: string; msg
       questions={part.questions?.map((q) => ({ ...q, autoAdvance: true }))}
       status={status}
       result={part.status === "pending" && !live ? "No longer waiting for an answer." : part.result}
+      answers={part.status === "answered" ? (part.answers ?? legacyAnswers(part)) : undefined}
       approveLabel={part.approveLabel ?? "Approve"}
-      onSubmit={(answers) => done("answered", formatAnswers(part, answers) || "Answered")}
+      onSubmit={(answers) => {
+        const list = answerList(part, answers)
+        done("answered", answerText(list) || "Answered", list)
+      }}
       onApprove={() => done("approved", "Approved")}
       onRequestChanges={() => done("changes-requested", "Changes requested")}
       onReject={() => done("rejected", "Rejected")}
