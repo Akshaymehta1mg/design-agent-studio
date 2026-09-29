@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { Plus } from "lucide-react"
+import { Plus } from "@/components/ui/icons"
 import type { FrameNode } from "@/lib/types"
 import { frameLabel, useStore } from "@/lib/store"
 import { cn } from "@/lib/utils"

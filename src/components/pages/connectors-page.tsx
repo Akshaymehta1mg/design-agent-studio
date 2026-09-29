@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { AlertCircle, Check, ChevronDown, LogIn, LogOut, Loader2, Plug, Plus, RefreshCw, Trash2, Wrench } from "lucide-react"
+import { AlertCircle, Check, ChevronDown, LogIn, LogOut, Loader2, Plug, Plus, RefreshCw, Trash2, Wrench } from "@/components/ui/icons"
 import { toast } from "sonner"
 import { motion } from "motion/react"
 import type { Connector } from "@/lib/types"

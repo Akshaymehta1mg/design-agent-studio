@@ -1,5 +1,5 @@
 import { useEffect } from "react"
-import { FileStack, FileText, GalleryHorizontalEnd, Home, LayoutGrid, Palette, Plug, Plus, Radio, Settings2, Image as ImageIcon, Triangle, Workflow as WorkflowIcon } from "lucide-react"
+import { FileStack, FileText, GalleryHorizontalEnd, Home, LayoutGrid, Palette, Plug, Plus, Radio, Settings2, Image as ImageIcon, Triangle, Workflow as WorkflowIcon } from "@/components/ui/icons"
 import { useStore, frameLabel } from "@/lib/store"
 import { allDesignSystems } from "@/lib/design-systems"
 import type { FrameNode, Page } from "@/lib/types"

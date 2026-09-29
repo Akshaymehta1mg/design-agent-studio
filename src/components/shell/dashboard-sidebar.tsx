@@ -1,4 +1,4 @@
-import { ChevronDown, FileStack, FileText, GalleryHorizontalEnd, Home, ImagePlus, Palette, Plug, Plus, Radio, Search, Settings2, Shapes as Figma, Triangle } from "lucide-react"
+import { ChevronDown, FileStack, FileText, GalleryHorizontalEnd, Home, ImagePlus, Palette, Plug, Plus, Radio, Search, Settings2, Shapes as Figma, Triangle } from "@/components/ui/icons"
 import { useStore } from "@/lib/store"
 import { PROVIDER_ORDER } from "@/lib/providers"
 import type { Page } from "@/lib/types"

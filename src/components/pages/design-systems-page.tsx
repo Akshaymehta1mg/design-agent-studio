@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react"
 import { motion } from "motion/react"
-import { AlertCircle, ArrowLeft, Check, Copy, ExternalLink, FileJson, Images, Loader2, PenLine, Plus, RefreshCw, Star, Trash2, Upload, Shapes as Figma } from "lucide-react"
+import { AlertCircle, ArrowLeft, Check, Copy, ExternalLink, FileJson, Images, Loader2, PenLine, Plus, RefreshCw, Star, Trash2, Upload, Shapes as Figma } from "@/components/ui/icons"
 import { toast } from "sonner"
 import type { DesignSystem } from "@/lib/types"
 import { uid, useStore } from "@/lib/store"
@@ -224,6 +224,33 @@ function DesignSystemEditor({ ds, onBack, onOpen }: { ds: DesignSystem; onBack: 
 
   const previewDoc = useMemo(() => buildSrcDoc(PREVIEW_WIREFRAME, wireframeVars(ds)), [ds])
 
+  const defaultAction =
+    def === ds.id ? (
+      <Badge variant="secondary" className="h-8 gap-1 rounded-full px-3 text-[12.5px]">
+        <Check className="size-3.5" /> Default for new projects
+      </Badge>
+    ) : (
+      <Button variant="outline" size="sm" className="h-8 rounded-full" onClick={() => setDefault(ds.id)}>
+        <Star /> Make default
+      </Button>
+    )
+
+  if (ds.id === "ds_tata1mg")
+    return (
+      <DesignReferenceView
+        ds={ds}
+        onBack={onBack}
+        actions={
+          <>
+            {defaultAction}
+            <Button variant="ghost" size="sm" className="h-8 rounded-full" onClick={duplicate}>
+              <Copy /> Duplicate
+            </Button>
+          </>
+        }
+      />
+    )
+
   return (
     <div className="h-full overflow-y-auto" data-scrollable>
       <div className="mx-auto max-w-[1180px] px-6 pb-16 md:px-10">
@@ -232,15 +259,7 @@ function DesignSystemEditor({ ds, onBack, onOpen }: { ds: DesignSystem; onBack: 
             <ArrowLeft /> Design systems
           </Button>
           <div className="flex-1" />
-          {def === ds.id ? (
-            <Badge variant="secondary" className="h-8 gap-1 rounded-full px-3 text-[12.5px]">
-              <Check className="size-3.5" /> Default for new projects
-            </Badge>
-          ) : (
-            <Button variant="outline" size="sm" className="h-8 rounded-full" onClick={() => setDefault(ds.id)}>
-              <Star /> Make default
-            </Button>
-          )}
+          {defaultAction}
           <Button variant="outline" size="sm" className="h-8 rounded-full" onClick={duplicate}>
             <Copy /> Duplicate
           </Button>
@@ -432,11 +451,7 @@ function DesignSystemEditor({ ds, onBack, onOpen }: { ds: DesignSystem; onBack: 
         </div>
 
         <div className="pt-10">
-          {ds.id === "ds_tata1mg" ? (
-            <Section title="Reference" description="Colours, type, spacing, every component and page pattern, extracted from the portable reference. The agent reads the same sections.">
-              <DesignReferenceView ds={ds} />
-            </Section>
-          ) : ds.referenceUrl ? (
+          {ds.referenceUrl ? (
             <Section
               title="Component reference"
               action={

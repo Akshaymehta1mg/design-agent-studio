@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { GalleryHorizontalEnd, Palette, Plug } from "lucide-react"
+import { GalleryHorizontalEnd, Palette, Plug } from "@/components/ui/icons"
 import { loadPrismDoc, PRISM_CORE, PRISM_DOCS } from "@/lib/prism"
 import { useStore } from "@/lib/store"
 import { cn } from "@/lib/utils"

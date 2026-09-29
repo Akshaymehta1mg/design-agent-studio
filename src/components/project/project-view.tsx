@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { motion } from "motion/react"
-import { ArrowLeft, Check, ChevronDown, Layers, MousePointer2, Radio, Shapes as Figma, Palette } from "lucide-react"
+import { ArrowLeft, Check, ChevronDown, Layers, MousePointer2, Radio, Shapes as Figma, Palette } from "@/components/ui/icons"
 import { useActiveConversation, useStore } from "@/lib/store"
 import { allDesignSystems } from "@/lib/design-systems"
 import type { FrameNode, Mode } from "@/lib/types"

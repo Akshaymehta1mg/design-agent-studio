@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useShallow } from "zustand/react/shallow"
-import { Hand, ImagePlus, MessageCircle, Minus, MousePointer2, Plus, Redo2, StickyNote, Undo2, Maximize, Upload } from "lucide-react"
+import { Hand, ImagePlus, MessageCircle, Minus, MousePointer2, Plus, Redo2, StickyNote, Undo2, Maximize, Upload } from "@/components/ui/icons"
 import type { CanvasDoc, CanvasNode, FrameNode, Viewport } from "@/lib/types"
 import { useStore, uid, type Tool } from "@/lib/store"
 import { addImageFiles, addMarks } from "@/lib/canvas-actions"

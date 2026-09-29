@@ -1,5 +1,5 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react"
-import { Check, ExternalLink, Loader2, Pencil, RotateCcw, Sparkles } from "lucide-react"
+import { createContext, Fragment, useContext, useEffect, useMemo, useState } from "react"
+import { ArrowLeft, Check, Code, ExternalLink, Eye, LayoutDashboard, Loader2, PanelRight, Pencil, RotateCcw, Ruler, Search, Sparkles } from "@/components/ui/icons"
 import { toast } from "sonner"
 import type { DesignEdits, DesignSystem } from "@/lib/types"
 import { applyEdits, loadDesignReference, specimenRows, type Block, type DesignReference, type ReferenceTab, type Specimen } from "@/lib/design-reference"
@@ -36,56 +36,307 @@ function resetTab(tabKey: string, e: DesignEdits): DesignEdits {
   return { ...e, tokens, components }
 }
 
-/** The design system's component reference, rebuilt natively from the extracted data (same tabs as the HTML). */
-export function DesignReferenceView({ ds }: { ds: DesignSystem }) {
+type View = "preview" | "specs" | "css"
+
+/**
+ * The design-system workspace: section list | canvas (live preview, specs, CSS) | inspector side sheet.
+ * Built from the extracted reference; the canvas embeds the original HTML for each section.
+ */
+export function DesignReferenceView({ ds, onBack, actions }: { ds: DesignSystem; onBack: () => void; actions?: React.ReactNode }) {
   const [original, setOriginal] = useState<DesignReference | null>(null)
   const [tab, setTab] = useState(OVERVIEW)
+  const [view, setView] = useState<View>("preview")
+  const [query, setQuery] = useState("")
+  const [inspector, setInspector] = useState(true)
+  const [editing, setEditing] = useState(false)
   const edits = useStore((s) => s.designEdits[ds.id])
+  const patch = useStore((s) => s.patchDesignEdits)
   useEffect(() => {
     loadDesignReference().then(setOriginal)
   }, [])
   const ref = useMemo(() => (original ? applyEdits(original, edits) : null), [original, edits])
+  const ctx = useMemo(
+    () => ({
+      editing,
+      set: (kind: EditKind, key: string, value: string) => patch(ds.id, (e) => ({ ...e, [kind]: { ...(e[kind] ?? {}), [key]: value } })),
+    }),
+    [editing, patch, ds.id],
+  )
 
-  if (!ref) return <Spinner />
-  const groups: [string, ReferenceTab[]][] = [
-    ["Foundations", ref.tabs.filter((t) => t.group === "foundation")],
-    ["Components", ref.tabs.filter((t) => t.group === "component")],
-    ["Pages", ref.tabs.filter((t) => t.group === "page")],
-  ]
-  const current = ref.tabs.find((t) => t.key === tab)
+  const current = ref?.tabs.find((t) => t.key === tab)
+  const views: View[] = !current ? [] : [...(ds.referenceUrl && current.key !== "colors" ? (["preview"] as const) : []), "specs", ...(current.css ? (["css"] as const) : [])]
+  const shown: View = views.includes(view) ? view : (views[0] ?? "specs")
+
+  const open = (key: string) => {
+    setTab(key)
+    setEditing(false)
+  }
+  const q = query.trim().toLowerCase()
+  const groups: [string, ReferenceTab[]][] = ref
+    ? (
+        [
+          ["Foundations", ref.tabs.filter((t) => t.group === "foundation")],
+          ["Components", ref.tabs.filter((t) => t.group === "component")],
+          ["Pages", ref.tabs.filter((t) => t.group === "page")],
+        ] as [string, ReferenceTab[]][]
+      ).map(([n, ts]) => [n, ts.filter((t) => !q || `${t.title} ${t.key} ${t.description}`.toLowerCase().includes(q))])
+    : []
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[210px_1fr]">
-      <nav className="flex flex-col gap-3 lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:self-start lg:overflow-y-auto" aria-label="Design system sections" data-scrollable>
-        <NavItem active={tab === OVERVIEW} onClick={() => setTab(OVERVIEW)}>
-          Overview
-        </NavItem>
-        {groups.map(([name, tabs]) => (
-          <div key={name} className="flex flex-col gap-0.5">
-            <div className="eyebrow px-3 pb-1">{name}</div>
-            {tabs.map((t) => (
-              <NavItem key={t.key} active={tab === t.key} onClick={() => setTab(t.key)}>
-                <span className="flex items-center gap-2">
-                  <span className="min-w-0 flex-1 truncate">{t.title}</span>
-                  {tabEdits(t.key, edits) > 0 && <span className="size-1.5 shrink-0 rounded-full bg-[#FF6F61]" title="Edited by your team" />}
-                </span>
-              </NavItem>
-            ))}
+    <EditCtx.Provider value={ctx}>
+      <div className="bg-background flex h-full min-h-0 flex-col">
+        <header className="flex h-12 shrink-0 items-center gap-2 border-b px-3">
+          <Button variant="ghost" size="icon" className="size-8" onClick={onBack} aria-label="Back to design systems">
+            <ArrowLeft />
+          </Button>
+          <nav className="flex min-w-0 items-center gap-1.5 text-[13px]" aria-label="Breadcrumb">
+            <button onClick={onBack} className="text-muted-foreground hover:text-foreground shrink-0">
+              Design systems
+            </button>
+            <span className="text-muted-foreground/60">/</span>
+            <span className="truncate font-medium">{ds.name}</span>
+          </nav>
+          <div className="flex-1" />
+          {actions}
+          <Button variant={inspector ? "secondary" : "ghost"} size="icon" className="size-8" onClick={() => setInspector((v) => !v)} aria-label={inspector ? "Hide inspector" : "Show inspector"} aria-pressed={inspector}>
+            <PanelRight />
+          </Button>
+        </header>
+
+        {!ref ? (
+          <div className="grid flex-1 place-items-center">
+            <Spinner />
           </div>
-        ))}
-      </nav>
-      <article className="bg-card min-w-0 rounded-2xl border p-6 shadow-xs">
-        {tab === OVERVIEW ? <Overview ds={ds} ref_={ref} onOpen={setTab} /> : current ? <TabView key={current.key} tab={current} ref_={ref} ds={ds} /> : null}
-      </article>
-    </div>
+        ) : (
+          <div className="flex min-h-0 flex-1">
+            {/* section list */}
+            <aside className="bg-sidebar hidden w-[236px] shrink-0 flex-col border-r md:flex">
+              <div className="p-2.5">
+                <div className="bg-background focus-within:ring-ring/40 flex h-8 items-center gap-2 rounded-lg border px-2.5 focus-within:ring-2">
+                  <Search className="text-muted-foreground size-3.5 shrink-0" />
+                  <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search sections" className="min-w-0 flex-1 bg-transparent text-[12.5px] outline-none" aria-label="Search sections" />
+                </div>
+              </div>
+              <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-2 pb-4" data-scrollable aria-label="Design system sections" role="navigation">
+                {!q && (
+                  <NavItem active={tab === OVERVIEW} onClick={() => open(OVERVIEW)}>
+                    <LayoutDashboard className="size-3.5 shrink-0" /> <span className="flex-1">Overview</span>
+                  </NavItem>
+                )}
+                {groups.map(([name, tabs]) =>
+                  !tabs.length ? null : (
+                    <div key={name} className="flex flex-col gap-px">
+                      <div className="text-muted-foreground flex items-center px-2 pb-1 text-[11px] font-medium">
+                        <span className="flex-1">{name}</span>
+                        <span className="tabular-nums">{tabs.length}</span>
+                      </div>
+                      {tabs.map((t) => (
+                        <NavItem key={t.key} active={tab === t.key} onClick={() => open(t.key)}>
+                          <span className="min-w-0 flex-1 truncate">{t.title}</span>
+                          {tabEdits(t.key, edits) > 0 && <span className="size-1.5 shrink-0 rounded-full bg-[var(--pin)]" title="Edited by your team" />}
+                        </NavItem>
+                      ))}
+                    </div>
+                  ),
+                )}
+                {q && groups.every(([, ts]) => !ts.length) && <p className="text-muted-foreground px-2 text-[12.5px]">No sections match.</p>}
+              </div>
+            </aside>
+
+            {/* canvas */}
+            <section aria-label="Canvas" className="flex min-w-0 flex-1 flex-col bg-[var(--canvas)]">
+              {current ? (
+                <>
+                  <div className="flex h-11 shrink-0 items-center gap-3 border-b px-4">
+                    <span className="truncate text-[13.5px] font-semibold">{current.title}</span>
+                    <span className="text-muted-foreground hidden text-[12px] capitalize sm:inline">{current.group}</span>
+                    <div className="flex-1" />
+                    {views.length > 1 && (
+                      <div className="bg-muted flex rounded-lg p-0.5" role="tablist" aria-label="View">
+                        {views.map((v) => (
+                          <button
+                            key={v}
+                            role="tab"
+                            aria-selected={shown === v}
+                            onClick={() => setView(v)}
+                            className={cn("flex h-7 items-center gap-1.5 rounded-md px-2.5 text-[12.5px] transition-colors", shown === v ? "bg-background font-medium shadow-xs" : "text-muted-foreground hover:text-foreground")}
+                          >
+                            {v === "preview" ? <Eye className="size-3.5" /> : v === "specs" ? <Ruler className="size-3.5" /> : <Code className="size-3.5" />}
+                            {v === "preview" ? "Preview" : v === "specs" ? "Specs" : "CSS"}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {ds.referenceUrl && (
+                      <Button variant="ghost" size="icon" className="size-8" asChild>
+                        <a href={`${ds.referenceUrl}#${encodeURIComponent(current.key)}`} target="_blank" rel="noreferrer" aria-label="Open the original in a new tab" title="Open the original">
+                          <ExternalLink />
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+                  {shown === "preview" && ds.referenceUrl ? (
+                    <div className="min-h-0 flex-1 p-4">
+                      <LivePreview key={current.key} url={`${ds.referenceUrl}?embed#${encodeURIComponent(current.key)}`} edited={tabEdits(current.key, edits) > 0} onSpecs={() => setView("specs")} />
+                    </div>
+                  ) : (
+                    <div className="min-h-0 flex-1 overflow-y-auto p-4" data-scrollable>
+                      <div className="bg-background mx-auto max-w-[960px] rounded-xl border p-6">{shown === "css" ? <CssView css={current.css} /> : <Specs tab={current} ref_={ref} />}</div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="min-h-0 flex-1 overflow-y-auto p-4" data-scrollable>
+                  <div className="bg-background mx-auto max-w-[960px] rounded-xl border p-6">
+                    <Overview ds={ds} ref_={ref} onOpen={open} />
+                  </div>
+                </div>
+              )}
+            </section>
+
+            {/* inspector side sheet */}
+            {inspector && (
+              <aside className="bg-background hidden w-[320px] shrink-0 flex-col border-l lg:flex">
+                <div className="min-h-0 flex-1 overflow-y-auto" data-scrollable>
+                  {current ? (
+                    <Inspector
+                      tab={current}
+                      ds={ds}
+                      edited={tabEdits(current.key, edits)}
+                      editing={editing}
+                      onEdit={() => {
+                        setEditing((v) => !v)
+                        setView("specs")
+                      }}
+                      onReset={() => {
+                        patch(ds.id, (e) => resetTab(current.key, e))
+                        toast.success(`${current.title} reset to the original`)
+                      }}
+                    />
+                  ) : (
+                    <OverviewInspector ds={ds} edits={edits} ref_={ref} onOpen={open} />
+                  )}
+                </div>
+              </aside>
+            )}
+          </div>
+        )}
+      </div>
+    </EditCtx.Provider>
   )
 }
 
 function NavItem({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
-    <button onClick={onClick} className={cn("rounded-lg px-3 py-1.5 text-left text-[13px] transition-colors", active ? "bg-accent font-medium" : "text-muted-foreground hover:text-foreground hover:bg-accent/50")}>
+    <button onClick={onClick} aria-current={active ? "page" : undefined} className={cn("flex h-7 items-center gap-2 rounded-md px-2 text-left text-[13px] transition-colors", active ? "bg-sidebar-accent font-medium" : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60")}>
       {children}
     </button>
+  )
+}
+
+function InspectorSection({ title, children, action }: { title: string; children: React.ReactNode; action?: React.ReactNode }) {
+  return (
+    <section className="flex flex-col gap-2.5 border-b px-4 py-4 last:border-b-0">
+      <div className="flex items-center gap-2">
+        <h3 className="text-muted-foreground flex-1 text-[11.5px] font-medium">{title}</h3>
+        {action}
+      </div>
+      {children}
+    </section>
+  )
+}
+
+function Inspector({ tab, ds, edited, editing, onEdit, onReset }: { tab: ReferenceTab; ds: DesignSystem; edited: number; editing: boolean; onEdit: () => void; onReset: () => void }) {
+  const direct = DIRECT_EDIT.has(tab.key)
+  return (
+    <>
+      <InspectorSection title="Section">
+        <div>
+          <div className="text-[15px] font-semibold">{tab.title}</div>
+          <p className="text-muted-foreground mt-1 text-[12.5px] leading-relaxed">{tab.description}</p>
+        </div>
+        {tab.facts.length > 0 && (
+          <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-[12.5px]">
+            {tab.facts.map((f) => (
+              <Fragment key={f.label}>
+                <dt className="text-muted-foreground">{f.label}</dt>
+                <dd className="font-medium">{f.value}</dd>
+              </Fragment>
+            ))}
+          </dl>
+        )}
+      </InspectorSection>
+
+      {direct ? (
+        <InspectorSection title="Values">
+          <p className="text-muted-foreground text-[12.5px] leading-relaxed">
+            {editing ? "Change values in the specs. Changes save as you go and the agent uses them in every project." : "Change colours, sizes and tokens directly. The agent uses your values in every project."}
+          </p>
+          <Button variant={editing ? "default" : "outline"} size="sm" className="w-fit" onClick={onEdit}>
+            {editing ? <Check /> : <Pencil />} {editing ? "Done editing" : "Edit values"}
+          </Button>
+        </InspectorSection>
+      ) : (
+        <InspectorSection title={`Change with Prism`}>
+          <PrismChange tab={tab} dsId={ds.id} />
+        </InspectorSection>
+      )}
+
+      {tab.notes.length > 0 && (
+        <InspectorSection title="Usage">
+          <div className="flex flex-col gap-3">
+            {tab.notes.map((n) => (
+              <div key={n.label} className="text-[12.5px] leading-relaxed">
+                <div className="font-medium">{n.label}</div>
+                <div className="text-muted-foreground mt-0.5">{n.text}</div>
+              </div>
+            ))}
+          </div>
+        </InspectorSection>
+      )}
+
+      {edited > 0 && (
+        <InspectorSection
+          title="Team changes"
+          action={
+            <Button variant="ghost" size="sm" className="text-muted-foreground h-6 px-2 text-[12px]" onClick={onReset}>
+              <RotateCcw /> Reset
+            </Button>
+          }
+        >
+          <p className="text-muted-foreground text-[12.5px]">
+            {edited === 1 ? "1 change to this section overrides" : `${edited} changes to this section override`} the original.
+          </p>
+        </InspectorSection>
+      )}
+    </>
+  )
+}
+
+function OverviewInspector({ ds, edits, ref_, onOpen }: { ds: DesignSystem; edits?: DesignEdits; ref_: DesignReference; onOpen: (key: string) => void }) {
+  const changed = ref_.tabs.filter((t) => tabEdits(t.key, edits) > 0)
+  return (
+    <>
+      <InspectorSection title="Design system">
+        <div className="text-[15px] font-semibold">{ds.name}</div>
+        <p className="text-muted-foreground text-[12.5px] leading-relaxed">{ds.description}</p>
+      </InspectorSection>
+      <InspectorSection title="Team changes">
+        {changed.length ? (
+          <div className="flex flex-col gap-px">
+            {changed.map((t) => (
+              <NavItem key={t.key} active={false} onClick={() => onOpen(t.key)}>
+                <span className="size-1.5 shrink-0 rounded-full bg-[var(--pin)]" />
+                <span className="min-w-0 flex-1 truncate">{t.title}</span>
+                <span className="tabular-nums">{tabEdits(t.key, edits)}</span>
+              </NavItem>
+            ))}
+          </div>
+        ) : (
+          <p className="text-muted-foreground text-[12.5px] leading-relaxed">None yet. Edit foundation values directly, or open a component and describe a change to Prism.</p>
+        )}
+      </InspectorSection>
+    </>
   )
 }
 
@@ -94,150 +345,74 @@ function Overview({ ds, ref_, onOpen }: { ds: DesignSystem; ref_: DesignReferenc
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h2 className="text-[22px] font-bold">{ds.name}</h2>
-        <p className="text-muted-foreground mt-1 text-[14px]">
-          {ref_.colors.palettes.length} colour palettes · {ref_.colors.semantic.length} semantic tokens · {count("foundation")} foundations · {count("component")} components · {count("page")} page references. The agent reads every section below.
+        <h2 className="text-[20px] font-semibold">{ds.name}</h2>
+        <p className="text-muted-foreground mt-1 text-[13.5px]">
+          {ref_.colors.palettes.length} colour palettes · {ref_.colors.semantic.length} semantic tokens · {count("foundation")} foundations · {count("component")} components · {count("page")} page references. The agent reads every section.
         </p>
       </div>
       <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
         {ref_.tabs.map((t) => (
-          <button key={t.key} onClick={() => onOpen(t.key)} className="hover:bg-accent/50 rounded-xl border p-3 text-left transition-colors">
-            <div className="text-[13.5px] font-semibold">{t.title}</div>
+          <button key={t.key} onClick={() => onOpen(t.key)} className="hover:bg-accent/60 rounded-lg border p-3 text-left transition-colors">
+            <div className="text-[13px] font-medium">{t.title}</div>
             <div className="text-muted-foreground mt-0.5 line-clamp-2 text-[12px] leading-snug">{t.description}</div>
           </button>
         ))}
       </div>
-      <div>
-        <h3 className="mb-2 text-[15px] font-semibold">Guide</h3>
-        <Markdown text={ds.profile} className="text-[13.5px] leading-relaxed" />
-      </div>
+      <details className="rounded-lg border">
+        <summary className="cursor-pointer px-4 py-2.5 text-[13px] font-medium">Guide the agent follows</summary>
+        <Markdown text={ds.profile} className="border-t px-4 py-3 text-[13px] leading-relaxed" />
+      </details>
     </div>
   )
 }
 
-function TabView({ tab, ref_, ds }: { tab: ReferenceTab; ref_: DesignReference; ds: DesignSystem }) {
-  const edits = useStore((s) => s.designEdits[ds.id])
-  const patch = useStore((s) => s.patchDesignEdits)
-  const [editing, setEditing] = useState(false)
-  const direct = DIRECT_EDIT.has(tab.key)
-  const edited = tabEdits(tab.key, edits)
-  const ctx = useMemo(
-    () => ({
-      editing,
-      set: (kind: EditKind, key: string, value: string) => patch(ds.id, (e) => ({ ...e, [kind]: { ...(e[kind] ?? {}), [key]: value } })),
-    }),
-    [editing, patch, ds.id],
-  )
-  const live = ds.referenceUrl && tab.key !== "colors" ? `${ds.referenceUrl}?embed#${encodeURIComponent(tab.key)}` : null
-
+function Specs({ tab, ref_ }: { tab: ReferenceTab; ref_: DesignReference }) {
+  if (tab.key === "colors") return <Colors ref_={ref_} />
+  if (tab.key === "typography") return <TypeScale tab={tab} />
+  const sections = tab.sections.filter((s) => s.title || s.description || s.blocks.length)
+  if (!sections.length) return <p className="text-muted-foreground text-[13px]">No specs were extracted for this section. Use Preview.</p>
   return (
-    <EditCtx.Provider value={ctx}>
-      <div className="flex flex-col gap-6">
-        <header className="flex flex-wrap items-start gap-3">
-          <div className="min-w-0 flex-1">
-            <div className="eyebrow">{tab.label || tab.group}</div>
-            <h2 className="mt-1 text-[24px] leading-tight font-bold">{tab.title}</h2>
-            <p className="text-muted-foreground mt-1.5 text-[14px] leading-relaxed">{tab.description}</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {edited > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="rounded-full"
-                onClick={() => {
-                  patch(ds.id, (e) => resetTab(tab.key, e))
-                  toast.success(`${tab.title} reset to the original`)
-                }}
-              >
-                <RotateCcw /> Reset
-              </Button>
-            )}
-            {direct && (
-              <Button variant={editing ? "default" : "outline"} size="sm" className="rounded-full" onClick={() => setEditing((v) => !v)}>
-                {editing ? <Check /> : <Pencil />} {editing ? "Done" : "Edit"}
-              </Button>
-            )}
-            {ds.referenceUrl && (
-              <Button variant="outline" size="sm" className="rounded-full" asChild>
-                <a href={`${ds.referenceUrl}#${encodeURIComponent(tab.key)}`} target="_blank" rel="noreferrer">
-                  <ExternalLink /> Original
-                </a>
-              </Button>
-            )}
-          </div>
-        </header>
-
-        {!direct && <PrismChange tab={tab} dsId={ds.id} />}
-
-        {live && <LivePreview url={live} tall={tab.group === "page"} edited={edited > 0} />}
-
-        {tab.facts.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {tab.facts.map((f) => (
-              <div key={f.label} className="bg-muted rounded-xl px-3 py-2">
-                <div className="text-muted-foreground text-[11px]">{f.label}</div>
-                <div className="text-[13.5px] font-semibold">{f.value}</div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {tab.notes.map((n) => (
-          <div key={n.label} className="border-l-foreground/30 bg-muted/50 rounded-r-xl border-l-2 px-4 py-3 text-[13.5px] leading-relaxed">
-            <div className="font-semibold">{n.label}</div>
-            <div className="text-muted-foreground mt-0.5">{n.text}</div>
-          </div>
-        ))}
-
-        {tab.key === "colors" && <Colors ref_={ref_} />}
-        {tab.key === "typography" && <TypeScale tab={tab} />}
-
-        {tab.key !== "colors" &&
-          tab.key !== "typography" &&
-          tab.sections.map((s, i) =>
-            !s.title && !s.description && !s.blocks.length ? null : (
-              <section key={i} className="flex flex-col gap-3">
-                {s.title && <h3 className="text-[16px] font-semibold">{s.title}</h3>}
-                {s.description && <p className="text-muted-foreground text-[13.5px] leading-relaxed">{s.description}</p>}
-                {s.blocks.map((b, j) => (
-                  <BlockView key={j} block={b} tabKey={tab.key} />
-                ))}
-              </section>
-            ),
-          )}
-
-        {tab.css && (
-          <details className="rounded-xl border">
-            <summary className="cursor-pointer px-4 py-2.5 text-[13px] font-medium">CSS from the reference</summary>
-            <pre className="bg-muted max-h-[420px] overflow-auto rounded-b-xl p-4 font-mono text-[11.5px] leading-relaxed whitespace-pre-wrap" data-scrollable>
-              {tab.css}
-            </pre>
-          </details>
-        )}
-      </div>
-    </EditCtx.Provider>
+    <div className="flex flex-col gap-8">
+      {sections.map((s, i) => (
+        <section key={i} className="flex flex-col gap-3">
+          {s.title && <h3 className="text-[15px] font-semibold">{s.title}</h3>}
+          {s.description && <p className="text-muted-foreground text-[13px] leading-relaxed">{s.description}</p>}
+          {s.blocks.map((b, j) => (
+            <BlockView key={j} block={b} tabKey={tab.key} />
+          ))}
+        </section>
+      ))}
+    </div>
   )
 }
 
-/** The original HTML reference, rendered live (menu hidden) for this tab. */
-function LivePreview({ url, tall, edited }: { url: string; tall: boolean; edited: boolean }) {
+function CssView({ css }: { css?: string }) {
+  return <pre className="font-mono text-[11.5px] leading-relaxed whitespace-pre-wrap">{css}</pre>
+}
+
+/** The original HTML reference, rendered live (menu hidden) for this section. */
+function LivePreview({ url, edited, onSpecs }: { url: string; edited: boolean; onSpecs: () => void }) {
   const [loaded, setLoaded] = useState(false)
   return (
-    <section className="flex flex-col gap-2">
-      <div className="flex items-center gap-2">
-        <h3 className="text-[16px] font-semibold">Live reference</h3>
-        {edited && <span className="text-muted-foreground text-[12px]">Original rendering. Your team's changes show in the specimens and specs below.</span>}
-      </div>
-      <div className="relative overflow-hidden rounded-xl border bg-white">
+    <div className="flex h-full flex-col gap-2">
+      {edited && (
+        <div className="text-muted-foreground flex items-center gap-2 text-[12px]">
+          <span className="size-1.5 rounded-full bg-[var(--pin)]" />
+          Showing the original. Your team's changes are in
+          <button onClick={onSpecs} className="text-foreground underline underline-offset-2">
+            Specs
+          </button>
+        </div>
+      )}
+      <div className="relative min-h-[480px] flex-1 overflow-hidden rounded-xl border bg-white shadow-xs">
         {!loaded && (
           <div className="absolute inset-0 grid place-items-center">
             <Spinner />
           </div>
         )}
-        <iframe src={url} title="Live design-system reference" onLoad={() => setLoaded(true)} className={cn("block w-full bg-white", tall ? "h-[1000px]" : "h-[560px]")} />
+        <iframe src={url} title="Live design-system reference" onLoad={() => setLoaded(true)} className="absolute inset-0 size-full bg-white" />
       </div>
-    </section>
+    </div>
   )
 }
 
@@ -265,18 +440,33 @@ function PrismChange({ tab, dsId }: { tab: ReferenceTab; dsId: string }) {
   }
 
   return (
-    <section className="bg-muted/40 flex flex-col gap-3 rounded-xl border p-4">
-      <div className="flex items-center gap-2 text-[13.5px] font-semibold">
-        <Sparkles className="size-4" /> Change this {tab.group === "page" ? "page pattern" : "component"} with Prism
-      </div>
+    <div className="flex flex-col gap-2.5">
+      <p className="text-muted-foreground text-[12.5px] leading-relaxed">Describe what should change. Prism updates the {tab.group === "page" ? "pattern" : "component"}'s rules and its specs; the agent follows them in every project.</p>
+      <Textarea
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+            e.preventDefault()
+            apply()
+          }
+        }}
+        placeholder={tab.group === "page" ? `e.g. "Put the search bar above the banner"` : `e.g. "Make primary buttons 48px tall with a 12px radius"`}
+        className="min-h-[76px] resize-none text-[13px]"
+        disabled={busy}
+        aria-label={`Describe a change to ${tab.title}`}
+      />
+      <Button size="sm" className="w-fit" onClick={apply} disabled={!text.trim() || busy}>
+        {busy ? <Loader2 className="animate-spin" /> : <Sparkles />} {busy ? "Applying…" : "Apply change"}
+      </Button>
       {current && (
-        <div className="bg-card flex flex-col gap-2 rounded-lg border p-3">
+        <div className="bg-muted/50 mt-1 flex flex-col gap-2 rounded-lg border p-3">
           <div className="flex items-start gap-2">
-            <div className="min-w-0 flex-1 text-[13px] font-medium">{current.summary}</div>
+            <div className="min-w-0 flex-1 text-[12.5px] font-medium">{current.summary}</div>
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 rounded-full text-[12px]"
+              className="text-muted-foreground -mt-1 -mr-1 h-6 px-2 text-[12px]"
               onClick={() => {
                 patch(dsId, (e) => resetTab(tab.key, e))
                 toast.success(`${tab.title} reverted`)
@@ -287,30 +477,11 @@ function PrismChange({ tab, dsId }: { tab: ReferenceTab; dsId: string }) {
           </div>
           <details>
             <summary className="text-muted-foreground cursor-pointer text-[12px]">Team rules the agent follows</summary>
-            <Markdown text={current.spec} className="mt-2 text-[13px] leading-relaxed" />
+            <Markdown text={current.spec} className="mt-2 text-[12.5px] leading-relaxed" />
           </details>
         </div>
       )}
-      <Textarea
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-            e.preventDefault()
-            apply()
-          }
-        }}
-        placeholder={`e.g. "Make primary buttons 48px tall with a 12px radius"`}
-        className="bg-card min-h-[64px] text-[13.5px]"
-        disabled={busy}
-      />
-      <div className="flex items-center gap-3">
-        <Button size="sm" className="rounded-full" onClick={apply} disabled={!text.trim() || busy}>
-          {busy ? <Loader2 className="animate-spin" /> : <Sparkles />} {busy ? "Applying…" : "Apply change"}
-        </Button>
-        <span className="text-muted-foreground text-[12px]">Uses the model selected in chat. The agent follows the new rules in every project.</span>
-      </div>
-    </section>
+    </div>
   )
 }
 

@@ -1,5 +1,5 @@
 import { memo, useState } from "react"
-import { Sparkles } from "lucide-react"
+import { Sparkles } from "@/components/ui/icons"
 import type { NoteNode } from "@/lib/types"
 import { useStore } from "@/lib/store"
 import { cn } from "@/lib/utils"

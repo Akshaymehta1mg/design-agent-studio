@@ -1,4 +1,4 @@
-import { ExternalLink } from "lucide-react"
+import { ExternalLink } from "@/components/ui/icons"
 import { VISUAL_RESEARCH_URL } from "@/lib/prism"
 import { Button } from "@/components/ui/button"
 

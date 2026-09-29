@@ -1,6 +1,6 @@
 // Adapted from beUI's Approval Card: beui.dev/components/agents/approval-card
 // Changes: uses the studio's shadcn tokens and PressButton; status colors mapped to theme tokens.
-import { ArrowLeft, ArrowRight, Check, CircleHelp, LoaderCircle, MessageSquareText, X } from "lucide-react"
+import { ArrowLeft, ArrowRight, Check, CircleHelp, LoaderCircle, MessageSquareText, X } from "@/components/ui/icons"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { AgentDisclosure } from "./agent-disclosure"

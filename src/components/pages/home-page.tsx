@@ -19,7 +19,7 @@ import {
   Workflow as WorkflowIcon,
   X,
   MessageSquareText,
-} from "lucide-react"
+} from "@/components/ui/icons"
 import { toast } from "sonner"
 import type { Attachment } from "@/lib/types"
 import { useStore } from "@/lib/store"

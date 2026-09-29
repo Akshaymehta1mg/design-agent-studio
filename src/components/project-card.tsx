@@ -1,5 +1,5 @@
 import { useMemo } from "react"
-import { MoreHorizontal, Pencil, Trash2, Workflow as WorkflowIcon, Layers } from "lucide-react"
+import { MoreHorizontal, Pencil, Trash2, Workflow as WorkflowIcon, Layers } from "@/components/ui/icons"
 import type { Conversation, FrameNode } from "@/lib/types"
 import { useStore } from "@/lib/store"
 import { buildSrcDoc } from "@/lib/wireframe"

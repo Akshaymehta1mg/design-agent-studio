@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Check, Eye, EyeOff, Loader2, RefreshCw, ExternalLink, Trash2, AlertCircle } from "lucide-react"
+import { Check, Eye, EyeOff, Loader2, RefreshCw, ExternalLink, Trash2, AlertCircle } from "@/components/ui/icons"
 import { toast } from "sonner"
 import { useStore, defaultSettings, discardPendingWrites } from "@/lib/store"
 import { checkServer, useServer, viaServer } from "@/lib/server"

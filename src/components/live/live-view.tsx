@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
-import { Volume2, Check, Circle, Monitor, Mic, MicOff, Camera, PhoneOff, Loader2, ImageIcon, Send, AudioLines, AlertCircle } from "lucide-react"
+import { Volume2, Check, Circle, Monitor, Mic, MicOff, Camera, PhoneOff, Loader2, ImageIcon, Send, AudioLines, AlertCircle } from "@/components/ui/icons"
 import { toast } from "sonner"
 import { useActiveConversation, useStore } from "@/lib/store"
 import { readAsDataUrl } from "@/lib/files"

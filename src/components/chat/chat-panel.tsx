@@ -25,7 +25,7 @@ import {
   MessageSquareText,
   StickyNote,
   AlertCircle,
-} from "lucide-react"
+} from "@/components/ui/icons"
 import { toast } from "sonner"
 import type { ActionLog, Attachment, ChatMessage, FrameNode } from "@/lib/types"
 import { frameLabel, uid, useActiveConversation, useStore } from "@/lib/store"

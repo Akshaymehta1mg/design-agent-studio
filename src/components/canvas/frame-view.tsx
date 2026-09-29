@@ -1,5 +1,5 @@
 import { memo, useEffect, useMemo, useRef } from "react"
-import { Shapes as Figma, ImageIcon, MoreHorizontal, Sparkles, Radio, Package, Workflow as WorkflowIcon } from "lucide-react"
+import { Shapes as Figma, ImageIcon, MoreHorizontal, Sparkles, Radio, Package, Workflow as WorkflowIcon } from "@/components/ui/icons"
 import type { FrameNode, Mark } from "@/lib/types"
 import { buildSrcDoc } from "@/lib/wireframe"
 import { allDesignSystems, wireframeVars } from "@/lib/design-systems"
