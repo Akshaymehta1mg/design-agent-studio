@@ -244,7 +244,7 @@ export interface ProductLibrary {
 
 // ───────────────────────────── Settings / models ─────────────────────────────
 
-export type ProviderId = "anthropic" | "openai" | "google" | "openrouter" | "custom"
+export type ProviderId = "anthropic" | "openai" | "google" | "openrouter" | "moonshot" | "custom"
 
 export interface ModelInfo {
   id: string

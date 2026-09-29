@@ -95,6 +95,7 @@ export const defaultSettings: Settings = {
     openai: emptyProvider(),
     google: emptyProvider(),
     openrouter: emptyProvider(),
+    moonshot: emptyProvider(),
     custom: emptyProvider({ baseUrl: "", label: "Custom" }),
   },
   figmaToken: "",

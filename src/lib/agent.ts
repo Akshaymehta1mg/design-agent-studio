@@ -25,6 +25,31 @@ import { viaServer, type ServerUpstream } from "./server"
 export const NO_MODEL = "No model is set up yet. Open Settings, add an API key, and pick a model."
 
 /** The selected model, or null when no key or model is set up. */
+/** False only when the model is known not to read images (e.g. Kimi's text models). */
+export function currentModelReadsImages() {
+  const { settings } = useStore.getState()
+  const sel = settings.selectedModel
+  return settings.providers[sel.provider as KeyedProvider]?.models.find((m) => m.id === sel.id)?.vision ?? true
+}
+
+const NO_IMAGE = "[Image omitted: the selected model can't read images. Switch to a vision model to include it.]"
+
+/** Replace image and file parts with a note, for models that reject them. */
+export function withoutImages(messages: ModelMessage[]): ModelMessage[] {
+  const media = (p: { type?: string; mediaType?: string }) => p.type === "image" || (p.type === "file" && !String(p.mediaType ?? "").startsWith("text/")) || p.type === "media"
+  return messages.map((m) => {
+    if (typeof m.content === "string") return m
+    const content = (m.content as { type: string; output?: { type: string; value?: unknown } }[]).map((p) => {
+      if (media(p as never)) return { type: "text", text: NO_IMAGE }
+      if (p.type === "tool-result" && p.output?.type === "content" && Array.isArray(p.output.value)) {
+        return { ...p, output: { ...p.output, value: (p.output.value as { type: string }[]).map((v) => (media(v as never) ? { type: "text", text: NO_IMAGE } : v)) } }
+      }
+      return p
+    })
+    return { ...m, content } as ModelMessage
+  })
+}
+
 export function currentModel(): { model: LanguageModel | null; label: string } {
   const { settings } = useStore.getState()
   const sel = settings.selectedModel
@@ -560,6 +585,7 @@ export async function runChat(convId: string, userMsg: ChatMessage) {
       const tools: ToolSet = { ...mcp.tools, ...prismTools(convId), ...canvasTools(convId, assistantId, pushAction, figmaOn, markup, controller.signal) }
       const system = systemPrompt(c, useStore.getState().product, { figma: figmaOn, connectors: live.map((x) => x.name).filter((n) => !mcp.failed.includes(n)), markup })
       const signal = controller.signal
+      const readsImages = currentModelReadsImages()
       let text = ""
 
       /** One streamed pass. Returns the text of its last step and the messages it added. */
@@ -573,6 +599,8 @@ export async function runChat(convId: string, userMsg: ChatMessage) {
           stopWhen: stepCountIs(opts.steps ?? 10),
           abortSignal: signal,
           maxOutputTokens: 16000,
+          // Text-only models reject images anywhere in the history, including tool results.
+          ...(readsImages ? {} : { prepareStep: ({ messages: m }: { messages: ModelMessage[] }) => ({ messages: withoutImages(m) }) }),
         })
         // Batch streamed tokens: one store update per ~50ms instead of one per token.
         let buffered = ""

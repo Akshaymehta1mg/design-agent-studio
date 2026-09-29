@@ -47,6 +47,7 @@ Under **Environment Variables**, add at least one model key. Use the names from 
 | `OPENAI_API_KEY` | `sk-…` | platform.openai.com → API keys |
 | `GOOGLE_API_KEY` | `AIza…` | aistudio.google.com → Get API key |
 | `OPENROUTER_API_KEY` | `sk-or-…` | openrouter.ai → Keys |
+| `MOONSHOT_API_KEY` | `sk-…` | platform.moonshot.ai → API keys (Kimi; keys from moonshot.cn don't work) |
 | `FIGMA_TOKEN` *(optional)* | `figd_…` | Figma → Settings → Security → Personal access tokens (File content: read, Comments: write) |
 | `ACCESS_CODE` | a long passphrase you choose | Anyone using your keys must enter this once |
 

@@ -1,6 +1,6 @@
 // Shared by the Vercel functions in /api. Runs on the Edge runtime (Web Request/Response).
 
-export type Upstream = "anthropic" | "openai" | "google" | "openrouter" | "figma"
+export type Upstream = "anthropic" | "openai" | "google" | "openrouter" | "moonshot" | "figma"
 
 interface UpstreamDef {
   base: string
@@ -33,6 +33,12 @@ export const UPSTREAMS: Record<Upstream, UpstreamDef> = {
     base: "https://openrouter.ai/api",
     env: "OPENROUTER_API_KEY",
     allow: /^\/v1\/(chat\/completions|models|key)(\/|$|\?)/,
+    auth: (k) => ({ authorization: `Bearer ${k}` }),
+  },
+  moonshot: {
+    base: "https://api.moonshot.ai",
+    env: "MOONSHOT_API_KEY",
+    allow: /^\/v1\/(chat\/completions|models)(\/|$|\?)/,
     auth: (k) => ({ authorization: `Bearer ${k}` }),
   },
   figma: {

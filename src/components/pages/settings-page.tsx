@@ -72,7 +72,7 @@ export function SettingsPage() {
 
         <Card title="AI provider" description="Add a key and the model menu fills with every model it can use.">
           <Tabs value={tab} onValueChange={(v) => setTab(v as KeyedProvider)}>
-            <TabsList className="grid h-auto w-full grid-cols-5">
+            <TabsList className="grid h-auto w-full grid-cols-3 sm:grid-cols-6">
               {PROVIDER_ORDER.map((id) => (
                 <TabsTrigger key={id} value={id} className="relative flex h-auto flex-col items-start gap-0 px-2 py-1.5 text-left">
                   <span className="text-[12.5px] font-semibold">{PROVIDERS[id].name}</span>
@@ -248,7 +248,7 @@ function DataControls() {
   )
 }
 
-const NAMES: Record<string, string> = { anthropic: "Anthropic", openai: "OpenAI", google: "Gemini", openrouter: "OpenRouter", figma: "Figma" }
+const NAMES: Record<string, string> = { anthropic: "Anthropic", openai: "OpenAI", google: "Gemini", openrouter: "OpenRouter", moonshot: "Kimi (Moonshot)", figma: "Figma" }
 
 function DeploymentCard() {
   const server = useServer()
@@ -296,6 +296,6 @@ function DeploymentCard() {
 export async function loadServerModels() {
   const s = useServer.getState()
   if (!s.deployed || !s.authorized) return
-  const providers = (["anthropic", "openai", "google", "openrouter"] as const).filter((p) => s.providers[p] && !useStore.getState().settings.providers[p].apiKey.trim())
+  const providers = (["anthropic", "openai", "google", "openrouter", "moonshot"] as const).filter((p) => s.providers[p] && !useStore.getState().settings.providers[p].apiKey.trim())
   await Promise.all(providers.map((p) => connectProvider(p, true)))
 }
