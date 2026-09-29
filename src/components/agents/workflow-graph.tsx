@@ -3,7 +3,7 @@
 // edges for loops, plus a simulated run that walks the graph (including one pass round each loop).
 import { useEffect, useMemo, useRef, useState } from "react"
 import { motion, useReducedMotion } from "motion/react"
-import { Check, Diamond, Flag, Play, RotateCcw, Workflow as WorkflowIcon, Maximize2 } from "lucide-react"
+import { Check, Diamond, Flag, Play, RotateCcw, Workflow as WorkflowIcon, Maximize2 } from "@/components/ui/icons"
 import type { Workflow, WorkflowEdge, WorkflowNode } from "@/lib/types"
 import { EASE_OUT } from "@/lib/ease"
 import { cn } from "@/lib/utils"

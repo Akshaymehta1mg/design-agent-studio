@@ -11,6 +11,7 @@ import type {
   Mode,
   Page,
   DesignSystem,
+  DesignEdits,
   Connector,
   ProductLibrary,
   ProviderId,
@@ -18,6 +19,7 @@ import type {
   Settings,
   Viewport,
 } from "./types"
+import { DEFAULT_DESIGN_SYSTEM_ID } from "./design-systems"
 
 export const uid = (p = "") => p + nanoid(7)
 
@@ -93,6 +95,7 @@ export const defaultSettings: Settings = {
     openai: emptyProvider(),
     google: emptyProvider(),
     openrouter: emptyProvider(),
+    moonshot: emptyProvider(),
     custom: emptyProvider({ baseUrl: "", label: "Custom" }),
   },
   figmaToken: "",
@@ -163,6 +166,8 @@ function migrate(persisted: unknown, version: number) {
     const sel = p.settings?.selectedModel as { provider: string } | undefined
     if (p.settings && sel?.provider === "demo") p.settings = { ...p.settings, selectedModel: defaultSettings.selectedModel }
   }
+  // 2 → 3: Prism's Tata 1mg Dopamine system becomes the default unless someone picked another one.
+  if (version < 3 && (!p.defaultDesignSystemId || p.defaultDesignSystemId === "ds_wireframe")) p.defaultDesignSystemId = DEFAULT_DESIGN_SYSTEM_ID
   return p
 }
 
@@ -224,6 +229,9 @@ interface State {
   upsertDesignSystem: (ds: DesignSystem) => void
   deleteDesignSystem: (id: string) => void
   setDefaultDesignSystem: (id: string) => void
+  /** Edits layered on a design system's extracted reference, by design system id */
+  designEdits: Record<string, DesignEdits>
+  patchDesignEdits: (dsId: string, fn: (e: DesignEdits) => DesignEdits) => void
   connectors: Connector[]
   upsertConnector: (c: Connector) => void
   patchConnector: (id: string, patch: Partial<Connector>) => void
@@ -237,6 +245,12 @@ interface State {
   product: ProductLibrary
   history: Record<string, History>
   focus: { id: string; t: number } | null
+  /** The prototype frame open in the player */
+  playing: string | null
+  playPrototype: (id: string | null) => void
+  /** The notes document open in the reader */
+  reading: string | null
+  openNotes: (id: string | null) => void
   settingsOpen: boolean
   busy: boolean
 
@@ -274,15 +288,17 @@ export const useStore = create<State>()(
       setRoute: (route) => set({ route, selection: [] }),
       openProject: (id, mode = "canvas") => set({ activeId: id, route: "project", mode, selection: [] }),
       designSystems: [],
-      defaultDesignSystemId: "ds_wireframe",
+      defaultDesignSystemId: DEFAULT_DESIGN_SYSTEM_ID,
       upsertDesignSystem: (ds) =>
         set((s) => ({ designSystems: s.designSystems.some((d) => d.id === ds.id) ? s.designSystems.map((d) => (d.id === ds.id ? ds : d)) : [...s.designSystems, ds] })),
       deleteDesignSystem: (id) =>
         set((s) => ({
           designSystems: s.designSystems.filter((d) => d.id !== id),
-          defaultDesignSystemId: s.defaultDesignSystemId === id ? "ds_wireframe" : s.defaultDesignSystemId,
+          defaultDesignSystemId: s.defaultDesignSystemId === id ? DEFAULT_DESIGN_SYSTEM_ID : s.defaultDesignSystemId,
         })),
       setDefaultDesignSystem: (defaultDesignSystemId) => set({ defaultDesignSystemId }),
+      designEdits: {},
+      patchDesignEdits: (dsId, fn) => set((s) => ({ designEdits: { ...s.designEdits, [dsId]: fn(s.designEdits[dsId] ?? {}) } })),
       connectors: [],
       upsertConnector: (c) => set((s) => ({ connectors: s.connectors.some((x) => x.id === c.id) ? s.connectors.map((x) => (x.id === c.id ? c : x)) : [...s.connectors, c] })),
       patchConnector: (id, patch) => set((s) => ({ connectors: s.connectors.map((x) => (x.id === id ? { ...x, ...patch } : x)) })),
@@ -296,6 +312,10 @@ export const useStore = create<State>()(
       product: defaultProduct,
       history: {},
       focus: null,
+      playing: null,
+      playPrototype: (id) => set({ playing: id }),
+      reading: null,
+      openNotes: (id) => set({ reading: id }),
       settingsOpen: false,
       busy: false,
 
@@ -397,7 +417,7 @@ export const useStore = create<State>()(
     }),
     {
       name: "design-agent-studio",
-      version: 2,
+      version: 3,
       migrate: migrate as (p: unknown, v: number) => Partial<State>,
       storage: safeStorage as PersistStorage<Partial<State>>,
       partialize: (s) => ({
@@ -408,6 +428,7 @@ export const useStore = create<State>()(
         route: s.route,
         designSystems: s.designSystems,
         defaultDesignSystemId: s.defaultDesignSystemId,
+        designEdits: s.designEdits,
         connectors: s.connectors.map((c) => ({ ...c, status: c.status === "checking" ? ("untested" as const) : c.status })),
       }),
       merge: (persisted, current) => {

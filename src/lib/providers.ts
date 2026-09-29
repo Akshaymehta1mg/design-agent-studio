@@ -13,10 +13,11 @@ export const PROVIDERS: Record<KeyedProvider, { name: string; vendor: string; pl
   openai: { name: "GPT", vendor: "OpenAI", placeholder: "sk-…", keyUrl: "https://platform.openai.com/api-keys", hint: "platform.openai.com → API keys" },
   google: { name: "Gemini", vendor: "Google AI Studio", placeholder: "AIza…", keyUrl: "https://aistudio.google.com/apikey", hint: "aistudio.google.com → Get API key" },
   openrouter: { name: "Any model", vendor: "OpenRouter", placeholder: "sk-or-…", keyUrl: "https://openrouter.ai/keys", hint: "openrouter.ai → Keys" },
+  moonshot: { name: "Kimi", vendor: "Moonshot AI", placeholder: "sk-…", keyUrl: "https://platform.moonshot.ai/console/api-keys", hint: "platform.moonshot.ai → API keys (keys from the China site, moonshot.cn, don't work here)" },
   custom: { name: "Custom", vendor: "OpenAI-compatible", placeholder: "key (optional for local servers)", keyUrl: "", hint: "Groq, Together, LM Studio, Ollama… any /v1/models + /v1/chat/completions endpoint" },
 }
 
-export const PROVIDER_ORDER: KeyedProvider[] = ["anthropic", "openai", "google", "openrouter", "custom"]
+export const PROVIDER_ORDER: KeyedProvider[] = ["anthropic", "openai", "google", "openrouter", "moonshot", "custom"]
 
 const ANTHROPIC_HEADERS = (key: string) => ({
   "x-api-key": key,
@@ -47,6 +48,10 @@ async function getJson(url: string, init: RequestInit = {}) {
 }
 
 const OPENAI_SKIP = /(embed|whisper|tts|dall-e|moderation|audio|realtime|transcribe|image|search|babbage|davinci|computer-use|codex-mini)/i
+
+const MOONSHOT_BASE = "https://api.moonshot.ai"
+/** "kimi-k2-turbo-preview" → "Kimi K2 Turbo Preview" */
+const kimiName = (id: string) => id.replace(/^kimi-/i, "Kimi-").split("-").map((w) => (/^k\d/i.test(w) ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1))).join(" ")
 
 /** Fetch every model the key can use, straight from the provider's list endpoint. */
 export async function fetchModels(provider: KeyedProvider, state: ProviderKeyState): Promise<ModelInfo[]> {
@@ -99,6 +104,18 @@ export async function fetchModels(provider: KeyedProvider, state: ProviderKeySta
           context: m.context_length,
         }))
     }
+    case "moonshot": {
+      const j = await getJson(`${base(MOONSHOT_BASE)}/v1/models`, { headers: auth({ Authorization: `Bearer ${key}` }) })
+      return (j.data ?? [])
+        .filter((m: { id: string }) => !/embed|tts|asr|audio/i.test(m.id))
+        .map((m: { id: string; context_length?: number; supports_image_in?: boolean }) => ({
+          id: m.id,
+          name: kimiName(m.id),
+          provider,
+          vision: m.supports_image_in ?? /vision|vl\b|kimi-latest|k2\.5|kimi-k[3-9]/i.test(m.id),
+          context: m.context_length,
+        }))
+    }
     case "custom": {
       const base = (state.baseUrl ?? "").replace(/\/+$/, "")
       if (!base) throw new Error("Add the base URL, for example https://api.groq.com/openai/v1")
@@ -124,6 +141,8 @@ export function getLanguageModel(provider: KeyedProvider, modelId: string, state
         return createGoogleGenerativeAI({ apiKey: "server", baseURL: `${base}/v1beta`, headers })(modelId)
       case "openrouter":
         return createOpenAICompatible({ name: "openrouter", baseURL: `${base}/v1`, apiKey: "server", headers: { ...headers, "X-Title": "Design Agent Studio" } })(modelId)
+      case "moonshot":
+        return createOpenAICompatible({ name: "moonshot", baseURL: `${base}/v1`, apiKey: "server", headers })(modelId)
     }
   }
   switch (provider) {
@@ -140,6 +159,8 @@ export function getLanguageModel(provider: KeyedProvider, modelId: string, state
         apiKey: key,
         headers: { "HTTP-Referer": typeof location !== "undefined" ? location.origin : "", "X-Title": "Design Agent Studio" },
       })(modelId)
+    case "moonshot":
+      return createOpenAICompatible({ name: "moonshot", baseURL: `${MOONSHOT_BASE}/v1`, apiKey: key })(modelId)
     case "custom":
       return createOpenAICompatible({ name: "custom", baseURL: (state.baseUrl ?? "").replace(/\/+$/, ""), apiKey: key || undefined })(modelId)
   }
@@ -147,7 +168,7 @@ export function getLanguageModel(provider: KeyedProvider, modelId: string, state
 
 /** A sensible default when a key's models first load. */
 export function pickDefaultModel(models: ModelInfo[]): ModelInfo | undefined {
-  const prefs = [/claude-(opus|sonnet)-[45]/i, /claude-sonnet/i, /gpt-5(?!.*nano)/i, /gpt-4\.1(?!-nano)/i, /gpt-4o(?!-mini)/i, /gemini-2\.5-pro|gemini-3.*pro/i, /gemini.*flash/i, /anthropic\/claude-sonnet/i]
+  const prefs = [/claude-(opus|sonnet)-[45]/i, /claude-sonnet/i, /gpt-5(?!.*nano)/i, /gpt-4\.1(?!-nano)/i, /gpt-4o(?!-mini)/i, /gemini-2\.5-pro|gemini-3.*pro/i, /gemini.*flash/i, /anthropic\/claude-sonnet/i, /kimi-k2(?!.*(turbo|mini))/i, /kimi-latest/i]
   for (const p of prefs) {
     const m = models.find((x) => p.test(x.id))
     if (m) return m

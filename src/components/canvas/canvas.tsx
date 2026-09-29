@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useShallow } from "zustand/react/shallow"
-import { Hand, ImagePlus, MessageCircle, Minus, MousePointer2, Plus, Redo2, StickyNote, Undo2, Maximize, Upload } from "lucide-react"
+import { Hand, ImagePlus, MessageCircle, Minus, MousePointer2, Plus, Redo2, StickyNote, Undo2, Maximize, Upload } from "@/components/ui/icons"
 import type { CanvasDoc, CanvasNode, FrameNode, Viewport } from "@/lib/types"
 import { useStore, uid, type Tool } from "@/lib/store"
 import { addImageFiles, addMarks } from "@/lib/canvas-actions"
@@ -191,6 +191,8 @@ export function Canvas({ onAskAbout }: { onAskAbout: (f: FrameNode) => void }) {
       return
     }
     if (tool === "note") {
+      // Keep the rest of this click from moving focus away from the new note's text box.
+      e.preventDefault()
       const p = toWorld(e.clientX, e.clientY)
       const id = uid("n_")
       editCanvas((d) => ({ ...d, nodes: [...d.nodes, { id, kind: "note", x: p.x - 20, y: p.y - 20, w: 240, h: 150, text: "", author: "user", createdAt: Date.now() }] }))
@@ -344,7 +346,7 @@ export function Canvas({ onAskAbout }: { onAskAbout: (f: FrameNode) => void }) {
                 zoom={vp.zoom}
                 offset={moving?.has(n.id) ? offset : undefined}
                 onPointerDown={onNodeDown}
-                onPreview={setPreview}
+                onPreview={(f) => (f.screens?.length ? useStore.getState().playPrototype(f.id) : setPreview(f))}
                 onDelete={deleteNode}
                 onAsk={onAskAbout}
                 activeMark={activeMark}

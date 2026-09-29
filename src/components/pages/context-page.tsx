@@ -1,5 +1,5 @@
 import { useRef, useState } from "react"
-import { FileText, Loader2, Plus, RefreshCw, Trash2, Upload, MessageSquarePlus } from "lucide-react"
+import { FileText, Loader2, Plus, RefreshCw, Trash2, Upload, MessageSquarePlus } from "@/components/ui/icons"
 import { toast } from "sonner"
 import type { DesignSystemSource, ProductScreen } from "@/lib/types"
 import { uid, useStore } from "@/lib/store"

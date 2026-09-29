@@ -6,7 +6,7 @@ import { useStore } from "./store"
  * have server-side keys. Calls to those go through /api/p/<provider>/…, where
  * the key is added on the server and never reaches the browser.
  */
-export type ServerUpstream = "anthropic" | "openai" | "google" | "openrouter" | "figma"
+export type ServerUpstream = "anthropic" | "openai" | "google" | "openrouter" | "moonshot" | "figma"
 
 interface ServerState {
   checked: boolean

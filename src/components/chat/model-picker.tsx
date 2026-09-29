@@ -1,4 +1,4 @@
-import { Check, Eye, KeyRound } from "lucide-react"
+import { Check, Eye, KeyRound } from "@/components/ui/icons"
 import { useStore } from "@/lib/store"
 import { PROVIDERS, PROVIDER_ORDER } from "@/lib/providers"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command"

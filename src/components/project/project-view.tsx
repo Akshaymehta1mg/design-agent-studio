@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { motion } from "motion/react"
-import { ArrowLeft, Check, ChevronDown, Layers, MousePointer2, Radio, Shapes as Figma, Palette } from "lucide-react"
+import { ArrowLeft, Check, ChevronDown, Layers, MousePointer2, Radio, Shapes as Figma, Palette } from "@/components/ui/icons"
 import { useActiveConversation, useStore } from "@/lib/store"
 import { allDesignSystems } from "@/lib/design-systems"
 import type { FrameNode, Mode } from "@/lib/types"
@@ -11,6 +11,8 @@ import { ChatPanel } from "@/components/chat/chat-panel"
 import { LivePanel, LiveStage } from "@/components/live/live-view"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 import { Button } from "@/components/ui/button"
+import { PrototypePlayer } from "@/components/canvas/prototype-player"
+import { NotesReader } from "@/components/canvas/notes-reader"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useIsMobile } from "@/hooks/use-mobile"
 
@@ -119,6 +121,8 @@ export function ProjectView() {
 
   return (
     <div className="bg-background flex h-full flex-col">
+      <PrototypePlayer />
+      <NotesReader />
       <header className="flex h-14 shrink-0 items-center gap-2 border-b px-3">
         <Button variant="ghost" size="icon" className="size-8 rounded-full" onClick={() => setRoute("home")} aria-label="Back to Home">
           <ArrowLeft />
@@ -165,7 +169,7 @@ export function ProjectView() {
         <DesignSystemMenu />
       </header>
 
-      <div className="min-h-0 flex-1">
+      <div className="min-h-0 flex-1 overflow-clip">
         {isMobile ? (
           <div className="flex h-full flex-col">
             <div className="bg-muted m-2 grid shrink-0 grid-cols-2 rounded-lg p-0.5">
@@ -175,7 +179,7 @@ export function ProjectView() {
                 </button>
               ))}
             </div>
-            <div className="min-h-0 flex-1">{pane === "main" ? main : side}</div>
+            <div className="min-h-0 flex-1 overflow-clip">{pane === "main" ? main : side}</div>
           </div>
         ) : (
           <ResizablePanelGroup orientation="horizontal" className="h-full">
@@ -183,7 +187,7 @@ export function ProjectView() {
               {main}
             </ResizablePanel>
             <ResizableHandle />
-            <ResizablePanel id="right" defaultSize={420} minSize={340} maxSize={680}>
+            <ResizablePanel id="right" defaultSize={420} minSize={340} maxSize={680} className="overflow-clip">
               {side}
             </ResizablePanel>
           </ResizablePanelGroup>

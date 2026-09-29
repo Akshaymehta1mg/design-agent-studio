@@ -1,5 +1,5 @@
 // From beUI's Todo List: beui.dev/components/agents/todo-list (status colors mapped to studio tokens)
-import { ChevronDown, ListTodo } from "lucide-react"
+import { ChevronDown, ListTodo } from "@/components/ui/icons"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { type ReactNode, useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react"
 import { ActionSwapRollText } from "@/components/motion/action-swap"

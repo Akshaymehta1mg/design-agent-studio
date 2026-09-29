@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Signing in…</title>
+  <style>body{margin:0;display:grid;place-items:center;min-height:100vh;font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#555}</style>
+</head>
+<body>
+  <p id="msg">Finishing sign-in…</p>
+  <script>
+    // OAuth redirect target for connector sign-in: hand the result to the app window, then close.
+    const q = new URLSearchParams(location.search);
+    const result = { type: "das-oauth", code: q.get("code"), state: q.get("state"), error: q.get("error"), error_description: q.get("error_description") };
+    if (window.opener) {
+      window.opener.postMessage(result, location.origin);
+      window.close();
+    } else {
+      document.getElementById("msg").textContent = "Sign-in finished. You can close this window and return to Design Agent Studio.";
+    }
+  </script>
+</body>
+</html>

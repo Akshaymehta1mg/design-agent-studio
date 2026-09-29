@@ -1,6 +1,6 @@
 // Adapted from beUI's Approval Card: beui.dev/components/agents/approval-card
 // Changes: uses the studio's shadcn tokens and PressButton; status colors mapped to theme tokens.
-import { ArrowLeft, ArrowRight, Check, CircleHelp, LoaderCircle, MessageSquareText, X } from "lucide-react"
+import { ArrowLeft, ArrowRight, Check, CircleHelp, LoaderCircle, MessageSquareText, X } from "@/components/ui/icons"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { AgentDisclosure } from "./agent-disclosure"
@@ -50,6 +50,8 @@ export interface ApprovalCardProps {
   approveLabel?: ReactNode
   submitLabel?: ReactNode
   result?: ReactNode
+  /** Answered state: each question with the answer given */
+  answers?: { question: ReactNode; answer: ReactNode }[]
   className?: string
 }
 
@@ -60,7 +62,7 @@ function statusLabel(s: ApprovalCardStatus) {
   if (s === "approved") return "Approved"
   if (s === "rejected") return "Rejected"
   if (s === "changes-requested") return "Changes requested"
-  if (s === "answered") return "Response submitted"
+  if (s === "answered") return "Answered"
   return "Input required"
 }
 
@@ -152,6 +154,7 @@ export function ApprovalCard({
   approveLabel = "Approve",
   submitLabel = "Submit response",
   result,
+  answers: answered,
   className,
 }: ApprovalCardProps) {
   const reduce = useReducedMotion() ?? false
@@ -165,8 +168,9 @@ export function ApprovalCard({
   const busy = status === "submitting"
   const interactive = status === "pending" || busy
   const currentAnswer = question ? answers[question.id] ?? EMPTY : EMPTY
-  const displayTitle = question?.title ?? title
-  const titleKey = question?.id ?? String(status)
+  // Once answered, the card is about its own title, not whichever question came last.
+  const displayTitle = interactive ? question?.title ?? title : title
+  const titleKey = interactive ? question?.id ?? String(status) : String(status)
 
   const clear = useCallback(() => {
     if (timer.current !== undefined) window.clearTimeout(timer.current)
@@ -285,9 +289,35 @@ export function ApprovalCard({
             )}
           </AgentDisclosure>
 
-          {!interactive ? <p className="text-muted-foreground mt-1 text-sm">{result ?? statusLabel(status)}</p> : null}
+          {!interactive ? answered?.length ? <AnswerList answers={answered} /> : <p className="text-muted-foreground mt-1 text-sm">{result ?? statusLabel(status)}</p> : null}
         </div>
       </div>
+    </div>
+  )
+}
+
+const ANSWERS_SHOWN = 3
+
+/** Answered state: one row per question, the question small and muted, the answer below it. */
+function AnswerList({ answers }: { answers: { question: ReactNode; answer: ReactNode }[] }) {
+  const [all, setAll] = useState(false)
+  const shown = all ? answers : answers.slice(0, ANSWERS_SHOWN)
+  const hidden = answers.length - shown.length
+  return (
+    <div className="mt-3">
+      <dl className="bg-background/70 divide-border/70 flex flex-col divide-y rounded-xl">
+        {shown.map((a, i) => (
+          <div key={i} className="px-3 py-2.5">
+            <dt className="text-muted-foreground text-[12px] leading-snug">{a.question}</dt>
+            <dd className="text-foreground mt-0.5 text-[13.5px] leading-snug font-medium">{a.answer}</dd>
+          </div>
+        ))}
+      </dl>
+      {answers.length > ANSWERS_SHOWN && (
+        <button type="button" onClick={() => setAll(!all)} className="text-muted-foreground hover:text-foreground mt-2 px-1 text-[12.5px] font-medium">
+          {all ? "Show less" : `Show ${hidden} more`}
+        </button>
+      )}
     </div>
   )
 }

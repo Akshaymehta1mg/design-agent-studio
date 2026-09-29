@@ -188,6 +188,13 @@
 @layer base {
   * { @apply border-border outline-ring/50; }
   html, body, #root { height: 100%; }
+  /* The app is a fixed-height shell: nothing above the scroll areas may scroll, not even programmatically
+     (focus restoration, scrollIntoView, text-selection drags), or the chat composer drifts off the bottom. */
+  #root { overflow: clip; }
+  /* Safari (iPad/iPhone, narrow windows) scrolls the page even with body overflow hidden; pinning the
+     document stops the whole app, composer included, from sliding up when a scroll area hits its end. */
+  html { overflow: hidden; overscroll-behavior: none; }
+  body { position: fixed; inset: 0; overscroll-behavior: none; }
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-size: 14px;
@@ -215,6 +222,12 @@
 .md pre code { background: none; padding: 0; }
 .md h3, .md h4 { font-family: var(--font-sans); font-weight: 600; font-size: 1em; letter-spacing: 0; }
 .md strong { font-weight: 600; }
+.md hr { border: 0; border-top: 1px solid var(--border); margin: 0.9em 0; }
+.md .md-img { display: block; max-width: 100%; max-height: 420px; border-radius: 12px; border: 1px solid var(--border); }
+.md .md-table { overflow-x: auto; }
+.md table { border-collapse: collapse; font-size: 0.92em; min-width: 100%; }
+.md th, .md td { border: 1px solid var(--border); padding: 0.4em 0.6em; text-align: left; vertical-align: top; }
+.md th { background: var(--muted); font-weight: 600; }
 
 @keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 var(--ember-soft); } 100% { box-shadow: 0 0 0 10px transparent; } }
 .pulse-ring { animation: pulse-ring 1.4s ease-out infinite; }

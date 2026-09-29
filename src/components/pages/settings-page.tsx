@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Check, Eye, EyeOff, Loader2, RefreshCw, ExternalLink, Trash2, AlertCircle } from "lucide-react"
+import { Check, Eye, EyeOff, Loader2, RefreshCw, ExternalLink, Trash2, AlertCircle } from "@/components/ui/icons"
 import { toast } from "sonner"
 import { useStore, defaultSettings, discardPendingWrites } from "@/lib/store"
 import { checkServer, useServer, viaServer } from "@/lib/server"
@@ -72,7 +72,7 @@ export function SettingsPage() {
 
         <Card title="AI provider" description="Add a key and the model menu fills with every model it can use.">
           <Tabs value={tab} onValueChange={(v) => setTab(v as KeyedProvider)}>
-            <TabsList className="grid h-auto w-full grid-cols-5">
+            <TabsList className="grid h-auto w-full grid-cols-3 sm:grid-cols-6">
               {PROVIDER_ORDER.map((id) => (
                 <TabsTrigger key={id} value={id} className="relative flex h-auto flex-col items-start gap-0 px-2 py-1.5 text-left">
                   <span className="text-[12.5px] font-semibold">{PROVIDERS[id].name}</span>
@@ -117,6 +117,7 @@ export function SettingsPage() {
                     {serverHas(id) && !p.apiKey.trim() ? "This deployment provides a key, so you can leave this empty. Add your own to use it instead." : PROVIDERS[id].hint}
                   </p>
                 </div>
+                <PromptSize id={id} />
                 {p.status === "error" && (
                   <div className="border-destructive/30 bg-destructive/5 flex gap-2 rounded-lg border p-2.5 text-[12.5px]">
                     <AlertCircle className="text-destructive mt-0.5 size-4 shrink-0" />
@@ -248,7 +249,60 @@ function DataControls() {
   )
 }
 
-const NAMES: Record<string, string> = { anthropic: "Anthropic", openai: "OpenAI", google: "Gemini", openrouter: "OpenRouter", figma: "Figma" }
+const NAMES: Record<string, string> = { anthropic: "Anthropic", openai: "OpenAI", google: "Gemini", openrouter: "OpenRouter", moonshot: "Kimi (Moonshot)", figma: "Figma" }
+
+const SIZES = [
+  { id: "auto", label: "Auto", hint: "Full prompt; switches a model to the short one if it hits a request-size limit" },
+  { id: "full", label: "Full", hint: "Always send the full Prism prompt and every tool" },
+  { id: "compact", label: "Compact", hint: "About a quarter of the tokens, for small plans such as Groq's free tier" },
+] as const
+
+/** How much the agent sends per request for this provider's models. */
+function PromptSize({ id }: { id: KeyedProvider }) {
+  const size = useStore((s) => s.settings.providers[id].promptSize ?? "auto")
+  const remembered = useStore((s) => s.settings.compactModels)
+  const compactModels = Object.keys(remembered ?? {}).filter((k) => k.startsWith(`${id}:`))
+  const patchProvider = useStore((s) => s.patchProvider)
+  const patchSettings = useStore((s) => s.patchSettings)
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Label>Prompt size</Label>
+      <div className="bg-muted flex w-fit rounded-lg p-0.5" role="radiogroup" aria-label="Prompt size">
+        {SIZES.map((o) => (
+          <button
+            key={o.id}
+            role="radio"
+            aria-checked={size === o.id}
+            title={o.hint}
+            onClick={() => patchProvider(id, { promptSize: o.id })}
+            className={cn("h-7 rounded-md px-3 text-[12.5px] transition-colors", size === o.id ? "bg-background font-medium shadow-xs" : "text-muted-foreground hover:text-foreground")}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
+      <p className="text-muted-foreground text-[12px]">
+        {SIZES.find((o) => o.id === size)!.hint}.
+        {size === "auto" && compactModels.length > 0 && (
+          <>
+            {" "}
+            Using the short prompt for {compactModels.map((k) => k.slice(id.length + 1)).join(", ")}.{" "}
+            <button
+              className="text-foreground underline underline-offset-2"
+              onClick={() => {
+                const all = { ...(useStore.getState().settings.compactModels ?? {}) }
+                for (const k of compactModels) delete all[k]
+                patchSettings({ compactModels: all })
+              }}
+            >
+              Reset
+            </button>
+          </>
+        )}
+      </p>
+    </div>
+  )
+}
 
 function DeploymentCard() {
   const server = useServer()
@@ -296,6 +350,6 @@ function DeploymentCard() {
 export async function loadServerModels() {
   const s = useServer.getState()
   if (!s.deployed || !s.authorized) return
-  const providers = (["anthropic", "openai", "google", "openrouter"] as const).filter((p) => s.providers[p] && !useStore.getState().settings.providers[p].apiKey.trim())
+  const providers = (["anthropic", "openai", "google", "openrouter", "moonshot"] as const).filter((p) => s.providers[p] && !useStore.getState().settings.providers[p].apiKey.trim())
   await Promise.all(providers.map((p) => connectProvider(p, true)))
 }

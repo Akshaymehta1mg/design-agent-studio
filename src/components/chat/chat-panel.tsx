@@ -25,12 +25,13 @@ import {
   MessageSquareText,
   StickyNote,
   AlertCircle,
-} from "lucide-react"
+} from "@/components/ui/icons"
 import { toast } from "sonner"
 import type { ActionLog, Attachment, ChatMessage, FrameNode } from "@/lib/types"
 import { frameLabel, uid, useActiveConversation, useStore } from "@/lib/store"
 import { runChat, speak, stopAgent } from "@/lib/agent"
 import { addImageFiles } from "@/lib/canvas-actions"
+import { PrototypeCard } from "@/components/canvas/prototype-player"
 import { formatBytes, isTextFile, readAsDataUrl, readAsText } from "@/lib/files"
 import { cn } from "@/lib/utils"
 import { hasFigmaAccess } from "@/lib/figma"
@@ -61,29 +62,35 @@ import { TodoList } from "@/components/agents/todo-list"
 import { ApprovalCard, type ApprovalCardAnswers } from "@/components/agents/approval-card"
 import { WorkflowCard } from "@/components/agents/workflow-graph"
 import { answerAsk, isWaiting } from "@/lib/message-parts"
+import { legacyAnswers } from "@/lib/decisions"
 
-function formatAnswers(part: Extract<MessagePart, { type: "ask" }>, answers: ApprovalCardAnswers) {
-  return (part.questions ?? [])
-    .map((q) => {
-      const a = answers[q.id]
-      if (!a) return null
-      const labels = a.selected.map((v) => q.options?.find((o) => o.value === v)?.label ?? v)
-      if (a.custom?.trim()) labels.push(a.custom.trim())
-      return part.questions!.length > 1 ? `${q.title}: ${labels.join(", ")}` : labels.join(", ")
-    })
-    .filter(Boolean)
-    .join(" · ")
+type AskPart = Extract<MessagePart, { type: "ask" }>
+
+function answerList(part: AskPart, answers: ApprovalCardAnswers) {
+  return (part.questions ?? []).flatMap((q) => {
+    const a = answers[q.id]
+    if (!a) return []
+    const labels = a.selected.map((v) => q.options?.find((o) => o.value === v)?.label ?? v)
+    if (a.custom?.trim()) labels.push(a.custom.trim())
+    return labels.length ? [{ question: q.title, answer: labels.join(", ") }] : []
+  })
 }
+
+/** The text the model gets back. */
+const answerText = (list: { question: string; answer: string }[]) =>
+  list.length === 1 ? list[0].answer : list.map((x) => `${x.question}: ${x.answer}`).join(" · ")
+
 
 function PartView({ part, loc }: { part: MessagePart; loc: { convId: string; msgId: string } }) {
   const focusNode = useStore((s) => s.focusNode)
   if (part.type === "text") return <Markdown text={part.text} className="text-[14.5px] leading-[1.65]" />
   if (part.type === "plan") return <TodoList title={part.title} items={part.items} />
   if (part.type === "workflow") return <WorkflowCard workflow={part.workflow} onOpen={() => focusNode(part.frameId)} />
+  if (part.type === "prototype") return <PrototypeCard frameId={part.frameId} />
   // ask
   const live = isWaiting(part.id)
   const status = part.status === "pending" && !live ? "rejected" : part.status
-  const done = (s: typeof part.status, result: string) => answerAsk(loc, part.id, s, result)
+  const done = (s: typeof part.status, result: string, answers?: { question: string; answer: string }[]) => answerAsk(loc, part.id, s, result, answers)
   return (
     <ApprovalCard
       title={part.title}
@@ -91,8 +98,12 @@ function PartView({ part, loc }: { part: MessagePart; loc: { convId: string; msg
       questions={part.questions?.map((q) => ({ ...q, autoAdvance: true }))}
       status={status}
       result={part.status === "pending" && !live ? "No longer waiting for an answer." : part.result}
+      answers={part.status === "answered" ? (part.answers ?? legacyAnswers(part)) : undefined}
       approveLabel={part.approveLabel ?? "Approve"}
-      onSubmit={(answers) => done("answered", formatAnswers(part, answers) || "Answered")}
+      onSubmit={(answers) => {
+        const list = answerList(part, answers)
+        done("answered", answerText(list) || "Answered", list)
+      }}
       onApprove={() => done("approved", "Approved")}
       onRequestChanges={() => done("changes-requested", "Changes requested")}
       onReject={() => done("rejected", "Rejected")}
@@ -127,7 +138,9 @@ export function ChatPanel() {
   }
 
   return (
-    <div className="bg-background relative flex h-full min-w-0 flex-col">
+    // overflow-clip, not hidden: a clipped box can't be scrolled by focus() or scrollIntoView, so the
+    // composer can never drift up from the bottom.
+    <div className="bg-background relative flex h-full min-w-0 flex-col overflow-clip">
       <header className="flex h-14 shrink-0 items-center border-b px-4">
         <div className="min-w-0 flex-1 text-[13.5px] font-semibold">Chat</div>
         <span className="text-muted-foreground max-w-[60%] truncate text-[12px]">{model}</span>
@@ -135,7 +148,7 @@ export function ChatPanel() {
 
       <div
         ref={scroller}
-        className="min-h-0 flex-1 overflow-y-auto"
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
         data-scrollable
         onScroll={(e) => {
           const el = e.currentTarget
@@ -351,7 +364,12 @@ function AssistantMessage({ m, convId }: { m: ChatMessage; convId: string }) {
               <button
                 key={a.id}
                 disabled={!a.targetId}
-                onClick={() => a.targetId && focusNode(a.targetId)}
+                onClick={() => {
+                  if (!a.targetId) return
+                  // Notes open in the reader; everything else is shown on the canvas.
+                  if (a.tone === "note") useStore.getState().openNotes(a.targetId)
+                  else focusNode(a.targetId)
+                }}
                 title={a.label}
                 className={cn("hover:bg-accent inline-flex h-8 max-w-full min-w-0 items-center gap-1.5 rounded-full border px-3 text-[12.5px] font-medium transition-colors disabled:cursor-default", a.tone === "error" && "text-destructive")}
               >
@@ -429,7 +447,7 @@ function Composer({ busy }: { busy: boolean }) {
   useEffect(() => {
     const onCompose = (e: Event) => {
       setText((e as CustomEvent<{ text: string }>).detail.text)
-      requestAnimationFrame(() => ta.current?.focus())
+      requestAnimationFrame(() => ta.current?.focus({ preventScroll: true }))
     }
     window.addEventListener("das:compose", onCompose)
     return () => window.removeEventListener("das:compose", onCompose)

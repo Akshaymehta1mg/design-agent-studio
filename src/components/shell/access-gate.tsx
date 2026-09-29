@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Loader2, LockKeyhole } from "lucide-react"
+import { Loader2, LockKeyhole } from "@/components/ui/icons"
 import { toast } from "sonner"
 import { useStore } from "@/lib/store"
 import { checkServer, useServer } from "@/lib/server"

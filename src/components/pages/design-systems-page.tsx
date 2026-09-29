@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react"
 import { motion } from "motion/react"
-import { AlertCircle, ArrowLeft, Check, Copy, FileJson, Images, Loader2, PenLine, Plus, RefreshCw, Star, Trash2, Upload, Shapes as Figma } from "lucide-react"
+import { AlertCircle, ArrowLeft, Check, Copy, ExternalLink, FileJson, Images, Loader2, PenLine, Plus, RefreshCw, Star, Trash2, Upload, Shapes as Figma } from "@/components/ui/icons"
 import { toast } from "sonner"
 import type { DesignSystem } from "@/lib/types"
 import { uid, useStore } from "@/lib/store"
@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { PageHeader, Section } from "./page-header"
+import { DesignReferenceView } from "./design-reference-view"
 
 const blank = (): DesignSystem => ({
   id: uid("ds_"),
@@ -223,6 +224,33 @@ function DesignSystemEditor({ ds, onBack, onOpen }: { ds: DesignSystem; onBack: 
 
   const previewDoc = useMemo(() => buildSrcDoc(PREVIEW_WIREFRAME, wireframeVars(ds)), [ds])
 
+  const defaultAction =
+    def === ds.id ? (
+      <Badge variant="secondary" className="h-8 gap-1 rounded-full px-3 text-[12.5px]">
+        <Check className="size-3.5" /> Default for new projects
+      </Badge>
+    ) : (
+      <Button variant="outline" size="sm" className="h-8 rounded-full" onClick={() => setDefault(ds.id)}>
+        <Star /> Make default
+      </Button>
+    )
+
+  if (ds.id === "ds_tata1mg")
+    return (
+      <DesignReferenceView
+        ds={ds}
+        onBack={onBack}
+        actions={
+          <>
+            {defaultAction}
+            <Button variant="ghost" size="sm" className="h-8 rounded-full" onClick={duplicate}>
+              <Copy /> Duplicate
+            </Button>
+          </>
+        }
+      />
+    )
+
   return (
     <div className="h-full overflow-y-auto" data-scrollable>
       <div className="mx-auto max-w-[1180px] px-6 pb-16 md:px-10">
@@ -231,15 +259,7 @@ function DesignSystemEditor({ ds, onBack, onOpen }: { ds: DesignSystem; onBack: 
             <ArrowLeft /> Design systems
           </Button>
           <div className="flex-1" />
-          {def === ds.id ? (
-            <Badge variant="secondary" className="h-8 gap-1 rounded-full px-3 text-[12.5px]">
-              <Check className="size-3.5" /> Default for new projects
-            </Badge>
-          ) : (
-            <Button variant="outline" size="sm" className="h-8 rounded-full" onClick={() => setDefault(ds.id)}>
-              <Star /> Make default
-            </Button>
-          )}
+          {defaultAction}
           <Button variant="outline" size="sm" className="h-8 rounded-full" onClick={duplicate}>
             <Copy /> Duplicate
           </Button>
@@ -416,6 +436,8 @@ function DesignSystemEditor({ ds, onBack, onOpen }: { ds: DesignSystem; onBack: 
                 className="min-h-72 font-mono text-[12.5px] leading-relaxed"
               />
             </Section>
+
+
           </div>
 
           <aside className="lg:sticky lg:top-6 lg:self-start">
@@ -426,6 +448,23 @@ function DesignSystemEditor({ ds, onBack, onOpen }: { ds: DesignSystem; onBack: 
               </div>
             </div>
           </aside>
+        </div>
+
+        <div className="pt-10">
+          {ds.referenceUrl ? (
+            <Section
+              title="Component reference"
+              action={
+                <Button variant="outline" size="sm" className="rounded-full" asChild>
+                  <a href={ds.referenceUrl} target="_blank" rel="noreferrer">
+                    <ExternalLink /> Open in a new tab
+                  </a>
+                </Button>
+              }
+            >
+              <iframe title={`${ds.name} component reference`} src={ds.referenceUrl} loading="lazy" className="h-[80vh] w-full rounded-2xl border bg-white shadow-xs" />
+            </Section>
+          ) : null}
         </div>
       </div>
     </div>

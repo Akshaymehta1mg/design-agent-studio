@@ -16,8 +16,13 @@ export interface FrameNode {
   source: FrameSource
   /** data: URL or remote URL for image frames */
   src?: string
-  /** HTML fragment for wireframe frames */
+  /** HTML fragment for wireframe frames (for a prototype: its start screen) */
   html?: string
+  /** A prototype: every screen of a flow in one interactive file, linked with data-go */
+  screens?: PrototypeScreen[]
+  startScreen?: string
+  /** Every screen the agent planned, including ones it hasn't added yet */
+  plannedScreens?: { id: string; title: string }[]
   /** Graph for workflow frames */
   workflow?: Workflow
   device?: Device
@@ -31,6 +36,12 @@ export interface FrameNode {
   changeSummary?: string
   figma?: { fileKey: string; nodeId?: string }
   createdAt: number
+}
+
+export interface PrototypeScreen {
+  id: string
+  title: string
+  html: string
 }
 
 export interface NoteNode {
@@ -121,8 +132,21 @@ export type AskStatus = "pending" | "submitting" | "approved" | "rejected" | "ch
 export type MessagePart =
   | { type: "text"; id: string; text: string }
   | { type: "plan"; id: string; title: string; items: { id: string; title: string; status: PlanStatus }[] }
-  | { type: "ask"; id: string; title: string; description?: string; questions?: AskQuestion[]; approveLabel?: string; status: AskStatus; result?: string }
+  | {
+      type: "ask"
+      id: string
+      title: string
+      description?: string
+      questions?: AskQuestion[]
+      approveLabel?: string
+      status: AskStatus
+      /** What the model is told */
+      result?: string
+      /** Each question with the answer given, for the answered card */
+      answers?: { question: string; answer: string }[]
+    }
   | { type: "workflow"; id: string; frameId: string; workflow: Workflow }
+  | { type: "prototype"; id: string; frameId: string }
 
 
 export type Attachment =
@@ -222,7 +246,7 @@ export interface ProductLibrary {
 
 // ───────────────────────────── Settings / models ─────────────────────────────
 
-export type ProviderId = "anthropic" | "openai" | "google" | "openrouter" | "custom"
+export type ProviderId = "anthropic" | "openai" | "google" | "openrouter" | "moonshot" | "custom"
 
 export interface ModelInfo {
   id: string
@@ -242,6 +266,8 @@ export interface ProviderKeyState {
   fetchedAt?: number
   /** Models were loaded through the deployment's key */
   server?: boolean
+  /** How much the agent sends per request: auto switches to compact after a size or rate-limit error */
+  promptSize?: "auto" | "full" | "compact"
 }
 
 export interface Settings {
@@ -254,11 +280,13 @@ export interface Settings {
   profileName?: string
   /** Code for this deployment's server keys (see /api) */
   accessCode?: string
+  /** "provider:modelId" of models that hit a request-size limit, so later turns start compact */
+  compactModels?: Record<string, boolean>
 }
 
 export type Mode = "canvas" | "live"
 
-export type Page = "home" | "files" | "connectors" | "context" | "design-systems" | "settings" | "project"
+export type Page = "home" | "files" | "connectors" | "context" | "prism" | "design-systems" | "visual-research" | "settings" | "project"
 
 // ───────────────────────────── Design systems ─────────────────────────────
 
@@ -276,9 +304,39 @@ export interface DesignSystem {
   colors: { name: string; value: string }[]
   font?: string
   radius?: number
+  /** Portable component reference page for this system (searched by the agent, shown on its page) */
+  referenceUrl?: string
+  /** Mobile frame size when it differs from the default 390 × 844 */
+  viewport?: { w: number; h: number }
   updatedAt: number
   status?: "idle" | "syncing" | "error"
   error?: string
+}
+
+/** The team's edits on top of a design system's extracted reference (the original files stay untouched). */
+export interface DesignEdits {
+  /** "paletteId:stop" → hex */
+  palettes?: Record<string, string>
+  /** semantic token name → hex */
+  semantic?: Record<string, string>
+  /** brand colour name → hex */
+  brand?: Record<string, string>
+  /** type style name → "size / weight / line height" */
+  type?: Record<string, string>
+  /** "tabKey:token name" → value, for spacing, radius, shadow and gradient tokens */
+  tokens?: Record<string, string>
+  /** Changes made to a component or page through Prism */
+  components?: Record<string, ComponentEdit>
+}
+
+export interface ComponentEdit {
+  /** One line, shown in the list of changes */
+  summary: string
+  /** The component's updated rules, in Markdown; overrides the original where they differ */
+  spec: string
+  /** Visual adjustments applied to the component's demo specimens */
+  specimens?: { match: string; style: Record<string, string> }[]
+  updatedAt: number
 }
 
 // ───────────────────────────── Connectors (MCP) ─────────────────────────────
@@ -288,6 +346,8 @@ export interface Connector {
   name: string
   url: string
   transport: "http" | "sse"
+  /** "oauth": sign in through the browser; "token" (default): a pasted bearer token */
+  auth?: "token" | "oauth"
   token?: string
   enabled: boolean
   status: "untested" | "checking" | "ok" | "error"

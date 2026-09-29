@@ -1,5 +1,5 @@
 import { useEffect } from "react"
-import { FileStack, FileText, Home, LayoutGrid, Palette, Plug, Plus, Radio, Settings2, Image as ImageIcon, Workflow as WorkflowIcon } from "lucide-react"
+import { FileStack, FileText, GalleryHorizontalEnd, Home, LayoutGrid, Palette, Plug, Plus, Radio, Settings2, Image as ImageIcon, Triangle, Workflow as WorkflowIcon } from "@/components/ui/icons"
 import { useStore, frameLabel } from "@/lib/store"
 import { allDesignSystems } from "@/lib/design-systems"
 import type { FrameNode, Page } from "@/lib/types"
@@ -12,7 +12,9 @@ const PAGES: { id: Page; label: string; icon: React.ComponentType<{ className?: 
   { id: "files", label: "Files", icon: FileStack },
   { id: "connectors", label: "Connectors", icon: Plug },
   { id: "context", label: "Context file", icon: FileText },
+  { id: "prism", label: "Prism", icon: Triangle },
   { id: "design-systems", label: "Design systems", icon: Palette },
+  { id: "visual-research", label: "Visual research", icon: GalleryHorizontalEnd },
   { id: "settings", label: "Settings", icon: Settings2 },
 ]
 

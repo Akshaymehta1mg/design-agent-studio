@@ -1,4 +1,4 @@
-import { ChevronDown, FileStack, FileText, Home, ImagePlus, Palette, Plug, Plus, Radio, Search, Settings2, Shapes as Figma } from "lucide-react"
+import { ChevronDown, FileStack, FileText, GalleryHorizontalEnd, Home, ImagePlus, Palette, Plug, Plus, Radio, Search, Settings2, Shapes as Figma, Triangle } from "@/components/ui/icons"
 import { useStore } from "@/lib/store"
 import { PROVIDER_ORDER } from "@/lib/providers"
 import type { Page } from "@/lib/types"
@@ -23,7 +23,9 @@ const NAV: { id: Page; label: string; icon: React.ComponentType<{ className?: st
   { id: "files", label: "Files", icon: FileStack },
   { id: "connectors", label: "Connectors", icon: Plug },
   { id: "context", label: "Context file", icon: FileText },
+  { id: "prism", label: "Prism", icon: Triangle },
   { id: "design-systems", label: "Design systems", icon: Palette },
+  { id: "visual-research", label: "Visual research", icon: GalleryHorizontalEnd },
 ]
 
 /** Things the Create menu can start. Home listens for these. */

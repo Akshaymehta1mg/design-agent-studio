@@ -47,6 +47,7 @@ Under **Environment Variables**, add at least one model key. Use the names from 
 | `OPENAI_API_KEY` | `sk-…` | platform.openai.com → API keys |
 | `GOOGLE_API_KEY` | `AIza…` | aistudio.google.com → Get API key |
 | `OPENROUTER_API_KEY` | `sk-or-…` | openrouter.ai → Keys |
+| `MOONSHOT_API_KEY` | `sk-…` | platform.moonshot.ai → API keys (Kimi; keys from moonshot.cn don't work) |
 | `FIGMA_TOKEN` *(optional)* | `figd_…` | Figma → Settings → Security → Personal access tokens (File content: read, Comments: write) |
 | `ACCESS_CODE` | a long passphrase you choose | Anyone using your keys must enter this once |
 
@@ -94,5 +95,5 @@ vercel dev
 - **Spend limits:** set a monthly limit in each provider's console. The access code keeps strangers out; it doesn't cap what your team uses.
 - **Timeouts:** the proxy runs on Vercel's Edge runtime and streams, so long answers aren't cut off by the usual function timeout.
 - **Screen sharing and the mic** (Live mode) work on the deployed site. They need HTTPS, which Vercel provides.
-- **Connectors (MCP)** still connect straight from the browser. They only work with servers that accept requests from other sites (CORS).
+- **Connectors (MCP)** connect from the browser. When a server blocks cross-site requests, the app retries through `/api/relay`, which only forwards to Mobbin and Pinterest images. To allow another MCP host, set `MCP_RELAY_HOSTS` (comma-separated, e.g. `mcp.linear.app,mcp.notion.com`).
 - **What's stored where:** projects, design systems and personal keys live in each person's browser (IndexedDB). The server stores nothing. If you later want shared projects across a team, that needs a database, for example Vercel Postgres or Supabase.

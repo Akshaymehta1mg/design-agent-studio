@@ -8,6 +8,8 @@ import { FilesPage } from "@/components/pages/files-page"
 import { ConnectorsPage } from "@/components/pages/connectors-page"
 import { ContextPage } from "@/components/pages/context-page"
 import { DesignSystemsPage } from "@/components/pages/design-systems-page"
+import { PrismPage } from "@/components/pages/prism-page"
+import { VisualResearchPage } from "@/components/pages/visual-research-page"
 import { SettingsPage } from "@/components/pages/settings-page"
 import { ProjectView } from "@/components/project/project-view"
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
@@ -69,7 +71,7 @@ export default function App() {
   const [search, setSearch] = useState(false)
 
   const page =
-    route === "home" ? <HomePage /> : route === "files" ? <FilesPage /> : route === "connectors" ? <ConnectorsPage /> : route === "context" ? <ContextPage /> : route === "design-systems" ? <DesignSystemsPage /> : route === "settings" ? <SettingsPage /> : <HomePage />
+    route === "home" ? <HomePage /> : route === "files" ? <FilesPage /> : route === "connectors" ? <ConnectorsPage /> : route === "context" ? <ContextPage /> : route === "design-systems" ? <DesignSystemsPage /> : route === "prism" ? <PrismPage /> : route === "visual-research" ? <VisualResearchPage /> : route === "settings" ? <SettingsPage /> : <HomePage />
 
   return (
     <TooltipProvider delayDuration={300}>
@@ -78,7 +80,7 @@ export default function App() {
       ) : (
         <SidebarProvider style={{ "--sidebar-width": "16.5rem" } as React.CSSProperties} className="h-full min-h-0">
           <DashboardSidebar onSearch={() => setSearch(true)} />
-          <SidebarInset className="min-h-0 overflow-hidden md:peer-data-[variant=inset]:shadow-xs">
+          <SidebarInset className="min-h-0 overflow-clip md:peer-data-[variant=inset]:shadow-xs">
             <div className="absolute top-3 left-3 z-10 md:hidden">
               <SidebarTrigger />
             </div>
