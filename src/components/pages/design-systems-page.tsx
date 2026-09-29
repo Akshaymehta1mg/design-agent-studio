@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { PageHeader, Section } from "./page-header"
+import { DesignReferenceView } from "./design-reference-view"
 
 const blank = (): DesignSystem => ({
   id: uid("ds_"),
@@ -417,21 +418,7 @@ function DesignSystemEditor({ ds, onBack, onOpen }: { ds: DesignSystem; onBack: 
               />
             </Section>
 
-            {ds.referenceUrl && (
-              <Section
-                title="Component reference"
-                description="The portable component library. Prism searches it by component key when building wireframes."
-                action={
-                  <Button variant="outline" size="sm" className="rounded-full" asChild>
-                    <a href={ds.referenceUrl} target="_blank" rel="noreferrer">
-                      <ExternalLink /> Open in a new tab
-                    </a>
-                  </Button>
-                }
-              >
-                <iframe title={`${ds.name} component reference`} src={ds.referenceUrl} loading="lazy" className="h-[80vh] w-full rounded-2xl border bg-white shadow-xs" />
-              </Section>
-            )}
+
           </div>
 
           <aside className="lg:sticky lg:top-6 lg:self-start">
@@ -442,6 +429,27 @@ function DesignSystemEditor({ ds, onBack, onOpen }: { ds: DesignSystem; onBack: 
               </div>
             </div>
           </aside>
+        </div>
+
+        <div className="pt-10">
+          {ds.id === "ds_tata1mg" ? (
+            <Section title="Reference" description="Colours, type, spacing, every component and page pattern, extracted from the portable reference. The agent reads the same sections.">
+              <DesignReferenceView ds={ds} />
+            </Section>
+          ) : ds.referenceUrl ? (
+            <Section
+              title="Component reference"
+              action={
+                <Button variant="outline" size="sm" className="rounded-full" asChild>
+                  <a href={ds.referenceUrl} target="_blank" rel="noreferrer">
+                    <ExternalLink /> Open in a new tab
+                  </a>
+                </Button>
+              }
+            >
+              <iframe title={`${ds.name} component reference`} src={ds.referenceUrl} loading="lazy" className="h-[80vh] w-full rounded-2xl border bg-white shadow-xs" />
+            </Section>
+          ) : null}
         </div>
       </div>
     </div>

@@ -1,0 +1,5031 @@
+{
+ "source": "public/prism/design-system/design-system.html",
+ "colors": {
+  "palettes": [
+   {
+    "id": "coolNeutral",
+    "name": "Cool Neutral",
+    "stops": [
+     {
+      "stop": "0",
+      "hex": "#000000"
+     },
+     {
+      "stop": "10",
+      "hex": "#181A1F"
+     },
+     {
+      "stop": "20",
+      "hex": "#272B33"
+     },
+     {
+      "stop": "30",
+      "hex": "#414752"
+     },
+     {
+      "stop": "40",
+      "hex": "#4E5665"
+     },
+     {
+      "stop": "50",
+      "hex": "#626A7A"
+     },
+     {
+      "stop": "60",
+      "hex": "#868E9E"
+     },
+     {
+      "stop": "70",
+      "hex": "#A2A9B8"
+     },
+     {
+      "stop": "80",
+      "hex": "#BEC5D1"
+     },
+     {
+      "stop": "90",
+      "hex": "#DDE2EB"
+     },
+     {
+      "stop": "95",
+      "hex": "#EEF1F5"
+     },
+     {
+      "stop": "97",
+      "hex": "#F7F8FA"
+     },
+     {
+      "stop": "99",
+      "hex": "#FBFCFD"
+     },
+     {
+      "stop": "100",
+      "hex": "#FFFFFF"
+     }
+    ]
+   },
+   {
+    "id": "sunshineYellow",
+    "name": "Sunshine Yellow",
+    "stops": [
+     {
+      "stop": "10",
+      "hex": "#231D00"
+     },
+     {
+      "stop": "20",
+      "hex": "#3F3101"
+     },
+     {
+      "stop": "30",
+      "hex": "#715A09"
+     },
+     {
+      "stop": "40",
+      "hex": "#967500"
+     },
+     {
+      "stop": "50",
+      "hex": "#BF9514"
+     },
+     {
+      "stop": "60",
+      "hex": "#E8B828"
+     },
+     {
+      "stop": "70",
+      "hex": "#FBD101"
+     },
+     {
+      "stop": "80",
+      "hex": "#FCDD41"
+     },
+     {
+      "stop": "90",
+      "hex": "#FCE880"
+     },
+     {
+      "stop": "95",
+      "hex": "#FFF4C0"
+     },
+     {
+      "stop": "97",
+      "hex": "#FFFDF2"
+     },
+     {
+      "stop": "99",
+      "hex": "#FFF9D9"
+     }
+    ]
+   },
+   {
+    "id": "sunriseGlow",
+    "name": "Sunrise Glow",
+    "stops": [
+     {
+      "stop": "10",
+      "hex": "#2B0E03"
+     },
+     {
+      "stop": "20",
+      "hex": "#401504"
+     },
+     {
+      "stop": "30",
+      "hex": "#6F2305"
+     },
+     {
+      "stop": "40",
+      "hex": "#9D3004"
+     },
+     {
+      "stop": "50",
+      "hex": "#CE4009"
+     },
+     {
+      "stop": "60",
+      "hex": "#ED5213"
+     },
+     {
+      "stop": "70",
+      "hex": "#FF6C30"
+     },
+     {
+      "stop": "80",
+      "hex": "#FA8E63"
+     },
+     {
+      "stop": "90",
+      "hex": "#FCB295"
+     },
+     {
+      "stop": "95",
+      "hex": "#FFEDE6"
+     },
+     {
+      "stop": "97",
+      "hex": "#FEE9E1"
+     },
+     {
+      "stop": "99",
+      "hex": "#FFFBFA"
+     }
+    ]
+   },
+   {
+    "id": "comfortPink",
+    "name": "Comfort Pink",
+    "stops": [
+     {
+      "stop": "10",
+      "hex": "#50132F"
+     },
+     {
+      "stop": "20",
+      "hex": "#772A4D"
+     },
+     {
+      "stop": "40",
+      "hex": "#B1527F"
+     },
+     {
+      "stop": "50",
+      "hex": "#CC749C"
+     },
+     {
+      "stop": "60",
+      "hex": "#E79ABD"
+     },
+     {
+      "stop": "70",
+      "hex": "#F5B2D1"
+     },
+     {
+      "stop": "80",
+      "hex": "#F7C1DA"
+     },
+     {
+      "stop": "90",
+      "hex": "#F9CFE3"
+     },
+     {
+      "stop": "95",
+      "hex": "#FBDEEB"
+     },
+     {
+      "stop": "97",
+      "hex": "#FFFBFD"
+     },
+     {
+      "stop": "99",
+      "hex": "#FDECF4"
+     }
+    ]
+   },
+   {
+    "id": "healingMauve",
+    "name": "Healing Mauve",
+    "stops": [
+     {
+      "stop": "10",
+      "hex": "#41004B"
+     },
+     {
+      "stop": "20",
+      "hex": "#581463"
+     },
+     {
+      "stop": "30",
+      "hex": "#6E2A79"
+     },
+     {
+      "stop": "40",
+      "hex": "#864291"
+     },
+     {
+      "stop": "50",
+      "hex": "#9D59A8"
+     },
+     {
+      "stop": "60",
+      "hex": "#B470BE"
+     },
+     {
+      "stop": "70",
+      "hex": "#D786E4"
+     },
+     {
+      "stop": "80",
+      "hex": "#EEAAF9"
+     },
+     {
+      "stop": "90",
+      "hex": "#F1BAFA"
+     },
+     {
+      "stop": "95",
+      "hex": "#F5D0FC"
+     },
+     {
+      "stop": "97",
+      "hex": "#FAE5FD"
+     },
+     {
+      "stop": "99",
+      "hex": "#FEFBFF"
+     }
+    ]
+   },
+   {
+    "id": "wellnessGreen",
+    "name": "Wellness Green",
+    "stops": [
+     {
+      "stop": "10",
+      "hex": "#002C13"
+     },
+     {
+      "stop": "20",
+      "hex": "#004D21"
+     },
+     {
+      "stop": "30",
+      "hex": "#156437"
+     },
+     {
+      "stop": "40",
+      "hex": "#308956"
+     },
+     {
+      "stop": "50",
+      "hex": "#43A46D"
+     },
+     {
+      "stop": "60",
+      "hex": "#63C48D"
+     },
+     {
+      "stop": "70",
+      "hex": "#82D3A5"
+     },
+     {
+      "stop": "80",
+      "hex": "#96DAB3"
+     },
+     {
+      "stop": "90",
+      "hex": "#AFE3C5"
+     },
+     {
+      "stop": "95",
+      "hex": "#C7EDD7"
+     },
+     {
+      "stop": "97",
+      "hex": "#E0F6E9"
+     },
+     {
+      "stop": "99",
+      "hex": "#F8FFFB"
+     }
+    ]
+   },
+   {
+    "id": "precisionBlue",
+    "name": "Precision Blue",
+    "stops": [
+     {
+      "stop": "10",
+      "hex": "#00233F"
+     },
+     {
+      "stop": "20",
+      "hex": "#003E6F"
+     },
+     {
+      "stop": "30",
+      "hex": "#065392"
+     },
+     {
+      "stop": "40",
+      "hex": "#0B66AF"
+     },
+     {
+      "stop": "50",
+      "hex": "#1772BB"
+     },
+     {
+      "stop": "60",
+      "hex": "#2F8AD3"
+     },
+     {
+      "stop": "70",
+      "hex": "#4AA5EE"
+     },
+     {
+      "stop": "80",
+      "hex": "#6BBDFF"
+     },
+     {
+      "stop": "90",
+      "hex": "#8FCDFF"
+     },
+     {
+      "stop": "95",
+      "hex": "#B3DDFF"
+     },
+     {
+      "stop": "97",
+      "hex": "#D6EDFF"
+     },
+     {
+      "stop": "99",
+      "hex": "#ECF8FF"
+     }
+    ]
+   },
+   {
+    "id": "horizonBlue",
+    "name": "Corporate Horizon Blue",
+    "stops": [
+     {
+      "stop": "10",
+      "hex": "#002C30"
+     },
+     {
+      "stop": "20",
+      "hex": "#004950"
+     },
+     {
+      "stop": "30",
+      "hex": "#086E78"
+     },
+     {
+      "stop": "40",
+      "hex": "#008F9E"
+     },
+     {
+      "stop": "50",
+      "hex": "#0EB9CB"
+     },
+     {
+      "stop": "60",
+      "hex": "#1AC7D8"
+     },
+     {
+      "stop": "70",
+      "hex": "#38E5F6"
+     },
+     {
+      "stop": "80",
+      "hex": "#6EF2FF"
+     },
+     {
+      "stop": "90",
+      "hex": "#BEF9FF"
+     },
+     {
+      "stop": "95",
+      "hex": "#E5FDFF"
+     },
+     {
+      "stop": "97",
+      "hex": "#F6FEFF"
+     },
+     {
+      "stop": "99",
+      "hex": "#EEFEFF"
+     }
+    ]
+   },
+   {
+    "id": "vitalRed",
+    "name": "Vital Red",
+    "stops": [
+     {
+      "stop": "10",
+      "hex": "#280305"
+     },
+     {
+      "stop": "20",
+      "hex": "#4A050B"
+     },
+     {
+      "stop": "30",
+      "hex": "#87151F"
+     },
+     {
+      "stop": "40",
+      "hex": "#A3111E"
+     },
+     {
+      "stop": "50",
+      "hex": "#C50F1F"
+     },
+     {
+      "stop": "60",
+      "hex": "#FD3647"
+     },
+     {
+      "stop": "70",
+      "hex": "#FF6673"
+     },
+     {
+      "stop": "80",
+      "hex": "#FF9EA7"
+     },
+     {
+      "stop": "90",
+      "hex": "#FFB4BB"
+     },
+     {
+      "stop": "95",
+      "hex": "#FFE0E3"
+     },
+     {
+      "stop": "97",
+      "hex": "#FFF6F7"
+     },
+     {
+      "stop": "99",
+      "hex": "#FFCACF"
+     }
+    ]
+   },
+   {
+    "id": "jovialPurple",
+    "name": "Jovial Purple",
+    "stops": [
+     {
+      "stop": "10",
+      "hex": "#0F0A1C"
+     },
+     {
+      "stop": "20",
+      "hex": "#19102F"
+     },
+     {
+      "stop": "30",
+      "hex": "#241742"
+     },
+     {
+      "stop": "40",
+      "hex": "#33215D"
+     },
+     {
+      "stop": "50",
+      "hex": "#3F2975"
+     },
+     {
+      "stop": "60",
+      "hex": "#4C318C"
+     },
+     {
+      "stop": "70",
+      "hex": "#6350BA"
+     },
+     {
+      "stop": "80",
+      "hex": "#8974E7"
+     },
+     {
+      "stop": "90",
+      "hex": "#B4A4FF"
+     },
+     {
+      "stop": "95",
+      "hex": "#CEC4FF"
+     },
+     {
+      "stop": "97",
+      "hex": "#E3DDFF"
+     },
+     {
+      "stop": "99",
+      "hex": "#F2EFFF"
+     }
+    ]
+   },
+   {
+    "id": "brown",
+    "name": "Brown",
+    "stops": [
+     {
+      "stop": "10",
+      "hex": "#190505"
+     },
+     {
+      "stop": "20",
+      "hex": "#290808"
+     },
+     {
+      "stop": "30",
+      "hex": "#320A0A"
+     },
+     {
+      "stop": "40",
+      "hex": "#543232"
+     },
+     {
+      "stop": "50",
+      "hex": "#765B5B"
+     },
+     {
+      "stop": "60",
+      "hex": "#8D7676"
+     },
+     {
+      "stop": "70",
+      "hex": "#9E8B8B"
+     },
+     {
+      "stop": "80",
+      "hex": "#AF9F9F"
+     },
+     {
+      "stop": "90",
+      "hex": "#C0B4B4"
+     },
+     {
+      "stop": "95",
+      "hex": "#D1C8C8"
+     },
+     {
+      "stop": "97",
+      "hex": "#DBD3D3"
+     },
+     {
+      "stop": "99",
+      "hex": "#E4DEDE"
+     }
+    ]
+   },
+   {
+    "id": "golden",
+    "name": "Golden",
+    "stops": [
+     {
+      "stop": "50",
+      "hex": "#E5B674"
+     },
+     {
+      "stop": "60",
+      "hex": "#E8BC7E"
+     },
+     {
+      "stop": "70",
+      "hex": "#EBC288"
+     },
+     {
+      "stop": "80",
+      "hex": "#EEC991"
+     },
+     {
+      "stop": "90",
+      "hex": "#F1CF9B"
+     },
+     {
+      "stop": "95",
+      "hex": "#F3D5A5"
+     },
+     {
+      "stop": "97",
+      "hex": "#FFF2D8"
+     },
+     {
+      "stop": "99",
+      "hex": "#FFEECC"
+     }
+    ]
+   }
+  ],
+  "semantic": [
+   {
+    "token": "Content / Primary",
+    "role": "Main body text, headings",
+    "maps": "Cool Neutral 10 → #181a1f",
+    "hex": "#181A1F"
+   },
+   {
+    "token": "Content / Secondary",
+    "role": "Supplementary text",
+    "maps": "Cool Neutral 50 → #626a7a",
+    "hex": "#626A7A"
+   },
+   {
+    "token": "Content / Tertiary",
+    "role": "Hints, captions",
+    "maps": "Cool Neutral 60 → #868e9e",
+    "hex": "#868E9E"
+   },
+   {
+    "token": "Content / Disabled",
+    "role": "Disabled text",
+    "maps": "Cool Neutral 70 → #a2a9b8",
+    "hex": "#A2A9B8"
+   },
+   {
+    "token": "Content / CTA",
+    "role": "Actionable text links",
+    "maps": "Brand Coral → #FF6F61",
+    "hex": "#FF6F61"
+   },
+   {
+    "token": "Content Inverse / Primary",
+    "role": "White text on fills",
+    "maps": "#ffffff",
+    "hex": "#FFFFFF"
+   },
+   {
+    "token": "Content Inverse / Secondary",
+    "role": "Secondary on fills",
+    "maps": "White + Alpha 80",
+    "hex": ""
+   },
+   {
+    "token": "Content Inverse / Tertiary",
+    "role": "Tertiary on fills",
+    "maps": "White + Alpha 60",
+    "hex": ""
+   },
+   {
+    "token": "Background / Primary",
+    "role": "Page background",
+    "maps": "#ffffff",
+    "hex": "#FFFFFF"
+   },
+   {
+    "token": "Background / Subtle",
+    "role": "Section fills, cards",
+    "maps": "Cool Neutral 97 → #F7F8FA",
+    "hex": "#F7F8FA"
+   },
+   {
+    "token": "Background / Moderate",
+    "role": "Input fill, divider areas",
+    "maps": "Cool Neutral 95 → #EEF1F5",
+    "hex": "#EEF1F5"
+   },
+   {
+    "token": "Background / Disabled",
+    "role": "Disabled elements",
+    "maps": "Cool Neutral 90 → #dde2eb",
+    "hex": "#DDE2EB"
+   },
+   {
+    "token": "Stroke / Subtle",
+    "role": "Card borders, dividers",
+    "maps": "Cool Neutral 90 → #dde2eb",
+    "hex": "#DDE2EB"
+   },
+   {
+    "token": "Stroke / Moderate",
+    "role": "Input borders",
+    "maps": "Cool Neutral 80 → #bec5d1",
+    "hex": "#BEC5D1"
+   },
+   {
+    "token": "Stroke / Default",
+    "role": "Active borders",
+    "maps": "Cool Neutral 0 → #000000",
+    "hex": "#000000"
+   },
+   {
+    "token": "Stroke / Selected",
+    "role": "Selected state borders",
+    "maps": "Brand Coral → #FF6F61",
+    "hex": "#FF6F61"
+   },
+   {
+    "token": "Stroke / Disabled",
+    "role": "Disabled borders",
+    "maps": "Cool Neutral 90",
+    "hex": ""
+   },
+   {
+    "token": "Stroke / Intense",
+    "role": "High-contrast borders",
+    "maps": "Cool Neutral 30 → #414752",
+    "hex": "#414752"
+   },
+   {
+    "token": "Divider / Subtle",
+    "role": "Light content separators",
+    "maps": "Cool Neutral 90",
+    "hex": ""
+   },
+   {
+    "token": "Divider / Moderate",
+    "role": "Stronger separators",
+    "maps": "Cool Neutral 80",
+    "hex": ""
+   },
+   {
+    "token": "Icons / Primary",
+    "role": "Default interactive",
+    "maps": "Cool Neutral 10",
+    "hex": ""
+   },
+   {
+    "token": "Icons / Secondary",
+    "role": "Secondary icons",
+    "maps": "Cool Neutral 50",
+    "hex": ""
+   },
+   {
+    "token": "Icons / Tertiary",
+    "role": "Subtle icons",
+    "maps": "Cool Neutral 60",
+    "hex": ""
+   },
+   {
+    "token": "Icons / Disabled",
+    "role": "Non-interactive",
+    "maps": "Cool Neutral 70",
+    "hex": ""
+   },
+   {
+    "token": "Icons / Inverse",
+    "role": "Icons on fills",
+    "maps": "#ffffff",
+    "hex": "#FFFFFF"
+   },
+   {
+    "token": "Icons / CTA",
+    "role": "Action icons",
+    "maps": "Brand Coral",
+    "hex": ""
+   },
+   {
+    "token": "States / Success",
+    "role": "Success feedback",
+    "maps": "Wellness Green 40 → #308956",
+    "hex": "#308956"
+   },
+   {
+    "token": "States / Warning",
+    "role": "Caution alerts",
+    "maps": "Sunshine Yellow 50 → #bf9514",
+    "hex": "#BF9514"
+   },
+   {
+    "token": "States / Error",
+    "role": "Error, destructive",
+    "maps": "Vital Red 50 → #C50F1F",
+    "hex": "#C50F1F"
+   },
+   {
+    "token": "States / Offer",
+    "role": "Promotional, deals",
+    "maps": "Sunrise Glow 50 → #ce4009",
+    "hex": "#CE4009"
+   },
+   {
+    "token": "Brand / Coral",
+    "role": "Primary action",
+    "maps": "#FF6F61",
+    "hex": "#FF6F61"
+   },
+   {
+    "token": "Branding / 1mg",
+    "role": "1mg brand identity",
+    "maps": "#FF5443",
+    "hex": "#FF5443"
+   },
+   {
+    "token": "Branding / Corporate",
+    "role": "Tata corporate",
+    "maps": "Horizon Blue 30 → #086E78",
+    "hex": "#086E78"
+   },
+   {
+    "token": "Branding / Care Plan",
+    "role": "Care plan identity",
+    "maps": "Healing Mauve 50",
+    "hex": ""
+   },
+   {
+    "token": "Branding / Quick Commerce",
+    "role": "Rapid delivery",
+    "maps": "Sunrise Glow 50",
+    "hex": ""
+   }
+  ],
+  "brand": [
+   {
+    "hex": "#FF6F61",
+    "name": "Living Coral",
+    "use": "Primary action"
+   },
+   {
+    "hex": "#FF5443",
+    "name": "1mg Red",
+    "use": "Brand identity"
+   },
+   {
+    "hex": "#086E78",
+    "name": "Corporate Teal",
+    "use": "Corporate / Horizon Blue"
+   },
+   {
+    "hex": "#208376",
+    "name": "Success Green (Production)",
+    "use": "Success state fills"
+   }
+  ]
+ },
+ "tabs": [
+  {
+   "key": "colors",
+   "group": "foundation",
+   "title": "Colors",
+   "label": "Foundation",
+   "description": "Dopamine 2.0's complete color system extracted from the Figma foundation file. 12 primitive palettes with 10–14 tonal stops each, plus semantic tokens. Production hex values from #FF6F61 (Living Coral) through the full Cool Neutral scale.",
+   "facts": [],
+   "notes": [],
+   "sections": [
+    {
+     "title": "Brand",
+     "description": "",
+     "blocks": [
+      {
+       "type": "text",
+       "text": "#FF6F61Living Coral#FF54431mg Red#086E78Corporate Teal#208376Success Green (Production)"
+      },
+      {
+       "type": "text",
+       "text": "Production reference — Disabled fill: #E0E0E0 · Disabled text: #A9A9A9 · Primary text: #3B3B3B · Success fill: #208376 · Container: #FFFFFF"
+      }
+     ]
+    },
+    {
+     "title": "Cool Neutral",
+     "description": "",
+     "blocks": [
+      {
+       "type": "text",
+       "text": "#0000000#181a1f10#272b3320#41475230#4e566540#626a7a50#868e9e60#a2a9b870#bec5d180#dde2eb90#EEF1F595#F7F8FA97#FBFCFD99#ffffff100"
+      }
+     ]
+    },
+    {
+     "title": "Sunshine Yellow",
+     "description": "",
+     "blocks": [
+      {
+       "type": "text",
+       "text": "#231d0010#3f310120#715a0930#96750040#bf951450#e8b82860#fbd10170#fcdd4180#fce88090#fff4c095#fffdf297#FFF9D999"
+      }
+     ]
+    },
+    {
+     "title": "Sunrise Glow",
+     "description": "",
+     "blocks": [
+      {
+       "type": "text",
+       "text": "#2b0e0310#40150420#6f230530#9d300440#ce400950#ed521360#ff6c3070#fa8e6380#FCB29590#ffede695#FEE9E197#fffbfa99"
+      }
+     ]
+    },
+    {
+     "title": "Comfort Pink",
+     "description": "",
+     "blocks": [
+      {
+       "type": "text",
+       "text": "#50132f10#772a4d20#b1527f40#cc749c50#e79abd60#f5b2d170#F7C1DA80#F9CFE390#FBDEEB95#fffbfd97#FDECF499"
+      }
+     ]
+    },
+    {
+     "title": "Healing Mauve",
+     "description": "",
+     "blocks": [
+      {
+       "type": "text",
+       "text": "#41004b10#58146320#6e2a7930#86429140#9d59a850#b470be60#d786e470#eeaaf980#F1BAFA90#F5D0FC95#FAE5FD97#fefbff99"
+      }
+     ]
+    },
+    {
+     "title": "Wellness Green",
+     "description": "",
+     "blocks": [
+      {
+       "type": "text",
+       "text": "#002c1310#004d2120#15643730#30895640#43a46d50#63c48d60#82d3a570#96DAB380#AFE3C590#C7EDD795#E0F6E997#f8fffb99"
+      }
+     ]
+    },
+    {
+     "title": "Precision Blue",
+     "description": "",
+     "blocks": [
+      {
+       "type": "text",
+       "text": "#00233f10#003e6f20#06539230#0b66af40#1772bb50#2f8ad360#4aa5ee70#6bbdff80#8FCDFF90#B3DDFF95#D6EDFF97#ECF8FF99"
+      }
+     ]
+    },
+    {
+     "title": "Corporate Horizon Blue",
+     "description": "",
+     "blocks": [
+      {
+       "type": "text",
+       "text": "#002C3010#00495020#086E7830#008F9E40#0EB9CB50#1AC7D860#38E5F670#6EF2FF80#BEF9FF90#E5FDFF95#F6FEFF97#EEFEFF99"
+      }
+     ]
+    },
+    {
+     "title": "Vital Red",
+     "description": "",
+     "blocks": [
+      {
+       "type": "text",
+       "text": "#28030510#4A050B20#87151F30#A3111E40#C50F1F50#FD364760#FF667370#FF9EA780#FFB4BB90#FFE0E395#FFF6F797#FFCACF99"
+      }
+     ]
+    },
+    {
+     "title": "Jovial Purple",
+     "description": "",
+     "blocks": [
+      {
+       "type": "text",
+       "text": "#0F0A1C10#19102F20#24174230#33215D40#3F297550#4C318C60#6350BA70#8974E780#B4A4FF90#CEC4FF95#E3DDFF97#F2EFFF99"
+      }
+     ]
+    },
+    {
+     "title": "Brown",
+     "description": "",
+     "blocks": [
+      {
+       "type": "text",
+       "text": "#19050510#29080820#320A0A30#54323240#765B5B50#8D767660#9E8B8B70#AF9F9F80#C0B4B490#D1C8C895#DBD3D397#E4DEDE99"
+      }
+     ]
+    },
+    {
+     "title": "Golden",
+     "description": "",
+     "blocks": [
+      {
+       "type": "text",
+       "text": "#E5B67450#E8BC7E60#EBC28870#EEC99180#F1CF9B90#F3D5A595#FFF2D897#FFEECC99"
+      }
+     ]
+    },
+    {
+     "title": "White + Alpha",
+     "description": "White (#FFFFFF) at 10% through 100% opacity. Used for overlays, content-inverse hierarchy on dark backgrounds (shades 10 and 20).",
+     "blocks": [
+      {
+       "type": "text",
+       "text": "10%10%20%20%30%30%40%40%50%50%60%60%70%70%80%80%90%90%95%95%97%97%100%100%"
+      }
+     ]
+    },
+    {
+     "title": "Semantic Token Mapping",
+     "description": "Semantic colours reference primitive scale stops. These tokens are used in components rather than raw hex values.",
+     "blocks": [
+      {
+       "type": "table",
+       "rows": [
+        [
+         "Token",
+         "Role",
+         "Maps to"
+        ],
+        [
+         "Content / Primary",
+         "Main body text, headings",
+         "Cool Neutral 10 → #181a1f"
+        ],
+        [
+         "Content / Secondary",
+         "Supplementary text",
+         "Cool Neutral 50 → #626a7a"
+        ],
+        [
+         "Content / Tertiary",
+         "Hints, captions",
+         "Cool Neutral 60 → #868e9e"
+        ],
+        [
+         "Content / Disabled",
+         "Disabled text",
+         "Cool Neutral 70 → #a2a9b8"
+        ],
+        [
+         "Content / CTA",
+         "Actionable text links",
+         "Brand Coral → #FF6F61"
+        ],
+        [
+         "Content Inverse / Primary",
+         "White text on fills",
+         "#ffffff"
+        ],
+        [
+         "Content Inverse / Secondary",
+         "Secondary on fills",
+         "White + Alpha 80"
+        ],
+        [
+         "Content Inverse / Tertiary",
+         "Tertiary on fills",
+         "White + Alpha 60"
+        ],
+        [
+         "Background / Primary",
+         "Page background",
+         "#ffffff"
+        ],
+        [
+         "Background / Subtle",
+         "Section fills, cards",
+         "Cool Neutral 97 → #F7F8FA"
+        ],
+        [
+         "Background / Moderate",
+         "Input fill, divider areas",
+         "Cool Neutral 95 → #EEF1F5"
+        ],
+        [
+         "Background / Disabled",
+         "Disabled elements",
+         "Cool Neutral 90 → #dde2eb"
+        ],
+        [
+         "Stroke / Subtle",
+         "Card borders, dividers",
+         "Cool Neutral 90 → #dde2eb"
+        ],
+        [
+         "Stroke / Moderate",
+         "Input borders",
+         "Cool Neutral 80 → #bec5d1"
+        ],
+        [
+         "Stroke / Default",
+         "Active borders",
+         "Cool Neutral 0 → #000000"
+        ],
+        [
+         "Stroke / Selected",
+         "Selected state borders",
+         "Brand Coral → #FF6F61"
+        ],
+        [
+         "Stroke / Disabled",
+         "Disabled borders",
+         "Cool Neutral 90"
+        ],
+        [
+         "Stroke / Intense",
+         "High-contrast borders",
+         "Cool Neutral 30 → #414752"
+        ],
+        [
+         "Divider / Subtle",
+         "Light content separators",
+         "Cool Neutral 90"
+        ],
+        [
+         "Divider / Moderate",
+         "Stronger separators",
+         "Cool Neutral 80"
+        ],
+        [
+         "Icons / Primary",
+         "Default interactive",
+         "Cool Neutral 10"
+        ],
+        [
+         "Icons / Secondary",
+         "Secondary icons",
+         "Cool Neutral 50"
+        ],
+        [
+         "Icons / Tertiary",
+         "Subtle icons",
+         "Cool Neutral 60"
+        ],
+        [
+         "Icons / Disabled",
+         "Non-interactive",
+         "Cool Neutral 70"
+        ],
+        [
+         "Icons / Inverse",
+         "Icons on fills",
+         "#ffffff"
+        ],
+        [
+         "Icons / CTA",
+         "Action icons",
+         "Brand Coral"
+        ],
+        [
+         "States / Success",
+         "Success feedback",
+         "Wellness Green 40 → #308956"
+        ],
+        [
+         "States / Warning",
+         "Caution alerts",
+         "Sunshine Yellow 50 → #bf9514"
+        ],
+        [
+         "States / Error",
+         "Error, destructive",
+         "Vital Red 50 → #C50F1F"
+        ],
+        [
+         "States / Offer",
+         "Promotional, deals",
+         "Sunrise Glow 50 → #ce4009"
+        ],
+        [
+         "Brand / Coral",
+         "Primary action",
+         "#FF6F61"
+        ],
+        [
+         "Branding / 1mg",
+         "1mg brand identity",
+         "#FF5443"
+        ],
+        [
+         "Branding / Corporate",
+         "Tata corporate",
+         "Horizon Blue 30 → #086E78"
+        ],
+        [
+         "Branding / Care Plan",
+         "Care plan identity",
+         "Healing Mauve 50"
+        ],
+        [
+         "Branding / Quick Commerce",
+         "Rapid delivery",
+         "Sunrise Glow 50"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "title": "HIH (Health Insights) Special Colors",
+     "description": "Five severity levels for Health Insights Hub data visualization: Normal, Borderline Abnormal, Needs Monitoring, Needs Attention, Needs Immediate Attention.",
+     "blocks": []
+    }
+   ],
+   "css": ".sg { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }\n.si { text-align: center; position: relative; }\n.sb { width: 64px; height: 44px; border-radius: 6px; border: 1px solid rgba(0, 0, 0, 0.06); cursor: pointer; transition: transform 0.12s; position: relative; display: flex; align-items: center; justify-content: center; }\n.sb:hover { transform: scale(1.1); z-index: 2; }\n.sb .hx { font-size: 8px; font-weight: 600; color: rgb(255, 255, 255); text-shadow: rgba(0, 0, 0, 0.6) 0px 1px 2px; opacity: 0; transition: opacity 0.12s; font-family: \"SF Mono\", monospace; }\n.sb:hover .hx { opacity: 1; }\n.sl { font-size: 10px; color: rgb(134, 142, 158); margin-top: 3px; font-family: \"SF Mono\", monospace; }\n.sr .lbl { width: 40px; text-align: right; font-size: 11px; color: rgb(134, 142, 158); font-family: \"SF Mono\", monospace; }\n.ph { margin-bottom: 28px; }\n.ph h1 { font-size: 32px; font-weight: 800; color: rgb(24, 26, 31); margin: 0px 0px 6px; letter-spacing: -0.6px; line-height: 1.2; }\n.ph .lbl { font-size: 11px; font-weight: 600; color: rgb(134, 142, 158); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }\n.ph p { font-size: 14px; color: rgb(78, 86, 101); line-height: 1.6; max-width: 600px; margin: 0px 0px 12px; }\n.st { font-size: 18px; font-weight: 700; color: rgb(24, 26, 31); margin: 28px 0px 12px; letter-spacing: -0.2px; }\n.sd { font-size: 13px; color: rgb(78, 86, 101); line-height: 1.55; margin-bottom: 12px; max-width: 560px; }"
+  },
+  {
+   "key": "typography",
+   "group": "foundation",
+   "title": "Typography",
+   "label": "Foundation",
+   "description": "Figtree as the default typeface, Cabinet Grotesk Variable for display. Five groups: Display, Heading, Body, Tag. Naming convention: Group/Size/Weight(Name) e.g. Heading/32/700(Bold)",
+   "facts": [],
+   "notes": [
+    {
+     "label": "Font families",
+     "text": "Figtree — Regular 400, Medium 500, Bold 700, ExtraBold 800. Default for all UI. Cabinet Grotesk Variable — Light 300, ExtraBold 800. Display sizes only."
+    }
+   ],
+   "sections": [
+    {
+     "title": "Display — Cabinet Grotesk Variable",
+     "description": "",
+     "blocks": [
+      {
+       "type": "table",
+       "rows": [
+        [
+         "Style",
+         "Size / weight / line height"
+        ],
+        [
+         "Display / 45 / 800 Extrabold",
+         "45px / 800"
+        ],
+        [
+         "Display / 45 / 300 Light",
+         "45px / 300"
+        ],
+        [
+         "Display / 36 / 800 Extrabold",
+         "36px / 800"
+        ],
+        [
+         "Display / 36 / 300 Light",
+         "36px / 300"
+        ],
+        [
+         "Display / 24 / 800 Extrabold",
+         "24px / 800"
+        ],
+        [
+         "Display / 24 / 300 Light",
+         "24px / 300"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Heading — Figtree",
+     "description": "",
+     "blocks": [
+      {
+       "type": "table",
+       "rows": [
+        [
+         "Style",
+         "Size / weight / line height"
+        ],
+        [
+         "Heading / 32/800 Extrabold",
+         "32 / 800 / 40"
+        ],
+        [
+         "Heading / 32/700 Bold",
+         "32 / 700 / 40"
+        ],
+        [
+         "Heading / 32/500 Medium",
+         "32 / 500 / 40"
+        ],
+        [
+         "Heading / 32/400 Regular",
+         "32 / 400 / 40"
+        ],
+        [
+         "Heading / 28/800 Extrabold",
+         "28 / 800 / 36"
+        ],
+        [
+         "Heading / 28/700 Bold",
+         "28 / 700 / 36"
+        ],
+        [
+         "Heading / 28/500 Medium",
+         "28 / 500 / 36"
+        ],
+        [
+         "Heading / 28/400 Regular",
+         "28 / 400 / 36"
+        ],
+        [
+         "Heading / 24/800 Extrabold",
+         "24 / 800 / 32"
+        ],
+        [
+         "Heading / 24/700 Bold",
+         "24 / 700 / 32"
+        ],
+        [
+         "Heading / 24/500 Medium",
+         "24 / 500 / 32"
+        ],
+        [
+         "Heading / 24/400 Regular",
+         "24 / 400 / 32"
+        ],
+        [
+         "Heading / 18/800 Extrabold",
+         "18 / 800 / 28"
+        ],
+        [
+         "Heading / 18/700 Bold",
+         "18 / 700 / 28"
+        ],
+        [
+         "Heading / 18/500 Medium",
+         "18 / 500 / 28"
+        ],
+        [
+         "Heading / 18/400 Regular",
+         "18 / 400 / 28"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Body — Figtree",
+     "description": "",
+     "blocks": [
+      {
+       "type": "table",
+       "rows": [
+        [
+         "Style",
+         "Size / weight / line height"
+        ],
+        [
+         "Body / 22/800 Extrabold",
+         "22 / 800 / 28"
+        ],
+        [
+         "Body / 16/800 Extrabold",
+         "16 / 800 / 24"
+        ],
+        [
+         "Body / 16/700 Bold",
+         "16 / 700 / 24"
+        ],
+        [
+         "Body / 16/500 Medium",
+         "16 / 500 / 24"
+        ],
+        [
+         "Body / 16/400 Regular",
+         "16 / 400 / 24"
+        ],
+        [
+         "Body / 14/800 Extrabold",
+         "14 / 800 / 20"
+        ],
+        [
+         "Body / 14/700 Bold",
+         "14 / 700 / 20"
+        ],
+        [
+         "Body / 14/500 Medium",
+         "14 / 500 / 20"
+        ],
+        [
+         "Body / 14/400 Regular",
+         "14 / 400 / 20"
+        ],
+        [
+         "Body / 12/700 Bold",
+         "12 / 700 / 16"
+        ],
+        [
+         "Body / 12/500 Medium",
+         "12 / 500 / 16"
+        ],
+        [
+         "Body / 12/400 Regular",
+         "12 / 400 / 16"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Tag — Figtree",
+     "description": "",
+     "blocks": [
+      {
+       "type": "table",
+       "rows": [
+        [
+         "Style",
+         "Size / weight / line height"
+        ],
+        [
+         "Tag / 700 Bold",
+         "12 / 700 / LS 3px"
+        ],
+        [
+         "Tag / 500 Medium",
+         "12 / 500 / LS 0"
+        ],
+        [
+         "Tag / 400 Regular",
+         "12 / 400 / LS 0"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Additional",
+     "description": "Body/Small (Bold, Medium, Regular), Heading/XS/Semibold, Body/Medium variants, Tag/Offer/Coupon, Tag/SKU Regular, Tag/SKU Bold — specialized product UI typography.",
+     "blocks": []
+    }
+   ],
+   "css": ".tr { display: flex; align-items: baseline; gap: 16px; padding: 10px 0px; border-bottom: 1px solid rgb(240, 240, 240); }\n.tr:last-child { border-bottom: none; }\n.tn { width: 180px; flex-shrink: 0; font-size: 12px; color: rgb(134, 142, 158); font-weight: 500; }\n.tp { flex: 1 1 0%; color: rgb(24, 26, 31); }\n.tm { font-size: 11px; color: rgb(190, 197, 209); white-space: nowrap; font-family: \"SF Mono\", monospace; }\n.sr .lbl { width: 40px; text-align: right; font-size: 11px; color: rgb(134, 142, 158); font-family: \"SF Mono\", monospace; }\n.ph { margin-bottom: 28px; }\n.ph h1 { font-size: 32px; font-weight: 800; color: rgb(24, 26, 31); margin: 0px 0px 6px; letter-spacing: -0.6px; line-height: 1.2; }\n.ph .lbl { font-size: 11px; font-weight: 600; color: rgb(134, 142, 158); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }\n.ph p { font-size: 14px; color: rgb(78, 86, 101); line-height: 1.6; max-width: 600px; margin: 0px 0px 12px; }\n.st { font-size: 18px; font-weight: 700; color: rgb(24, 26, 31); margin: 28px 0px 12px; letter-spacing: -0.2px; }\n.sd { font-size: 13px; color: rgb(78, 86, 101); line-height: 1.55; margin-bottom: 12px; max-width: 560px; }\n.un { background: rgb(247, 248, 250); border-left: 3px solid rgb(24, 26, 31); border-radius: 0px 6px 6px 0px; padding: 12px 16px; margin-bottom: 16px; }\n.un .nl { font-size: 11px; font-weight: 700; color: rgb(24, 26, 31); margin-bottom: 2px; }\n.un p { font-size: 13px; color: rgb(78, 86, 101); margin: 0px; line-height: 1.45; }"
+  },
+  {
+   "key": "spacing",
+   "group": "foundation",
+   "title": "Spacing",
+   "label": "Foundation",
+   "description": "Global 8-point system. Baseline 8px multiplied for consistency. Smaller 2px and 4px for fine control.",
+   "facts": [],
+   "notes": [],
+   "sections": [
+    {
+     "title": "",
+     "description": "",
+     "blocks": [
+      {
+       "type": "tokens",
+       "kind": "spacing",
+       "items": [
+        {
+         "name": "0",
+         "value": "0px"
+        },
+        {
+         "name": "2",
+         "value": "2px"
+        },
+        {
+         "name": "4",
+         "value": "4px"
+        },
+        {
+         "name": "8",
+         "value": "8px"
+        },
+        {
+         "name": "12",
+         "value": "12px"
+        },
+        {
+         "name": "16",
+         "value": "16px"
+        },
+        {
+         "name": "20",
+         "value": "20px"
+        },
+        {
+         "name": "24",
+         "value": "24px"
+        },
+        {
+         "name": "28",
+         "value": "28px"
+        },
+        {
+         "name": "32",
+         "value": "32px"
+        },
+        {
+         "name": "36",
+         "value": "36px"
+        },
+        {
+         "name": "40",
+         "value": "40px"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "css": ".sr { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }\n.sr .lbl { width: 40px; text-align: right; font-size: 11px; color: rgb(134, 142, 158); font-family: \"SF Mono\", monospace; }\n.sr .bar { height: 20px; background: rgb(24, 26, 31); border-radius: 3px; opacity: 0.1; transition: opacity 0.12s; }\n.sr .bar:hover { opacity: 0.28; }\n.sr .px { font-size: 10px; color: rgb(190, 197, 209); font-family: \"SF Mono\", monospace; }\n.ph { margin-bottom: 28px; }\n.ph h1 { font-size: 32px; font-weight: 800; color: rgb(24, 26, 31); margin: 0px 0px 6px; letter-spacing: -0.6px; line-height: 1.2; }\n.ph .lbl { font-size: 11px; font-weight: 600; color: rgb(134, 142, 158); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }\n.ph p { font-size: 14px; color: rgb(78, 86, 101); line-height: 1.6; max-width: 600px; margin: 0px 0px 12px; }"
+  },
+  {
+   "key": "corner-radius",
+   "group": "foundation",
+   "title": "Corner Radius",
+   "label": "Foundation",
+   "description": "8 tokens from 0px to 24px. Figma tokens: cr-s-4, cr-m-8, cr-12, cr-16, cr-xl (24).",
+   "facts": [],
+   "notes": [],
+   "sections": [
+    {
+     "title": "",
+     "description": "",
+     "blocks": [
+      {
+       "type": "tokens",
+       "kind": "radius",
+       "items": [
+        {
+         "name": "0px",
+         "value": "0px"
+        },
+        {
+         "name": "2px",
+         "value": "2px"
+        },
+        {
+         "name": "4px sm",
+         "value": "4px"
+        },
+        {
+         "name": "6px",
+         "value": "6px"
+        },
+        {
+         "name": "8px md",
+         "value": "8px"
+        },
+        {
+         "name": "12px",
+         "value": "12px"
+        },
+        {
+         "name": "16px",
+         "value": "16px"
+        },
+        {
+         "name": "24px xl",
+         "value": "24px"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "css": ".sr .lbl { width: 40px; text-align: right; font-size: 11px; color: rgb(134, 142, 158); font-family: \"SF Mono\", monospace; }\n.rg { display: flex; gap: 14px; flex-wrap: wrap; }\n.ri { text-align: center; }\n.rb { width: 56px; height: 56px; border: 2px solid rgb(24, 26, 31); background: rgb(250, 250, 250); margin-bottom: 3px; }\n.ri span { font-size: 10px; color: rgb(134, 142, 158); }\n.ph { margin-bottom: 28px; }\n.ph h1 { font-size: 32px; font-weight: 800; color: rgb(24, 26, 31); margin: 0px 0px 6px; letter-spacing: -0.6px; line-height: 1.2; }\n.ph .lbl { font-size: 11px; font-weight: 600; color: rgb(134, 142, 158); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }\n.ph p { font-size: 14px; color: rgb(78, 86, 101); line-height: 1.6; max-width: 600px; margin: 0px 0px 12px; }"
+  },
+  {
+   "key": "shadows",
+   "group": "foundation",
+   "title": "Shadows & Elevation",
+   "label": "Foundation",
+   "description": "Elevation tokens: midRaised with configurable blur, spread, x, y.",
+   "facts": [],
+   "notes": [],
+   "sections": [
+    {
+     "title": "",
+     "description": "",
+     "blocks": [
+      {
+       "type": "tokens",
+       "kind": "shadow",
+       "items": [
+        {
+         "name": "None",
+         "value": "none"
+        },
+        {
+         "name": "Low",
+         "value": "rgba(0, 0, 0, 0.06) 0px 1px 2px 0px"
+        },
+        {
+         "name": "Mid Raised",
+         "value": "rgba(0, 0, 0, 0.08) 0px 2px 8px 0px"
+        },
+        {
+         "name": "High",
+         "value": "rgba(0, 0, 0, 0.1) 0px 4px 16px 0px"
+        },
+        {
+         "name": "Overlay",
+         "value": "rgba(0, 0, 0, 0.12) 0px 8px 32px 0px"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "css": ".sr .lbl { width: 40px; text-align: right; font-size: 11px; color: rgb(134, 142, 158); font-family: \"SF Mono\", monospace; }\n.shg { display: flex; gap: 20px; flex-wrap: wrap; }\n.shi { text-align: center; }\n.shb { width: 88px; height: 64px; background: rgb(255, 255, 255); border-radius: 8px; margin-bottom: 4px; }\n.shi span { font-size: 10px; color: rgb(134, 142, 158); }\n.ph { margin-bottom: 28px; }\n.ph h1 { font-size: 32px; font-weight: 800; color: rgb(24, 26, 31); margin: 0px 0px 6px; letter-spacing: -0.6px; line-height: 1.2; }\n.ph .lbl { font-size: 11px; font-weight: 600; color: rgb(134, 142, 158); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }\n.ph p { font-size: 14px; color: rgb(78, 86, 101); line-height: 1.6; max-width: 600px; margin: 0px 0px 12px; }"
+  },
+  {
+   "key": "gradients",
+   "group": "foundation",
+   "title": "Gradients",
+   "label": "Foundation",
+   "description": "11 families × 3 intensities (light, regular, intense) = 33 gradient tokens.",
+   "facts": [],
+   "notes": [],
+   "sections": [
+    {
+     "title": "",
+     "description": "",
+     "blocks": [
+      {
+       "type": "tokens",
+       "kind": "gradient",
+       "items": [
+        {
+         "name": "Mango",
+         "value": "linear-gradient(135deg, rgb(255, 179, 71), rgb(255, 111, 97))"
+        },
+        {
+         "name": "Cotton Candy",
+         "value": "linear-gradient(135deg, rgb(255, 182, 193), rgb(255, 105, 180))"
+        },
+        {
+         "name": "Butterscotch",
+         "value": "linear-gradient(135deg, rgb(245, 199, 126), rgb(219, 160, 82))"
+        },
+        {
+         "name": "Pumpkin Pie",
+         "value": "linear-gradient(135deg, rgb(255, 140, 66), rgb(209, 96, 61))"
+        },
+        {
+         "name": "Strawberry",
+         "value": "linear-gradient(135deg, rgb(255, 107, 138), rgb(196, 69, 105))"
+        },
+        {
+         "name": "Marine",
+         "value": "linear-gradient(135deg, rgb(78, 205, 196), rgb(44, 123, 147))"
+        },
+        {
+         "name": "Dusk",
+         "value": "linear-gradient(135deg, rgb(168, 85, 247), rgb(109, 40, 217))"
+        },
+        {
+         "name": "Grape Ice",
+         "value": "linear-gradient(135deg, rgb(192, 132, 252), rgb(124, 58, 237))"
+        },
+        {
+         "name": "Peach Ice",
+         "value": "linear-gradient(135deg, rgb(253, 186, 116), rgb(251, 146, 60))"
+        },
+        {
+         "name": "Blueberry Ice",
+         "value": "linear-gradient(135deg, rgb(147, 197, 253), rgb(59, 130, 246))"
+        },
+        {
+         "name": "Green Apple",
+         "value": "linear-gradient(135deg, rgb(134, 239, 172), rgb(34, 197, 94))"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "css": ".sr .lbl { width: 40px; text-align: right; font-size: 11px; color: rgb(134, 142, 158); font-family: \"SF Mono\", monospace; }\n.gg { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }\n.gi { text-align: center; }\n.gs { height: 48px; border-radius: 8px; border: 1px solid rgba(0, 0, 0, 0.04); margin-bottom: 3px; }\n.gi span { font-size: 10px; color: rgb(134, 142, 158); }\n.ph { margin-bottom: 28px; }\n.ph h1 { font-size: 32px; font-weight: 800; color: rgb(24, 26, 31); margin: 0px 0px 6px; letter-spacing: -0.6px; line-height: 1.2; }\n.ph .lbl { font-size: 11px; font-weight: 600; color: rgb(134, 142, 158); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }\n.ph p { font-size: 14px; color: rgb(78, 86, 101); line-height: 1.6; max-width: 600px; margin: 0px 0px 12px; }"
+  },
+  {
+   "key": "grid",
+   "group": "foundation",
+   "title": "Grid & Layout",
+   "label": "Foundation",
+   "description": "24px base grid. Mobile: 6 columns, 16px margins, 8px gutter. Desktop/Tablet: flexible multi-column.",
+   "facts": [],
+   "notes": [
+    {
+     "label": "Mobile — 6 columns",
+     "text": "6 columns, 16px side margins, 8px gutter. Based on 1mg mobile production layout."
+    },
+    {
+     "label": "Desktop & Tablet",
+     "text": "Responsive multi-column on 24px grid base."
+    }
+   ],
+   "sections": [],
+   "css": ".sr .lbl { width: 40px; text-align: right; font-size: 11px; color: rgb(134, 142, 158); font-family: \"SF Mono\", monospace; }\n.ph { margin-bottom: 28px; }\n.ph h1 { font-size: 32px; font-weight: 800; color: rgb(24, 26, 31); margin: 0px 0px 6px; letter-spacing: -0.6px; line-height: 1.2; }\n.ph .lbl { font-size: 11px; font-weight: 600; color: rgb(134, 142, 158); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }\n.ph p { font-size: 14px; color: rgb(78, 86, 101); line-height: 1.6; max-width: 600px; margin: 0px 0px 12px; }\n.un { background: rgb(247, 248, 250); border-left: 3px solid rgb(24, 26, 31); border-radius: 0px 6px 6px 0px; padding: 12px 16px; margin-bottom: 16px; }\n.un .nl { font-size: 11px; font-weight: 700; color: rgb(24, 26, 31); margin-bottom: 2px; }\n.un p { font-size: 13px; color: rgb(78, 86, 101); margin: 0px; line-height: 1.45; }"
+  },
+  {
+   "key": "iconography",
+   "group": "foundation",
+   "title": "Iconography",
+   "label": "Foundation",
+   "description": "4 sizes × 5 states. Icon size rule: match text's line-height, or one step smaller.",
+   "facts": [],
+   "notes": [],
+   "sections": [
+    {
+     "title": "",
+     "description": "",
+     "blocks": [
+      {
+       "type": "table",
+       "rows": [
+        [
+         "Size",
+         "Name",
+         "Usage"
+        ],
+        [
+         "18px",
+         "Small",
+         "Body/12, Body/14"
+        ],
+        [
+         "24px",
+         "Default",
+         "Body/16, Heading/18"
+        ],
+        [
+         "30px",
+         "Large",
+         "Navigation, cards"
+        ],
+        [
+         "45px",
+         "XL",
+         "Hero, empty states"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "title": "States",
+     "description": "",
+     "blocks": [
+      {
+       "type": "table",
+       "rows": [
+        [
+         "State",
+         "Usage"
+        ],
+        [
+         "Default",
+         "Standard interactive"
+        ],
+        [
+         "Disabled",
+         "Non-interactive"
+        ],
+        [
+         "Disabled Highlight",
+         "Disabled-filled buttons only"
+        ],
+        [
+         "Action",
+         "Interactive action"
+        ],
+        [
+         "Background",
+         "On primary backgrounds"
+        ]
+       ]
+      }
+     ]
+    }
+   ],
+   "css": ".sr .lbl { width: 40px; text-align: right; font-size: 11px; color: rgb(134, 142, 158); font-family: \"SF Mono\", monospace; }\n.ph { margin-bottom: 28px; }\n.ph h1 { font-size: 32px; font-weight: 800; color: rgb(24, 26, 31); margin: 0px 0px 6px; letter-spacing: -0.6px; line-height: 1.2; }\n.ph .lbl { font-size: 11px; font-weight: 600; color: rgb(134, 142, 158); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }\n.ph p { font-size: 14px; color: rgb(78, 86, 101); line-height: 1.6; max-width: 600px; margin: 0px 0px 12px; }\n.st { font-size: 18px; font-weight: 700; color: rgb(24, 26, 31); margin: 28px 0px 12px; letter-spacing: -0.2px; }"
+  },
+  {
+   "key": "buttons",
+   "group": "component",
+   "title": "Buttons",
+   "label": "Component",
+   "description": "6 button types extracted from Figma and matched against 1mg mobile production. Primary action color: #FF6F61 (Living Coral). Disabled fill: #E0E0E0, disabled text: #A9A9A9.",
+   "facts": [
+    {
+     "label": "Types",
+     "value": "6"
+    },
+    {
+     "label": "Sizes",
+     "value": "Lg, Md"
+    },
+    {
+     "label": "States",
+     "value": "Primary, Secondary, Inverse, Disabled"
+    },
+    {
+     "label": "Styles",
+     "value": "Fill, Outline, Ghost"
+    }
+   ],
+   "notes": [],
+   "sections": [
+    {
+     "title": "Standard Button — Fill",
+     "description": "Primary action button used across 1mg for CTAs like \"Continue\", \"Add to Cart\", \"Buy now\". Coral fill (#FF6F61), white text, 8px radius. Production: used in action bars, checkout, PDP.",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "button",
+         "class": "",
+         "text": "Continue",
+         "style": {
+          "width": "125px",
+          "height": "40px",
+          "padding": "12px 32px",
+          "border-radius": "8px",
+          "background-color": "#FF6F61",
+          "color": "#FFFFFF",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "700",
+          "line-height": "normal"
+         }
+        },
+        {
+         "tag": "button",
+         "class": "",
+         "text": "Buy now",
+         "style": {
+          "width": "122px",
+          "height": "40px",
+          "padding": "12px 32px",
+          "border-radius": "8px",
+          "background-color": "#FF6F61",
+          "color": "#FFFFFF",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "700",
+          "line-height": "normal"
+         }
+        },
+        {
+         "tag": "button",
+         "class": "",
+         "text": "ADD",
+         "style": {
+          "width": "76px",
+          "height": "35px",
+          "padding": "10px 24px",
+          "border-radius": "8px",
+          "background-color": "#FF6F61",
+          "color": "#FFFFFF",
+          "font-family": "Figtree",
+          "font-size": "13px",
+          "font-weight": "700",
+          "line-height": "normal"
+         }
+        },
+        {
+         "tag": "button",
+         "class": "",
+         "text": "Secondary (Black)",
+         "style": {
+          "width": "186px",
+          "height": "40px",
+          "padding": "12px 32px",
+          "border-radius": "8px",
+          "background-color": "#181A1F",
+          "color": "#FFFFFF",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "700",
+          "line-height": "normal"
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Standard Button — Outline",
+     "description": "Used for secondary actions and the ADD button on product cards. Light gray border (#dde2eb), coral text, white background, 8px radius. This is the most common button on 1mg mobile product listings.",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "button",
+         "class": "",
+         "text": "ADD",
+         "style": {
+          "width": "88px",
+          "height": "38px",
+          "padding": "10px 28px",
+          "border-radius": "8px",
+          "background-color": "#FFFFFF",
+          "color": "#FF6F61",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "700",
+          "line-height": "normal",
+          "border": "1px solid #DDE2EB"
+         }
+        },
+        {
+         "tag": "button",
+         "class": "",
+         "text": "View Details",
+         "style": {
+          "width": "134px",
+          "height": "37px",
+          "padding": "10px 28px",
+          "border-radius": "8px",
+          "background-color": "#FFFFFF",
+          "color": "#FF6F61",
+          "font-family": "Figtree",
+          "font-size": "13px",
+          "font-weight": "700",
+          "line-height": "normal",
+          "border": "1px solid #DDE2EB"
+         }
+        },
+        {
+         "tag": "button",
+         "class": "",
+         "text": "Cancel",
+         "style": {
+          "width": "101px",
+          "height": "37px",
+          "padding": "10px 28px",
+          "border-radius": "8px",
+          "background-color": "#FFFFFF",
+          "color": "#181A1F",
+          "font-family": "Figtree",
+          "font-size": "13px",
+          "font-weight": "600",
+          "line-height": "normal",
+          "border": "1px solid #DDE2EB"
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Standard Button — Ghost",
+     "description": "Text-only action link with no border or fill. Used for tertiary actions, \"See all\" links, and navigation text.",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "span",
+         "class": "",
+         "text": "See all",
+         "style": {
+          "width": "44px",
+          "height": "16px",
+          "color": "#FF6F61",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "600",
+          "line-height": "normal"
+         }
+        },
+        {
+         "tag": "span",
+         "class": "",
+         "text": "Coral Underline",
+         "style": {
+          "width": "104px",
+          "height": "16px",
+          "color": "#FF6F61",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "600",
+          "line-height": "normal"
+         }
+        },
+        {
+         "tag": "span",
+         "class": "",
+         "text": "Black",
+         "style": {
+          "width": "37px",
+          "height": "16px",
+          "color": "#181A1F",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "600",
+          "line-height": "normal"
+         }
+        },
+        {
+         "tag": "span",
+         "class": "",
+         "text": "Disabled",
+         "style": {
+          "width": "58px",
+          "height": "16px",
+          "color": "#A2A9B8",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "600",
+          "line-height": "normal"
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Disabled State",
+     "description": "Production: fill = #E0E0E0, text = #A9A9A9. Used when action is unavailable (sold out, loading, invalid).",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "button",
+         "class": "",
+         "text": "Disabled Fill",
+         "style": {
+          "width": "146px",
+          "height": "40px",
+          "padding": "12px 32px",
+          "border-radius": "8px",
+          "background-color": "#E0E0E0",
+          "color": "#A9A9A9",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "700",
+          "line-height": "normal"
+         }
+        },
+        {
+         "tag": "button",
+         "class": "",
+         "text": "Disabled Outline",
+         "style": {
+          "width": "168px",
+          "height": "38px",
+          "padding": "10px 28px",
+          "border-radius": "8px",
+          "color": "#A9A9A9",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "700",
+          "line-height": "normal",
+          "border": "1px solid #DDE2EB"
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Inverse State",
+     "description": "White fill or outline on dark backgrounds. Used on banners, overlays, and image-heavy sections.",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "button",
+         "class": "",
+         "text": "Inverse Fill",
+         "style": {
+          "width": "116px",
+          "height": "35px",
+          "padding": "10px 24px",
+          "border-radius": "8px",
+          "background-color": "#FFFFFF",
+          "color": "#181A1F",
+          "font-family": "Figtree",
+          "font-size": "13px",
+          "font-weight": "700",
+          "line-height": "normal"
+         }
+        },
+        {
+         "tag": "button",
+         "class": "",
+         "text": "Inverse Outline",
+         "style": {
+          "width": "144px",
+          "height": "37px",
+          "padding": "10px 24px",
+          "border-radius": "8px",
+          "color": "#FFFFFF",
+          "font-family": "Figtree",
+          "font-size": "13px",
+          "font-weight": "700",
+          "line-height": "normal",
+          "border": "1px solid #FFFFFF"
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "title": "PDP Bottom Bar (1mg Production)",
+     "description": "Sticky bottom bar from the product detail page. Contains quantity counter, \"Buy now\" ghost button, and \"ADD\" filled CTA.",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "div",
+         "class": "",
+         "text": "−0+",
+         "style": {
+          "width": "69px",
+          "height": "32px",
+          "padding": "6px 10px",
+          "border-radius": "6px",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "normal",
+          "border": "1px solid #DDE2EB",
+          "gap": "6px"
+         }
+        },
+        {
+         "tag": "button",
+         "class": "",
+         "text": "Buy now",
+         "style": {
+          "width": "132px",
+          "height": "18px",
+          "padding": "1px 6px",
+          "color": "#FF6F61",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "700",
+          "line-height": "normal"
+         }
+        },
+        {
+         "tag": "button",
+         "class": "",
+         "text": "ADD",
+         "style": {
+          "width": "120px",
+          "height": "36px",
+          "padding": "10px 0px",
+          "border-radius": "8px",
+          "background-color": "#FF6F61",
+          "color": "#FFFFFF",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "700",
+          "line-height": "normal"
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Add to Cart Variants",
+     "description": "Commerce-specific button with quantity states. Matches 1mg mobile product cards.",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "button",
+         "class": "",
+         "text": "ADDDefault",
+         "style": {
+          "width": "84px",
+          "height": "28px",
+          "padding": "6px 28px",
+          "border-radius": "8px",
+          "background-color": "#FFFFFF",
+          "color": "#FF6F61",
+          "font-family": "Figtree",
+          "font-size": "12px",
+          "font-weight": "700",
+          "line-height": "normal",
+          "border": "1px solid #DDE2EB"
+         }
+        },
+        {
+         "tag": "div",
+         "class": "",
+         "text": "−1+Added",
+         "style": {
+          "width": "81px",
+          "height": "26px",
+          "border-radius": "6px",
+          "background-color": "#FF6F61",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "normal"
+         }
+        },
+        {
+         "tag": "button",
+         "class": "",
+         "text": "ADDSold Out",
+         "style": {
+          "width": "84px",
+          "height": "28px",
+          "padding": "6px 28px",
+          "border-radius": "6px",
+          "color": "#A2A9B8",
+          "font-family": "Figtree",
+          "font-size": "12px",
+          "font-weight": "700",
+          "line-height": "normal",
+          "border": "1px solid #DDE2EB"
+         }
+        }
+       ]
+      },
+      {
+       "type": "table",
+       "rows": [
+        [
+         "Type",
+         "States",
+         "Out of Stock?"
+        ],
+        [
+         "Filled",
+         "Add, Added-Number, Added-Text",
+         "Yes / No"
+        ],
+        [
+         "Outline",
+         "Add, Added-Number, Added-Text",
+         "No"
+        ],
+        [
+         "Icon only",
+         "Default, Disabled",
+         "—"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Special Button",
+     "description": "Black rounded pill button for hero sections, promotional banners. High-contrast placement.",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "button",
+         "class": "",
+         "text": "Order now",
+         "style": {
+          "width": "134px",
+          "height": "40px",
+          "padding": "12px 32px",
+          "border-radius": "24px",
+          "background-color": "#181A1F",
+          "color": "#FFFFFF",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "700",
+          "line-height": "normal"
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Floating Action Button (FAB)",
+     "description": "Two states: collapsed (icon-only circle) and expanded (icon + text pill). Used for primary page-level actions like \"Upload prescription\".",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "div",
+         "class": "",
+         "text": "+",
+         "style": {
+          "width": "48px",
+          "height": "48px",
+          "border-radius": "24px",
+          "background-color": "#FF6F61",
+          "color": "#FFFFFF",
+          "font-family": "Figtree",
+          "font-size": "20px",
+          "font-weight": "700",
+          "line-height": "normal",
+          "box-shadow": "rgba(255, 111, 97, 0.3) 0px 4px 12px 0px"
+         }
+        },
+        {
+         "tag": "div",
+         "class": "",
+         "text": "+ Upload Rx",
+         "style": {
+          "width": "115px",
+          "height": "41px",
+          "padding": "10px 20px 10px 14px",
+          "border-radius": "24px",
+          "background-color": "#FF6F61",
+          "color": "#FFFFFF",
+          "font-family": "Figtree",
+          "font-size": "13px",
+          "font-weight": "700",
+          "line-height": "normal",
+          "box-shadow": "rgba(255, 111, 97, 0.3) 0px 4px 12px 0px",
+          "gap": "6px"
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Icon Button",
+     "description": "Icon-only button for compact actions. Grey variant for low-contrast backgrounds, White for dark backgrounds.",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "div",
+         "class": "",
+         "text": "←",
+         "style": {
+          "width": "36px",
+          "height": "36px",
+          "border-radius": "18px",
+          "background-color": "#EEF1F5",
+          "color": "#626A7A",
+          "font-family": "Figtree",
+          "font-size": "16px",
+          "font-weight": "400",
+          "line-height": "normal"
+         }
+        },
+        {
+         "tag": "div",
+         "class": "",
+         "text": "✕",
+         "style": {
+          "width": "36px",
+          "height": "36px",
+          "border-radius": "18px",
+          "background-color": "#EEF1F5",
+          "color": "#626A7A",
+          "font-family": "Figtree",
+          "font-size": "16px",
+          "font-weight": "400",
+          "line-height": "normal"
+         }
+        },
+        {
+         "tag": "div",
+         "class": "",
+         "text": "♡",
+         "style": {
+          "width": "36px",
+          "height": "36px",
+          "border-radius": "18px",
+          "background-color": "#EEF1F5",
+          "color": "#626A7A",
+          "font-family": "Figtree",
+          "font-size": "16px",
+          "font-weight": "400",
+          "line-height": "normal"
+         }
+        },
+        {
+         "tag": "div",
+         "class": "",
+         "text": "⋮",
+         "style": {
+          "width": "36px",
+          "height": "36px",
+          "border-radius": "18px",
+          "background-color": "#EEF1F5",
+          "color": "#626A7A",
+          "font-family": "Figtree",
+          "font-size": "16px",
+          "font-weight": "400",
+          "line-height": "normal"
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Full Variant Matrix",
+     "description": "",
+     "blocks": [
+      {
+       "type": "table",
+       "rows": [
+        [
+         "Type",
+         "Sizes",
+         "States",
+         "Content"
+        ],
+        [
+         "Standard Fill",
+         "Large (48h), Medium (40h)",
+         "Primary (Coral), Secondary (Black), Inverse (White), Disabled (#E0E0E0)",
+         "Text Only, Icon+Text, Text+Icon"
+        ],
+        [
+         "Standard Outline",
+         "Large, Medium",
+         "Primary (Gray border + Coral text), Secondary (Gray border + Black text), Disabled",
+         "Text Only, Icon+Text, Text+Icon"
+        ],
+        [
+         "Ghost / Textual",
+         "Large, Medium",
+         "Coral, Black, White, Disabled ± Underline",
+         "Text Only"
+        ],
+        [
+         "Add to Cart",
+         "Large, Medium",
+         "Add, Added-Number, Added-Text, Out of Stock",
+         "Text, Number stepper"
+        ],
+        [
+         "Special (Rounded)",
+         "—",
+         "Black rounded, Disabled",
+         "Text"
+        ],
+        [
+         "FAB",
+         "—",
+         "Collapsed (circle), Expanded (pill)",
+         "Icon, Icon+Text"
+        ],
+        [
+         "Icon Button",
+         "36px",
+         "Grey, White",
+         "Icon only"
+        ]
+       ]
+      }
+     ]
+    }
+   ],
+   "css": ".sr .lbl { width: 40px; text-align: right; font-size: 11px; color: rgb(134, 142, 158); font-family: \"SF Mono\", monospace; }\n.pb { background: rgb(250, 250, 250); border: 1px solid rgb(240, 240, 240); border-radius: 8px; padding: 24px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; margin-bottom: 16px; }\n.ph { margin-bottom: 28px; }\n.ph h1 { font-size: 32px; font-weight: 800; color: rgb(24, 26, 31); margin: 0px 0px 6px; letter-spacing: -0.6px; line-height: 1.2; }\n.ph .lbl { font-size: 11px; font-weight: 600; color: rgb(134, 142, 158); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }\n.ph p { font-size: 14px; color: rgb(78, 86, 101); line-height: 1.6; max-width: 600px; margin: 0px 0px 12px; }\n.st { font-size: 18px; font-weight: 700; color: rgb(24, 26, 31); margin: 28px 0px 12px; letter-spacing: -0.2px; }\n.sd { font-size: 13px; color: rgb(78, 86, 101); line-height: 1.55; margin-bottom: 12px; max-width: 560px; }\n.ir { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px; }\n.ic { background: rgb(250, 250, 250); border: 1px solid rgb(240, 240, 240); border-radius: 6px; padding: 12px 14px; }\n.ic .il { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: rgb(134, 142, 158); margin-bottom: 2px; }\n.ic .iv { font-size: 20px; font-weight: 700; color: rgb(24, 26, 31); }"
+  },
+  {
+   "key": "input-fields",
+   "group": "component",
+   "title": "Input Fields",
+   "label": "Component",
+   "description": "Floating label input from 1mg production. Default: label sits inside as placeholder. On focus: label floats up onto the top border with a white background cutout. 5 states, 4 types.",
+   "facts": [
+    {
+     "label": "Types",
+     "value": "4"
+    },
+    {
+     "label": "States",
+     "value": "5"
+    },
+    {
+     "label": "Pattern",
+     "value": "Floating label (outlined)"
+    }
+   ],
+   "notes": [
+    {
+     "label": "Behavior",
+     "text": "Default → label is inside the box, vertically centered, acting as placeholder. On tap/focus → label animates up to sit on the top border line with a white background behind it, border darkens."
+    }
+   ],
+   "sections": [
+    {
+     "title": "Default State",
+     "description": "Label sits inside the field as placeholder text. Border: #bec5d1.",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "div",
+         "class": "inp-outer",
+         "text": "Your name",
+         "style": {
+          "width": "300px",
+          "height": "50px",
+          "padding": "14px",
+          "border-radius": "8px",
+          "background-color": "#FFFFFF",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "normal",
+          "border": "1px solid #BEC5D1"
+         }
+        },
+        {
+         "tag": "div",
+         "class": "inp-outer",
+         "text": "We will call you on",
+         "style": {
+          "width": "300px",
+          "height": "50px",
+          "padding": "14px",
+          "border-radius": "8px",
+          "background-color": "#FFFFFF",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "normal",
+          "border": "1px solid #BEC5D1"
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Focused / Typing State",
+     "description": "Label floats to top border. Border thickens and darkens to #414752. Cursor active inside.",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "div",
+         "class": "inp-outer focused",
+         "text": "We will call you on",
+         "style": {
+          "width": "300px",
+          "height": "49px",
+          "padding": "13.5px",
+          "border-radius": "8px",
+          "background-color": "#FFFFFF",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "normal",
+          "border": "1px solid #414752"
+         }
+        },
+        {
+         "tag": "div",
+         "class": "inp-outer focused",
+         "text": "Your name",
+         "style": {
+          "width": "300px",
+          "height": "49px",
+          "padding": "13.5px",
+          "border-radius": "8px",
+          "background-color": "#FFFFFF",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "normal",
+          "border": "1px solid #414752"
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Error State",
+     "description": "Border and label turn #C50F1F. Helper text below with error message.",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "div",
+         "class": "inp-outer focused inp-error",
+         "text": "We will call you on",
+         "style": {
+          "width": "300px",
+          "height": "49px",
+          "padding": "13.5px",
+          "border-radius": "8px",
+          "background-color": "#FFFFFF",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "normal",
+          "border": "1px solid #C50F1F"
+         }
+        },
+        {
+         "tag": "div",
+         "class": "inp-helper error",
+         "text": "Please enter a valid 10-digit number",
+         "style": {
+          "width": "300px",
+          "height": "12px",
+          "color": "#C50F1F",
+          "font-family": "Figtree",
+          "font-size": "11px",
+          "font-weight": "400",
+          "line-height": "normal"
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Success State",
+     "description": "Border and label turn #308956. Helper text with checkmark.",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "div",
+         "class": "inp-outer focused inp-success",
+         "text": "We will call you on",
+         "style": {
+          "width": "300px",
+          "height": "49px",
+          "padding": "13.5px",
+          "border-radius": "8px",
+          "background-color": "#FFFFFF",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "normal",
+          "border": "1px solid #308956"
+         }
+        },
+        {
+         "tag": "div",
+         "class": "inp-helper success",
+         "text": "✓ Verified",
+         "style": {
+          "width": "300px",
+          "height": "13px",
+          "color": "#308956",
+          "font-family": "Figtree",
+          "font-size": "11px",
+          "font-weight": "400",
+          "line-height": "normal"
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Disabled State",
+     "description": "Background fills to #F7F8FA. Label and text muted. Not interactive.",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "div",
+         "class": "inp-outer inp-disabled",
+         "text": "We will call you on",
+         "style": {
+          "width": "300px",
+          "height": "50px",
+          "padding": "14px",
+          "border-radius": "8px",
+          "background-color": "#F7F8FA",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "normal",
+          "border": "1px solid #DDE2EB"
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Dropdown (Production)",
+     "description": "Select field matching Dropdown-module from 1mg. Caret icon on right.",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "label",
+         "class": "",
+         "text": "Are you Diabetic or Pre-diabetic?",
+         "style": {
+          "width": "300px",
+          "height": "14px",
+          "color": "#4E5665",
+          "font-family": "Figtree",
+          "font-size": "12px",
+          "font-weight": "500",
+          "line-height": "normal"
+         }
+        },
+        {
+         "tag": "div",
+         "class": "drp-container",
+         "text": "Select your statusDiabeticPre-diabetic▼",
+         "style": {
+          "width": "300px",
+          "height": "46px",
+          "border-radius": "8px",
+          "background-color": "#FFFFFF",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "normal",
+          "border": "1px solid #BEC5D1"
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "title": "OTP Input (4-digit)",
+     "description": "",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "input",
+         "class": "otp-box",
+         "text": "Enter verification code",
+         "style": {
+          "width": "44px",
+          "height": "48px",
+          "padding": "1px 2px",
+          "border-radius": "8px",
+          "background-color": "#FFFFFF",
+          "color": "#181A1F",
+          "font-family": "Figtree",
+          "font-size": "18px",
+          "font-weight": "600",
+          "line-height": "normal",
+          "border": "1px solid #BEC5D1"
+         }
+        },
+        {
+         "tag": "input",
+         "class": "otp-box filled",
+         "text": "OTP — Filled",
+         "style": {
+          "width": "44px",
+          "height": "48px",
+          "padding": "1px 2px",
+          "border-radius": "8px",
+          "background-color": "#FFFFFF",
+          "color": "#181A1F",
+          "font-family": "Figtree",
+          "font-size": "18px",
+          "font-weight": "600",
+          "line-height": "normal",
+          "border": "1px solid #414752"
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Field with CTA Button",
+     "description": "Input paired with an inline CTA, used for coupon codes and lead forms. From PrimaryButtonNew-module with coral variant.",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "div",
+         "class": "inp-outer",
+         "text": "Have a coupon?",
+         "style": {
+          "width": "218px",
+          "height": "50px",
+          "padding": "14px",
+          "border-radius": "8px 0px 0px 8px",
+          "background-color": "#FFFFFF",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "normal"
+         }
+        },
+        {
+         "tag": "button",
+         "class": "",
+         "text": "APPLY",
+         "style": {
+          "width": "82px",
+          "height": "50px",
+          "padding": "0px 20px",
+          "border-radius": "0px 8px 8px 0px",
+          "background-color": "#FF6F61",
+          "color": "#FFFFFF",
+          "font-family": "Figtree",
+          "font-size": "13px",
+          "font-weight": "700",
+          "line-height": "normal"
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Variant Matrix",
+     "description": "",
+     "blocks": [
+      {
+       "type": "table",
+       "rows": [
+        [
+         "Type",
+         "States"
+        ],
+        [
+         "Field with CTA text",
+         "Default, Typing, Error, Success, Disable"
+        ],
+        [
+         "Field with CTA logo",
+         "Default, Typing, Error, Success, Disable"
+        ],
+        [
+         "4-digit OTP",
+         "Default, Typing, Success, Error, Disable"
+        ],
+        [
+         "6-digit OTP",
+         "Default, Typing, Success, Error, Disable"
+        ]
+       ]
+      }
+     ]
+    }
+   ],
+   "css": ".sr .lbl { width: 40px; text-align: right; font-size: 11px; color: rgb(134, 142, 158); font-family: \"SF Mono\", monospace; }\n.pb { background: rgb(250, 250, 250); border: 1px solid rgb(240, 240, 240); border-radius: 8px; padding: 24px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; margin-bottom: 16px; }\n.ph { margin-bottom: 28px; }\n.ph h1 { font-size: 32px; font-weight: 800; color: rgb(24, 26, 31); margin: 0px 0px 6px; letter-spacing: -0.6px; line-height: 1.2; }\n.ph .lbl { font-size: 11px; font-weight: 600; color: rgb(134, 142, 158); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }\n.ph p { font-size: 14px; color: rgb(78, 86, 101); line-height: 1.6; max-width: 600px; margin: 0px 0px 12px; }\n.st { font-size: 18px; font-weight: 700; color: rgb(24, 26, 31); margin: 28px 0px 12px; letter-spacing: -0.2px; }\n.sd { font-size: 13px; color: rgb(78, 86, 101); line-height: 1.55; margin-bottom: 12px; max-width: 560px; }\n.ir { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px; }\n.ic { background: rgb(250, 250, 250); border: 1px solid rgb(240, 240, 240); border-radius: 6px; padding: 12px 14px; }\n.ic .il { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: rgb(134, 142, 158); margin-bottom: 2px; }\n.ic .iv { font-size: 20px; font-weight: 700; color: rgb(24, 26, 31); }\n.un { background: rgb(247, 248, 250); border-left: 3px solid rgb(24, 26, 31); border-radius: 0px 6px 6px 0px; padding: 12px 16px; margin-bottom: 16px; }\n.un .nl { font-size: 11px; font-weight: 700; color: rgb(24, 26, 31); margin-bottom: 2px; }\n.un p { font-size: 13px; color: rgb(78, 86, 101); margin: 0px; line-height: 1.45; }\n.mob-snack.success { background: rgb(224, 246, 233); color: rgb(21, 100, 55); }\n.mob-snack.error { background: rgb(255, 224, 227); color: rgb(135, 21, 31); }\n.inp-wrap { position: relative; width: 100%; max-width: 300px; }\n.inp-outer { position: relative; border: 1px solid rgb(190, 197, 209); border-radius: 8px; padding: 14px; background: rgb(255, 255, 255); transition: border-color 0.15s; cursor: text; }\n.inp-outer.focused { border-color: rgb(65, 71, 82); border-width: 1.5px; padding: 13.5px; }\n.inp-outer.inp-error { border-color: rgb(197, 15, 31); }\n.inp-outer.inp-success { border-color: rgb(48, 137, 86); }\n.inp-outer.inp-disabled { background: rgb(247, 248, 250); cursor: not-allowed; border-color: rgb(221, 226, 235); }\n.inp-float-label { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 14px; color: rgb(134, 142, 158); transition: 0.15s; pointer-events: none; background: rgb(255, 255, 255); padding: 0px 2px; }\n.inp-outer.focused .inp-float-label, .inp-outer.has-value .inp-float-label { top: 0px; font-size: 12px; color: rgb(65, 71, 82); }\n.inp-outer.inp-error .inp-float-label { color: rgb(197, 15, 31); }\n.inp-outer.inp-success .inp-float-label { color: rgb(48, 137, 86); }\n.inp-outer.inp-disabled .inp-float-label { color: rgb(190, 197, 209); background: rgb(247, 248, 250); }\n.inp-field { border: none; outline: none; font-size: 14px; font-weight: 400; color: rgb(24, 26, 31); font-family: inherit; background: transparent; padding: 0px; width: 100%; line-height: 1.4; }\n.inp-field::placeholder { color: transparent; }\n.inp-outer.focused .inp-field::placeholder { color: rgb(162, 169, 184); }\n.inp-field:disabled { color: rgb(162, 169, 184); cursor: not-allowed; }\n.inp-helper { font-size: 11px; margin-top: 4px; text-align: right; }\n.inp-helper.error { color: rgb(197, 15, 31); }\n.inp-helper.success { color: rgb(48, 137, 86); }\n.drp-container { position: relative; border: 1px solid rgb(190, 197, 209); border-radius: 8px; background: rgb(255, 255, 255); }\n.drp-select { width: 100%; padding: 14px 36px 14px 14px; border: none; border-radius: 8px; font-size: 14px; font-family: inherit; color: rgb(24, 26, 31); background: transparent; appearance: none; cursor: pointer; outline: none; }\n.drp-select option { font-size: 14px; }\n.drp-caret { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; font-size: 12px; color: rgb(134, 142, 158); }\n.otp-row { display: flex; gap: 10px; }\n.otp-box { width: 44px; height: 48px; border: 1px solid rgb(190, 197, 209); border-radius: 8px; text-align: center; font-size: 18px; font-weight: 600; font-family: inherit; color: rgb(24, 26, 31); outline: none; transition: border-color 0.15s; }\n.otp-box:focus { border-color: rgb(65, 71, 82); }\n.otp-box.filled { border-color: rgb(65, 71, 82); }\n.otp-box.otp-error { border-color: rgb(197, 15, 31); }\n.otp-box.otp-success { border-color: rgb(48, 137, 86); }"
+  },
+  {
+   "key": "switch",
+   "group": "component",
+   "title": "Switch",
+   "label": "Component",
+   "description": "Binary toggle. 4 states.",
+   "facts": [],
+   "notes": [],
+   "sections": [
+    {
+     "title": "",
+     "description": "",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "button",
+         "class": "ant-switch css-ihipre",
+         "text": "Default",
+         "style": {
+          "width": "44px",
+          "height": "22px",
+          "border-radius": "100px",
+          "background-color": "rgba(0, 0, 0, 0.25)",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "22px"
+         }
+        },
+        {
+         "tag": "button",
+         "class": "ant-switch css-ihipre ant-switch-checked",
+         "text": "Selected",
+         "style": {
+          "width": "44px",
+          "height": "22px",
+          "border-radius": "100px",
+          "background-color": "#181A1F",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "22px"
+         }
+        },
+        {
+         "tag": "button",
+         "class": "ant-switch css-ihipre ant-switch-disabled",
+         "text": "Disabled",
+         "style": {
+          "width": "44px",
+          "height": "22px",
+          "border-radius": "100px",
+          "background-color": "rgba(0, 0, 0, 0.25)",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "22px",
+          "opacity": "0.65"
+         }
+        },
+        {
+         "tag": "button",
+         "class": "ant-switch css-ihipre ant-switch-checked ant-switch-disabled",
+         "text": "Sel+Dis",
+         "style": {
+          "width": "44px",
+          "height": "22px",
+          "border-radius": "100px",
+          "background-color": "#181A1F",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "22px",
+          "opacity": "0.65"
+         }
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "css": ".sr .lbl { width: 40px; text-align: right; font-size: 11px; color: rgb(134, 142, 158); font-family: \"SF Mono\", monospace; }\n.pb { background: rgb(250, 250, 250); border: 1px solid rgb(240, 240, 240); border-radius: 8px; padding: 24px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; margin-bottom: 16px; }\n.ph { margin-bottom: 28px; }\n.ph h1 { font-size: 32px; font-weight: 800; color: rgb(24, 26, 31); margin: 0px 0px 6px; letter-spacing: -0.6px; line-height: 1.2; }\n.ph .lbl { font-size: 11px; font-weight: 600; color: rgb(134, 142, 158); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }\n.ph p { font-size: 14px; color: rgb(78, 86, 101); line-height: 1.6; max-width: 600px; margin: 0px 0px 12px; }"
+  },
+  {
+   "key": "chips",
+   "group": "component",
+   "title": "Chips & Filters",
+   "label": "Component",
+   "description": "Two production chip patterns from 1mg mobile: SelectorChip (horizontal scroll bar with icons) and ChipSelect (wrapping selectable chips). Selected = dark fill + white bold text. Unselected = light gray fill + dark text.",
+   "facts": [
+    {
+     "label": "Patterns",
+     "value": "2 (Selector, Select)"
+    },
+    {
+     "label": "Selected",
+     "value": "#181a1f bg, bold white"
+    },
+    {
+     "label": "Unselected",
+     "value": "#EEF1F5 bg, regular dark"
+    }
+   ],
+   "notes": [
+    {
+     "label": "SelectorChip-module",
+     "text": "curved-max · bodySmallRegular · textMain · border: 1px solid #dde2eb · Horizontal scroll with padding-left/right 16px · Gap: margin-left 8px"
+    },
+    {
+     "label": "ChipSelect-module",
+     "text": "curved-xl · gap-4 · pY-8 pX-12 · Unselected: unselectedChip + unselectedChipBg (bg: #EEF1F5) · Selected: selectedChip + selectedChipBg (bg: #181a1f, bold, white text) · Gradient border: linear-gradient(90deg, #78BCF3, #1772BB)"
+    }
+   ],
+   "sections": [
+    {
+     "title": "SelectorChip — Production HTML",
+     "description": "Actual production markup from 1mg labs page with production SVG icons and utility classes.",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "button",
+         "class": "flex alignCenter curved-max shrink-0 bodySmallRegular textMain",
+         "text": "Sort byFiltersReport within 24 hoursPackageTests",
+         "style": {
+          "width": "87px",
+          "height": "36px",
+          "padding": "8px 12px",
+          "border-radius": "999px",
+          "background-color": "#FFFFFF",
+          "color": "#181A1F",
+          "font-family": "Figtree",
+          "font-size": "13px",
+          "font-weight": "400",
+          "line-height": "18px",
+          "border": "1px solid #DDE2EB",
+          "gap": "4px"
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "title": "ChipSelect — Production HTML",
+     "description": "Actual production markup from 1mg labs recommendation page. flex flexWrap gap-8 layout.",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "div",
+         "class": "curved-xl pY-8 pX-12 flex alignCenter justifyCenter gap-4 bodySmallRegular textM",
+         "text": "Men",
+         "style": {
+          "width": "51px",
+          "height": "36px",
+          "padding": "8px 12px",
+          "border-radius": "999px",
+          "background-color": "#EEF1F5",
+          "color": "#181A1F",
+          "font-family": "Figtree",
+          "font-size": "13px",
+          "font-weight": "400",
+          "line-height": "18px",
+          "border": "1px solid #DDE2EB",
+          "gap": "4px"
+         }
+        },
+        {
+         "tag": "div",
+         "class": "curved-xl pY-8 pX-12 flex alignCenter justifyCenter gap-4 bodySmallBold textWhit",
+         "text": "Women",
+         "style": {
+          "width": "71px",
+          "height": "36px",
+          "padding": "8px 12px",
+          "border-radius": "999px",
+          "background-color": "#181A1F",
+          "color": "#FFFFFF",
+          "font-family": "Figtree",
+          "font-size": "13px",
+          "font-weight": "700",
+          "line-height": "18px",
+          "gap": "4px"
+         }
+        },
+        {
+         "tag": "div",
+         "class": "curved-xl pY-8 pX-12 flex alignCenter justifyCenter gap-4 bodySmallRegular textM",
+         "text": "Below 30 yrs",
+         "style": {
+          "width": "100px",
+          "height": "36px",
+          "padding": "8px 12px",
+          "border-radius": "999px",
+          "background-color": "#EEF1F5",
+          "color": "#181A1F",
+          "font-family": "Figtree",
+          "font-size": "13px",
+          "font-weight": "400",
+          "line-height": "18px",
+          "border": "1px solid #DDE2EB",
+          "gap": "4px"
+         }
+        },
+        {
+         "tag": "div",
+         "class": "curved-xl pY-8 pX-12 flex alignCenter justifyCenter gap-4 bodySmallRegular textM",
+         "text": "30-55 yrs",
+         "style": {
+          "width": "80px",
+          "height": "36px",
+          "padding": "8px 12px",
+          "border-radius": "999px",
+          "background-color": "#EEF1F5",
+          "color": "#181A1F",
+          "font-family": "Figtree",
+          "font-size": "13px",
+          "font-weight": "400",
+          "line-height": "18px",
+          "border": "1px solid #DDE2EB",
+          "gap": "4px"
+         }
+        },
+        {
+         "tag": "div",
+         "class": "curved-xl pY-8 pX-12 flex alignCenter justifyCenter gap-4 bodySmallBold textWhit",
+         "text": "Above 55",
+         "style": {
+          "width": "82px",
+          "height": "36px",
+          "padding": "8px 12px",
+          "border-radius": "999px",
+          "background-color": "#181A1F",
+          "color": "#FFFFFF",
+          "font-family": "Figtree",
+          "font-size": "13px",
+          "font-weight": "700",
+          "line-height": "18px",
+          "gap": "4px"
+         }
+        },
+        {
+         "tag": "div",
+         "class": "curved-xl pY-8 pX-12 flex alignCenter justifyCenter gap-4 bodySmallRegular textM",
+         "text": "< ₹1000",
+         "style": {
+          "width": "74px",
+          "height": "36px",
+          "padding": "8px 12px",
+          "border-radius": "999px",
+          "background-color": "#EEF1F5",
+          "color": "#181A1F",
+          "font-family": "Figtree",
+          "font-size": "13px",
+          "font-weight": "400",
+          "line-height": "18px",
+          "border": "1px solid #DDE2EB",
+          "gap": "4px"
+         }
+        },
+        {
+         "tag": "div",
+         "class": "curved-xl pY-8 pX-12 flex alignCenter justifyCenter gap-4 bodySmallRegular textM",
+         "text": "₹1000-₹2500",
+         "style": {
+          "width": "104px",
+          "height": "36px",
+          "padding": "8px 12px",
+          "border-radius": "999px",
+          "background-color": "#EEF1F5",
+          "color": "#181A1F",
+          "font-family": "Figtree",
+          "font-size": "13px",
+          "font-weight": "400",
+          "line-height": "18px",
+          "border": "1px solid #DDE2EB",
+          "gap": "4px"
+         }
+        },
+        {
+         "tag": "div",
+         "class": "curved-xl pY-8 pX-12 flex alignCenter justifyCenter gap-4 bodySmallRegular textM",
+         "text": "> ₹2500",
+         "style": {
+          "width": "74px",
+          "height": "37px",
+          "padding": "8px 12px",
+          "border-radius": "999px",
+          "background-color": "#EEF1F5",
+          "color": "#181A1F",
+          "font-family": "Figtree",
+          "font-size": "13px",
+          "font-weight": "400",
+          "line-height": "18px",
+          "border": "1px solid #DDE2EB",
+          "gap": "4px"
+         }
+        },
+        {
+         "tag": "div",
+         "class": "",
+         "text": "Packages with Scans",
+         "style": {
+          "width": "151px",
+          "height": "37px",
+          "padding": "1.5px",
+          "border-radius": "999px",
+          "background-image": "linear-gradient(90deg, #78BCF3 0%, #1772BB 100%)",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "normal"
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Disabled State",
+     "description": "",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "div",
+         "class": "chipselect unselected",
+         "text": "Default",
+         "style": {
+          "width": "65px",
+          "height": "31px",
+          "padding": "8px 12px",
+          "border-radius": "999px",
+          "background-color": "#EEF1F5",
+          "color": "#181A1F",
+          "font-family": "Figtree",
+          "font-size": "13px",
+          "font-weight": "400",
+          "line-height": "normal",
+          "gap": "4px"
+         }
+        },
+        {
+         "tag": "div",
+         "class": "chipselect selected",
+         "text": "Selected",
+         "style": {
+          "width": "77px",
+          "height": "31px",
+          "padding": "8px 12px",
+          "border-radius": "999px",
+          "background-color": "#181A1F",
+          "color": "#FFFFFF",
+          "font-family": "Figtree",
+          "font-size": "13px",
+          "font-weight": "700",
+          "line-height": "normal",
+          "gap": "4px"
+         }
+        },
+        {
+         "tag": "div",
+         "class": "chipselect disabled",
+         "text": "Disabled",
+         "style": {
+          "width": "75px",
+          "height": "31px",
+          "padding": "8px 12px",
+          "border-radius": "999px",
+          "background-color": "#EEF1F5",
+          "color": "#A2A9B8",
+          "font-family": "Figtree",
+          "font-size": "13px",
+          "font-weight": "400",
+          "line-height": "normal",
+          "gap": "4px"
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Production CSS Classes",
+     "description": "",
+     "blocks": []
+    },
+    {
+     "title": "Variant Matrix",
+     "description": "",
+     "blocks": [
+      {
+       "type": "table",
+       "rows": [
+        [
+         "Type",
+         "Layout",
+         "States",
+         "Usage"
+        ],
+        [
+         "SelectorChip",
+         "Horizontal scroll",
+         "Default (border, light bg)",
+         "Sort, Filters, category filters on listings"
+        ],
+        [
+         "ChipSelect",
+         "Flex wrap, gap-8",
+         "Unselected (#EEF1F5), Selected (#181a1f + white bold), Disabled",
+         "Gender, age, price range filters"
+        ],
+        [
+         "Timestamp",
+         "Inline",
+         "Selected, Unselected",
+         "Date/time pickers"
+        ],
+        [
+         "Gradient border",
+         "Flex wrap",
+         "Special promotional chip",
+         "Premium features like \"Packages with Scans\""
+        ]
+       ]
+      }
+     ]
+    }
+   ],
+   "css": ".sr .lbl { width: 40px; text-align: right; font-size: 11px; color: rgb(134, 142, 158); font-family: \"SF Mono\", monospace; }\n.pb { background: rgb(250, 250, 250); border: 1px solid rgb(240, 240, 240); border-radius: 8px; padding: 24px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; margin-bottom: 16px; }\n.ph { margin-bottom: 28px; }\n.ph h1 { font-size: 32px; font-weight: 800; color: rgb(24, 26, 31); margin: 0px 0px 6px; letter-spacing: -0.6px; line-height: 1.2; }\n.ph .lbl { font-size: 11px; font-weight: 600; color: rgb(134, 142, 158); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }\n.ph p { font-size: 14px; color: rgb(78, 86, 101); line-height: 1.6; max-width: 600px; margin: 0px 0px 12px; }\n.st { font-size: 18px; font-weight: 700; color: rgb(24, 26, 31); margin: 28px 0px 12px; letter-spacing: -0.2px; }\n.sd { font-size: 13px; color: rgb(78, 86, 101); line-height: 1.55; margin-bottom: 12px; max-width: 560px; }\n.ir { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px; }\n.ic { background: rgb(250, 250, 250); border: 1px solid rgb(240, 240, 240); border-radius: 6px; padding: 12px 14px; }\n.ic .il { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: rgb(134, 142, 158); margin-bottom: 2px; }\n.ic .iv { font-size: 20px; font-weight: 700; color: rgb(24, 26, 31); }\n.un { background: rgb(247, 248, 250); border-left: 3px solid rgb(24, 26, 31); border-radius: 0px 6px 6px 0px; padding: 12px 16px; margin-bottom: 16px; }\n.un .nl { font-size: 11px; font-weight: 700; color: rgb(24, 26, 31); margin-bottom: 2px; }\n.un p { font-size: 13px; color: rgb(78, 86, 101); margin: 0px; line-height: 1.45; }\n.chipselect-wrap { display: flex; flex-wrap: wrap; gap: 8px; }\n.chipselect { display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 8px 12px; border-radius: 999px; font-size: 13px; font-family: inherit; cursor: pointer; transition: 0.12s; border: none; }\n.chipselect.unselected { background: rgb(238, 241, 245); color: rgb(24, 26, 31); font-weight: 400; }\n.chipselect.selected { background: rgb(24, 26, 31); color: rgb(255, 255, 255); font-weight: 700; }\n.chipselect.disabled { background: rgb(238, 241, 245); color: rgb(162, 169, 184); cursor: not-allowed; }\n.chipselect.gradient-border { background: linear-gradient(90deg, rgb(120, 188, 243) 0%, rgb(23, 114, 187) 100%); padding: 1.5px; border-radius: 999px; }\n.chipselect.gradient-border .inner { background: rgb(255, 255, 255); border-radius: 999px; padding: 6.5px 12px; font-size: 13px; color: rgb(24, 26, 31); display: flex; align-items: center; gap: 4px; }\n.search-production-canvas .flex { display: flex; }\n.search-production-canvas .justifyCenter { justify-content: center; }\n.search-production-canvas .alignCenter { align-items: center; }\n.search-production-canvas .paddingBoth-8 { padding-top: 8px; padding-bottom: 8px; }\n.search-production-canvas .textMain { color: rgb(24, 26, 31); }\n.flex { display: flex; }\n.flexWrap { flex-wrap: wrap; }\n.alignCenter { align-items: center; }\n.justifyCenter { justify-content: center; }\n.shrink-0 { flex-shrink: 0; }\n.gap-4 { gap: 4px; }\n.gap-8 { gap: 8px; }\n.pY-8 { padding-top: 8px; padding-bottom: 8px; }\n.pX-12 { padding-left: 12px; padding-right: 12px; }\n.pLeft-16 { padding-left: 16px; }\n.paddingBoth-8 { padding: 0px 8px; }\n.mLeft-8 { margin-left: 8px; }\n.mY-8 { margin-top: 8px; margin-bottom: 8px; }\n.bodySmallRegular { font-size: 13px; font-weight: 400; line-height: 18px; font-family: Figtree, -apple-system, sans-serif; }\n.bodySmallBold { font-size: 13px; font-weight: 700; line-height: 18px; font-family: Figtree, -apple-system, sans-serif; }\n.textMain { color: rgb(24, 26, 31); }\n.textWhite { color: rgb(255, 255, 255); }\n.curved-max { border-radius: 999px; }\n.curved-xl { border-radius: 16px; }"
+  },
+  {
+   "key": "badges",
+   "group": "component",
+   "title": "Badges",
+   "label": "Component",
+   "description": "Production patterns from 1mg: rating badge (green pill), info badges (colored), notification dot/count.",
+   "facts": [],
+   "notes": [],
+   "sections": [
+    {
+     "title": "",
+     "description": "",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "span",
+         "class": "ant-tag ant-tag-red css-ihipre",
+         "text": "Error",
+         "style": {
+          "width": "43px",
+          "height": "22px",
+          "padding": "0px 7px",
+          "border-radius": "4px",
+          "background-color": "#FFF1F0",
+          "color": "#CF1322",
+          "font-family": "Figtree",
+          "font-size": "12px",
+          "font-weight": "400",
+          "line-height": "20px",
+          "border": "1px solid #FFA39E"
+         }
+        },
+        {
+         "tag": "span",
+         "class": "ant-tag ant-tag-green css-ihipre",
+         "text": "Success",
+         "style": {
+          "width": "61px",
+          "height": "22px",
+          "padding": "0px 7px",
+          "border-radius": "4px",
+          "background-color": "#F6FFED",
+          "color": "#389E0D",
+          "font-family": "Figtree",
+          "font-size": "12px",
+          "font-weight": "400",
+          "line-height": "20px",
+          "border": "1px solid #B7EB8F"
+         }
+        },
+        {
+         "tag": "span",
+         "class": "ant-tag ant-tag-gold css-ihipre",
+         "text": "Warning",
+         "style": {
+          "width": "60px",
+          "height": "22px",
+          "padding": "0px 7px",
+          "border-radius": "4px",
+          "background-color": "#FFFBE6",
+          "color": "#D48806",
+          "font-family": "Figtree",
+          "font-size": "12px",
+          "font-weight": "400",
+          "line-height": "20px",
+          "border": "1px solid #FFE58F"
+         }
+        },
+        {
+         "tag": "span",
+         "class": "ant-tag ant-tag-blue css-ihipre",
+         "text": "Info",
+         "style": {
+          "width": "36px",
+          "height": "22px",
+          "padding": "0px 7px",
+          "border-radius": "4px",
+          "background-color": "#E6F4FF",
+          "color": "#0958D9",
+          "font-family": "Figtree",
+          "font-size": "12px",
+          "font-weight": "400",
+          "line-height": "20px",
+          "border": "1px solid #91CAFF"
+         }
+        },
+        {
+         "tag": "span",
+         "class": "ant-tag ant-tag-orange css-ihipre",
+         "text": "Alert",
+         "style": {
+          "width": "41px",
+          "height": "22px",
+          "padding": "0px 7px",
+          "border-radius": "4px",
+          "background-color": "#FFF7E6",
+          "color": "#D46B08",
+          "font-family": "Figtree",
+          "font-size": "12px",
+          "font-weight": "400",
+          "line-height": "20px",
+          "border": "1px solid #FFD591"
+         }
+        },
+        {
+         "tag": "span",
+         "class": "ant-tag ant-tag-purple css-ihipre",
+         "text": "New",
+         "style": {
+          "width": "40px",
+          "height": "22px",
+          "padding": "0px 7px",
+          "border-radius": "4px",
+          "background-color": "#F9F0FF",
+          "color": "#531DAB",
+          "font-family": "Figtree",
+          "font-size": "12px",
+          "font-weight": "400",
+          "line-height": "20px",
+          "border": "1px solid #D3ADF7"
+         }
+        },
+        {
+         "tag": "sup",
+         "class": "ant-scroll-number ant-badge-count",
+         "text": "3",
+         "style": {
+          "width": "20px",
+          "height": "20px",
+          "border-radius": "10px",
+          "background-color": "#181A1F",
+          "color": "#FFFFFF",
+          "font-family": "Figtree",
+          "font-size": "12px",
+          "font-weight": "400",
+          "line-height": "20px",
+          "box-shadow": "#FFFFFF 0px 0px 0px 1px"
+         }
+        },
+        {
+         "tag": "span",
+         "class": "prod-badge",
+         "text": "★ 4.5",
+         "style": {
+          "width": "38px",
+          "height": "15px",
+          "padding": "2px 6px",
+          "border-radius": "3px",
+          "background-color": "#43A46D",
+          "color": "#FFFFFF",
+          "font-family": "Figtree",
+          "font-size": "10px",
+          "font-weight": "700",
+          "line-height": "normal",
+          "gap": "2px"
+         }
+        }
+       ]
+      },
+      {
+       "type": "table",
+       "rows": [
+        [
+         "Type",
+         "Colors",
+         "Usage"
+        ],
+        [
+         "Info Badge",
+         "Red, Yellow, Green, Blue, Purple, Orange",
+         "Status labels"
+        ],
+        [
+         "Rating Badge",
+         "Green with star",
+         "Product ratings (1mg production)"
+        ],
+        [
+         "Notification",
+         "Dot or number",
+         "Unread counts"
+        ]
+       ]
+      }
+     ]
+    }
+   ],
+   "css": ".sr .lbl { width: 40px; text-align: right; font-size: 11px; color: rgb(134, 142, 158); font-family: \"SF Mono\", monospace; }\n.pb { background: rgb(250, 250, 250); border: 1px solid rgb(240, 240, 240); border-radius: 8px; padding: 24px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; margin-bottom: 16px; }\n.ph { margin-bottom: 28px; }\n.ph h1 { font-size: 32px; font-weight: 800; color: rgb(24, 26, 31); margin: 0px 0px 6px; letter-spacing: -0.6px; line-height: 1.2; }\n.ph .lbl { font-size: 11px; font-weight: 600; color: rgb(134, 142, 158); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }\n.ph p { font-size: 14px; color: rgb(78, 86, 101); line-height: 1.6; max-width: 600px; margin: 0px 0px 12px; }\n.prod-badge { display: inline-flex; align-items: center; gap: 2px; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 700; }\n.prod-badge.bestseller { background: rgb(255, 244, 192); color: rgb(150, 117, 0); }\n.prod-badge.promoted { background: rgb(236, 248, 255); color: rgb(23, 114, 187); }\n.prod-badge.sold-out { background: rgb(238, 241, 245); color: rgb(98, 106, 122); }"
+  },
+  {
+   "key": "tags",
+   "group": "component",
+   "title": "Tags",
+   "label": "Component",
+   "description": "Notification tag, Info Badge, Rating Badge, New Badge.",
+   "facts": [],
+   "notes": [],
+   "sections": [
+    {
+     "title": "",
+     "description": "",
+     "blocks": [
+      {
+       "type": "table",
+       "rows": [
+        [
+         "Type",
+         "Colors"
+        ],
+        [
+         "Notification tag",
+         "Default"
+        ],
+        [
+         "Info Badge",
+         "Purple, Green, Red, Blue, Yellow, Orange"
+        ],
+        [
+         "Rating Badge",
+         "Default (green pill)"
+        ],
+        [
+         "New Badge",
+         "Default"
+        ]
+       ]
+      }
+     ]
+    }
+   ],
+   "css": ".sr .lbl { width: 40px; text-align: right; font-size: 11px; color: rgb(134, 142, 158); font-family: \"SF Mono\", monospace; }\n.ph { margin-bottom: 28px; }\n.ph h1 { font-size: 32px; font-weight: 800; color: rgb(24, 26, 31); margin: 0px 0px 6px; letter-spacing: -0.6px; line-height: 1.2; }\n.ph .lbl { font-size: 11px; font-weight: 600; color: rgb(134, 142, 158); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }\n.ph p { font-size: 14px; color: rgb(78, 86, 101); line-height: 1.6; max-width: 600px; margin: 0px 0px 12px; }"
+  },
+  {
+   "key": "tooltips",
+   "group": "component",
+   "title": "Tooltips",
+   "label": "Component",
+   "description": "4 placement variants with close icon.",
+   "facts": [],
+   "notes": [],
+   "sections": [
+    {
+     "title": "",
+     "description": "",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "span",
+         "class": "ant-tooltip-open",
+         "text": "Target",
+         "style": {
+          "width": "59px",
+          "height": "22px",
+          "padding": "3px 10px",
+          "border-radius": "6px",
+          "background-color": "#F7F8FA",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "normal"
+         }
+        }
+       ]
+      },
+      {
+       "type": "table",
+       "rows": [
+        [
+         "Variant",
+         "Caret"
+        ],
+        [
+         "Top left",
+         "Bottom-left"
+        ],
+        [
+         "Top right",
+         "Bottom-right"
+        ],
+        [
+         "Bottom left",
+         "Top-left"
+        ],
+        [
+         "Bottom right",
+         "Top-right"
+        ]
+       ]
+      }
+     ]
+    }
+   ],
+   "css": ".sr .lbl { width: 40px; text-align: right; font-size: 11px; color: rgb(134, 142, 158); font-family: \"SF Mono\", monospace; }\n.pb { background: rgb(250, 250, 250); border: 1px solid rgb(240, 240, 240); border-radius: 8px; padding: 24px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; margin-bottom: 16px; }\n.ph { margin-bottom: 28px; }\n.ph h1 { font-size: 32px; font-weight: 800; color: rgb(24, 26, 31); margin: 0px 0px 6px; letter-spacing: -0.6px; line-height: 1.2; }\n.ph .lbl { font-size: 11px; font-weight: 600; color: rgb(134, 142, 158); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }\n.ph p { font-size: 14px; color: rgb(78, 86, 101); line-height: 1.6; max-width: 600px; margin: 0px 0px 12px; }"
+  },
+  {
+   "key": "dividers",
+   "group": "component",
+   "title": "Dividers",
+   "label": "Component",
+   "description": "Solid and dotted variants.",
+   "facts": [],
+   "notes": [],
+   "sections": [
+    {
+     "title": "",
+     "description": "",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "div",
+         "class": "ant-space-item",
+         "text": "",
+         "style": {
+          "width": "710px",
+          "height": "9px",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "normal"
+         }
+        },
+        {
+         "tag": "div",
+         "class": "ant-space-item",
+         "text": "Solid",
+         "style": {
+          "width": "710px",
+          "height": "16px",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "normal"
+         }
+        },
+        {
+         "tag": "div",
+         "class": "ant-space-item",
+         "text": "Dotted",
+         "style": {
+          "width": "710px",
+          "height": "16px",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "normal"
+         }
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "css": ".sr .lbl { width: 40px; text-align: right; font-size: 11px; color: rgb(134, 142, 158); font-family: \"SF Mono\", monospace; }\n.pb { background: rgb(250, 250, 250); border: 1px solid rgb(240, 240, 240); border-radius: 8px; padding: 24px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; margin-bottom: 16px; }\n.ph { margin-bottom: 28px; }\n.ph h1 { font-size: 32px; font-weight: 800; color: rgb(24, 26, 31); margin: 0px 0px 6px; letter-spacing: -0.6px; line-height: 1.2; }\n.ph .lbl { font-size: 11px; font-weight: 600; color: rgb(134, 142, 158); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }\n.ph p { font-size: 14px; color: rgb(78, 86, 101); line-height: 1.6; max-width: 600px; margin: 0px 0px 12px; }"
+  },
+  {
+   "key": "checkboxes",
+   "group": "component",
+   "title": "Checkboxes",
+   "label": "Component",
+   "description": "2 sizes (Normal, Small) × 4 states.",
+   "facts": [],
+   "notes": [],
+   "sections": [
+    {
+     "title": "",
+     "description": "",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "span",
+         "class": "ant-checkbox ant-wave-target css-ihipre",
+         "text": "Default",
+         "style": {
+          "width": "16px",
+          "height": "16px",
+          "border-radius": "4px",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "14px"
+         }
+        },
+        {
+         "tag": "span",
+         "class": "ant-checkbox ant-wave-target css-ihipre ant-checkbox-checked",
+         "text": "Selected",
+         "style": {
+          "width": "16px",
+          "height": "16px",
+          "border-radius": "4px",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "14px"
+         }
+        },
+        {
+         "tag": "span",
+         "class": "ant-checkbox ant-wave-target css-ihipre ant-checkbox-disabled",
+         "text": "Disabled",
+         "style": {
+          "width": "16px",
+          "height": "16px",
+          "border-radius": "4px",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "14px"
+         }
+        },
+        {
+         "tag": "span",
+         "class": "ant-checkbox ant-wave-target css-ihipre ant-checkbox-checked ant-checkbox-disabl",
+         "text": "Dis+Sel",
+         "style": {
+          "width": "16px",
+          "height": "16px",
+          "border-radius": "4px",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "14px"
+         }
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "css": ".sr .lbl { width: 40px; text-align: right; font-size: 11px; color: rgb(134, 142, 158); font-family: \"SF Mono\", monospace; }\n.pb { background: rgb(250, 250, 250); border: 1px solid rgb(240, 240, 240); border-radius: 8px; padding: 24px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; margin-bottom: 16px; }\n.ph { margin-bottom: 28px; }\n.ph h1 { font-size: 32px; font-weight: 800; color: rgb(24, 26, 31); margin: 0px 0px 6px; letter-spacing: -0.6px; line-height: 1.2; }\n.ph .lbl { font-size: 11px; font-weight: 600; color: rgb(134, 142, 158); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }\n.ph p { font-size: 14px; color: rgb(78, 86, 101); line-height: 1.6; max-width: 600px; margin: 0px 0px 12px; }"
+  },
+  {
+   "key": "radio",
+   "group": "component",
+   "title": "Radio Buttons",
+   "label": "Component",
+   "description": "Single-select. Same sizes and states as checkboxes.",
+   "facts": [],
+   "notes": [],
+   "sections": [
+    {
+     "title": "",
+     "description": "",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "span",
+         "class": "ant-radio ant-wave-target",
+         "text": "Option A",
+         "style": {
+          "width": "16px",
+          "height": "16px",
+          "border-radius": "50%",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "22px"
+         }
+        },
+        {
+         "tag": "span",
+         "class": "ant-radio ant-wave-target ant-radio-checked",
+         "text": "Option B",
+         "style": {
+          "width": "16px",
+          "height": "16px",
+          "border-radius": "50%",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "22px"
+         }
+        },
+        {
+         "tag": "span",
+         "class": "ant-radio ant-wave-target ant-radio-disabled",
+         "text": "Disabled",
+         "style": {
+          "width": "16px",
+          "height": "16px",
+          "border-radius": "50%",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "22px"
+         }
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "css": ".sr .lbl { width: 40px; text-align: right; font-size: 11px; color: rgb(134, 142, 158); font-family: \"SF Mono\", monospace; }\n.pb { background: rgb(250, 250, 250); border: 1px solid rgb(240, 240, 240); border-radius: 8px; padding: 24px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; margin-bottom: 16px; }\n.ph { margin-bottom: 28px; }\n.ph h1 { font-size: 32px; font-weight: 800; color: rgb(24, 26, 31); margin: 0px 0px 6px; letter-spacing: -0.6px; line-height: 1.2; }\n.ph .lbl { font-size: 11px; font-weight: 600; color: rgb(134, 142, 158); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }\n.ph p { font-size: 14px; color: rgb(78, 86, 101); line-height: 1.6; max-width: 600px; margin: 0px 0px 12px; }"
+  },
+  {
+   "key": "ratings",
+   "group": "component",
+   "title": "Ratings",
+   "label": "Component",
+   "description": "View (read-only) and Fill (input). Big and Small sizes.",
+   "facts": [],
+   "notes": [],
+   "sections": [
+    {
+     "title": "",
+     "description": "",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "div",
+         "class": "ant-space-item",
+         "text": "View 4/5",
+         "style": {
+          "width": "132px",
+          "height": "45px",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "normal"
+         }
+        },
+        {
+         "tag": "div",
+         "class": "ant-space-item",
+         "text": "Fill 3/5",
+         "style": {
+          "width": "132px",
+          "height": "45px",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "normal"
+         }
+        }
+       ]
+      },
+      {
+       "type": "table",
+       "rows": [
+        [
+         "Type",
+         "Size",
+         "States"
+        ],
+        [
+         "View Ratings",
+         "Default, Big, Small",
+         "Empty, 1–5"
+        ],
+        [
+         "Fill Ratings",
+         "Default, Big, Small",
+         "Empty, 1–5"
+        ]
+       ]
+      }
+     ]
+    }
+   ],
+   "css": ".anticon { display: inline-flex; align-items: center; color: inherit; font-style: normal; line-height: 0; text-align: center; text-transform: none; vertical-align: -0.125em; text-rendering: optimizelegibility; -webkit-font-smoothing: antialiased; }\n.anticon > * { line-height: 1; }\n.anticon svg { display: inline-block; }\n.anticon::before { display: none; }\n.anticon .anticon-icon { display: block; }\n.anticon[tabindex] { cursor: pointer; }\n.anticon { display: inline-flex; align-items: center; color: inherit; font-style: normal; line-height: 0; text-align: center; text-transform: none; vertical-align: -0.125em; text-rendering: optimizelegibility; -webkit-font-smoothing: antialiased; }\n.anticon > * { line-height: 1; }\n.anticon svg { display: inline-block; }\n.anticon .anticon .anticon-icon { display: block; }\n.sr .lbl { width: 40px; text-align: right; font-size: 11px; color: rgb(134, 142, 158); font-family: \"SF Mono\", monospace; }\n.pb { background: rgb(250, 250, 250); border: 1px solid rgb(240, 240, 240); border-radius: 8px; padding: 24px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; margin-bottom: 16px; }\n.ph { margin-bottom: 28px; }\n.ph h1 { font-size: 32px; font-weight: 800; color: rgb(24, 26, 31); margin: 0px 0px 6px; letter-spacing: -0.6px; line-height: 1.2; }\n.ph .lbl { font-size: 11px; font-weight: 600; color: rgb(134, 142, 158); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }\n.ph p { font-size: 14px; color: rgb(78, 86, 101); line-height: 1.6; max-width: 600px; margin: 0px 0px 12px; }"
+  },
+  {
+   "key": "steppers",
+   "group": "component",
+   "title": "Steppers",
+   "label": "Component",
+   "description": "2 sizes, 3 types (Line Filling, Staggered, Default), 4 positional states.",
+   "facts": [],
+   "notes": [],
+   "sections": [
+    {
+     "title": "",
+     "description": "",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "div",
+         "class": "ant-steps-item-icon",
+         "text": "Address",
+         "style": {
+          "width": "24px",
+          "height": "24px",
+          "border-radius": "24px",
+          "background-color": "#595B5E",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "12px",
+          "font-weight": "400",
+          "line-height": "24px",
+          "border": "1px solid #595B5E"
+         }
+        },
+        {
+         "tag": "div",
+         "class": "ant-steps-item-icon",
+         "text": "2Payment",
+         "style": {
+          "width": "24px",
+          "height": "24px",
+          "border-radius": "24px",
+          "background-color": "#181A1F",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "12px",
+          "font-weight": "400",
+          "line-height": "24px",
+          "border": "1px solid #181A1F"
+         }
+        },
+        {
+         "tag": "div",
+         "class": "ant-steps-item-icon",
+         "text": "3Confirm",
+         "style": {
+          "width": "24px",
+          "height": "24px",
+          "border-radius": "24px",
+          "background-color": "rgba(0, 0, 0, 0.06)",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "12px",
+          "font-weight": "400",
+          "line-height": "24px",
+          "border": "1px solid rgba(0, 0, 0, 0)"
+         }
+        },
+        {
+         "tag": "div",
+         "class": "ant-steps-item-icon",
+         "text": "4Done",
+         "style": {
+          "width": "24px",
+          "height": "24px",
+          "border-radius": "24px",
+          "background-color": "rgba(0, 0, 0, 0.06)",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "12px",
+          "font-weight": "400",
+          "line-height": "24px",
+          "border": "1px solid rgba(0, 0, 0, 0)"
+         }
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "css": ".anticon { display: inline-flex; align-items: center; color: inherit; font-style: normal; line-height: 0; text-align: center; text-transform: none; vertical-align: -0.125em; text-rendering: optimizelegibility; -webkit-font-smoothing: antialiased; }\n.anticon > * { line-height: 1; }\n.anticon svg { display: inline-block; }\n.anticon::before { display: none; }\n.anticon .anticon-icon { display: block; }\n.anticon[tabindex] { cursor: pointer; }\n.anticon { display: inline-flex; align-items: center; color: inherit; font-style: normal; line-height: 0; text-align: center; text-transform: none; vertical-align: -0.125em; text-rendering: optimizelegibility; -webkit-font-smoothing: antialiased; }\n.anticon > * { line-height: 1; }\n.anticon svg { display: inline-block; }\n.anticon .anticon .anticon-icon { display: block; }\n.sr .lbl { width: 40px; text-align: right; font-size: 11px; color: rgb(134, 142, 158); font-family: \"SF Mono\", monospace; }\n.pb { background: rgb(250, 250, 250); border: 1px solid rgb(240, 240, 240); border-radius: 8px; padding: 24px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; margin-bottom: 16px; }\n.ph { margin-bottom: 28px; }\n.ph h1 { font-size: 32px; font-weight: 800; color: rgb(24, 26, 31); margin: 0px 0px 6px; letter-spacing: -0.6px; line-height: 1.2; }\n.ph .lbl { font-size: 11px; font-weight: 600; color: rgb(134, 142, 158); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }\n.ph p { font-size: 14px; color: rgb(78, 86, 101); line-height: 1.6; max-width: 600px; margin: 0px 0px 12px; }"
+  },
+  {
+   "key": "loaders",
+   "group": "component",
+   "title": "Loaders",
+   "label": "Component",
+   "description": "Linear bar (any width), image loader + primary text, image loader + supportive text.",
+   "facts": [],
+   "notes": [],
+   "sections": [
+    {
+     "title": "",
+     "description": "",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "div",
+         "class": "ant-space-item",
+         "text": "Loading your experience",
+         "style": {
+          "width": "154px",
+          "height": "16px",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "normal"
+         }
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "css": ".sr .lbl { width: 40px; text-align: right; font-size: 11px; color: rgb(134, 142, 158); font-family: \"SF Mono\", monospace; }\n.pb { background: rgb(250, 250, 250); border: 1px solid rgb(240, 240, 240); border-radius: 8px; padding: 24px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; margin-bottom: 16px; }\n.ph { margin-bottom: 28px; }\n.ph h1 { font-size: 32px; font-weight: 800; color: rgb(24, 26, 31); margin: 0px 0px 6px; letter-spacing: -0.6px; line-height: 1.2; }\n.ph .lbl { font-size: 11px; font-weight: 600; color: rgb(134, 142, 158); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }\n.ph p { font-size: 14px; color: rgb(78, 86, 101); line-height: 1.6; max-width: 600px; margin: 0px 0px 12px; }"
+  },
+  {
+   "key": "tabs",
+   "group": "component",
+   "title": "Tabs",
+   "label": "Component",
+   "description": "Matching 1mg mobile tab patterns: Highlighted, Single Horizontal, Multiple Horizontal.",
+   "facts": [],
+   "notes": [],
+   "sections": [
+    {
+     "title": "",
+     "description": "",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "div",
+         "class": "ant-tabs-ink-bar ant-tabs-ink-bar-animated",
+         "text": "PharmacyLabsConsultsInsurance",
+         "style": {
+          "width": "63px",
+          "height": "2px",
+          "background-color": "#181A1F",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "22px"
+         }
+        },
+        {
+         "tag": "div",
+         "class": "ant-tabs-content-holder",
+         "text": "",
+         "style": {
+          "width": "710px",
+          "height": "0px",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "22px"
+         }
+        }
+       ]
+      },
+      {
+       "type": "table",
+       "rows": [
+        [
+         "Type",
+         "Variants"
+        ],
+        [
+         "Highlighted",
+         "2 tabs, 2 with icon"
+        ],
+        [
+         "Single Horizontal",
+         "Image+Text, Image+2 lines, Text only"
+        ],
+        [
+         "Multiple Horizontal",
+         "With images, Text only"
+        ]
+       ]
+      }
+     ]
+    }
+   ],
+   "css": ".anticon { display: inline-flex; align-items: center; color: inherit; font-style: normal; line-height: 0; text-align: center; text-transform: none; vertical-align: -0.125em; text-rendering: optimizelegibility; -webkit-font-smoothing: antialiased; }\n.anticon > * { line-height: 1; }\n.anticon svg { display: inline-block; }\n.anticon::before { display: none; }\n.anticon .anticon-icon { display: block; }\n.anticon[tabindex] { cursor: pointer; }\n.anticon { display: inline-flex; align-items: center; color: inherit; font-style: normal; line-height: 0; text-align: center; text-transform: none; vertical-align: -0.125em; text-rendering: optimizelegibility; -webkit-font-smoothing: antialiased; }\n.anticon > * { line-height: 1; }\n.anticon svg { display: inline-block; }\n.anticon .anticon .anticon-icon { display: block; }\n.sr .lbl { width: 40px; text-align: right; font-size: 11px; color: rgb(134, 142, 158); font-family: \"SF Mono\", monospace; }\n.pb { background: rgb(250, 250, 250); border: 1px solid rgb(240, 240, 240); border-radius: 8px; padding: 24px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; margin-bottom: 16px; }\n.ph { margin-bottom: 28px; }\n.ph h1 { font-size: 32px; font-weight: 800; color: rgb(24, 26, 31); margin: 0px 0px 6px; letter-spacing: -0.6px; line-height: 1.2; }\n.ph .lbl { font-size: 11px; font-weight: 600; color: rgb(134, 142, 158); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }\n.ph p { font-size: 14px; color: rgb(78, 86, 101); line-height: 1.6; max-width: 600px; margin: 0px 0px 12px; }"
+  },
+  {
+   "key": "search",
+   "group": "component",
+   "title": "Search Bar",
+   "label": "Component",
+   "description": "Tata 1mg mobile homepage search component extracted from production HTML and CSS.",
+   "facts": [
+    {
+     "label": "Viewport",
+     "value": "412px"
+    },
+    {
+     "label": "Outer padding",
+     "value": "8px vertical"
+    },
+    {
+     "label": "Inner padding",
+     "value": "16px vertical"
+    },
+    {
+     "label": "Radius",
+     "value": "30px"
+    },
+    {
+     "label": "Icon",
+     "value": "20px"
+    }
+   ],
+   "notes": [],
+   "sections": [
+    {
+     "title": "Production Search Bar",
+     "description": "Search prompt with a clipped rotating keyword list and trailing search icon. The preview uses the exact production structure and dimensions at the 412px mobile width.",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "div",
+         "class": "search-production-canvas",
+         "text": "Search for'medicines''lab tests and packages''shampoo''weight management''healthy snacks''",
+         "style": {
+          "width": "412px",
+          "height": "71px",
+          "background-color": "#FFFFFF",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "normal"
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Production CSS",
+     "description": "",
+     "blocks": [
+      {
+       "type": "table",
+       "rows": [
+        [
+         "Part",
+         "Extracted value"
+        ],
+        [
+         "Outer container",
+         "12px horizontal · 8px vertical"
+        ],
+        [
+         "Search field",
+         "1px #868e9e · 30px radius · white fill"
+        ],
+        [
+         "Content row",
+         "12px horizontal · 16px vertical"
+        ],
+        [
+         "Prompt",
+         "Figtree 14px / 20px · #181a1f"
+        ],
+        [
+         "Keyword viewport",
+         "21px height · overflow hidden · 400ms transform"
+        ],
+        [
+         "Search icon",
+         "20 × 20px · #181a1f"
+        ]
+       ]
+      }
+     ]
+    }
+   ],
+   "css": ".sr .lbl { width: 40px; text-align: right; font-size: 11px; color: rgb(134, 142, 158); font-family: \"SF Mono\", monospace; }\n.pb { background: rgb(250, 250, 250); border: 1px solid rgb(240, 240, 240); border-radius: 8px; padding: 24px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; margin-bottom: 16px; }\n.ph { margin-bottom: 28px; }\n.ph h1 { font-size: 32px; font-weight: 800; color: rgb(24, 26, 31); margin: 0px 0px 6px; letter-spacing: -0.6px; line-height: 1.2; }\n.ph .lbl { font-size: 11px; font-weight: 600; color: rgb(134, 142, 158); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }\n.ph p { font-size: 14px; color: rgb(78, 86, 101); line-height: 1.6; max-width: 600px; margin: 0px 0px 12px; }\n.st { font-size: 18px; font-weight: 700; color: rgb(24, 26, 31); margin: 28px 0px 12px; letter-spacing: -0.2px; }\n.sd { font-size: 13px; color: rgb(78, 86, 101); line-height: 1.55; margin-bottom: 12px; max-width: 560px; }\n.ir { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px; }\n.ic { background: rgb(250, 250, 250); border: 1px solid rgb(240, 240, 240); border-radius: 6px; padding: 12px 14px; }\n.ic .il { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: rgb(134, 142, 158); margin-bottom: 2px; }\n.ic .iv { font-size: 20px; font-weight: 700; color: rgb(24, 26, 31); }\n.search-production-canvas { width: 412px; max-width: 100%; background: rgb(255, 255, 255); box-sizing: border-box; }\n.search-production-canvas * { box-sizing: border-box; }\n.search-production-canvas .flex { display: flex; }\n.search-production-canvas .justifyCenter { justify-content: center; }\n.search-production-canvas .justifyBetween { justify-content: space-between; }\n.search-production-canvas .alignCenter { align-items: center; }\n.search-production-canvas .relative { position: relative; }\n.search-production-canvas .container-fluid { width: 100%; padding-left: 12px; padding-right: 12px; }\n.search-production-canvas .paddingBoth-8 { padding-top: 8px; padding-bottom: 8px; }\n.search-production-canvas .paddingBoth-16 { padding-top: 16px; padding-bottom: 16px; }\n.search-production-canvas .gutter-only { margin-left: 4px; margin-right: 4px; }\n.search-production-canvas .bodyMediumRegular { font-family: Figtree, avenir, \"Century Gothic\", arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 20px; }\n.search-production-canvas .textMain { color: rgb(24, 26, 31); }\n.search-production-canvas .SearchBar-module__bgWrapper___mcnIz { background-size: 100% 100%; background-repeat: no-repeat; }\n.search-production-canvas .SearchBar-module__container___s667o { width: 100%; margin: 0px 4px; border: 1px solid rgb(134, 142, 158); border-radius: 30px; position: relative; background-color: rgb(255, 255, 255); overflow: hidden; z-index: 4; }\n.search-production-canvas .SearchBar-module__scroll___YTCwB { height: 21px; display: flex; overflow: hidden; pointer-events: none; }\n.search-production-canvas .SearchBar-module__scroll___YTCwB ul { margin: 0px 4px; padding: 0px; }\n.search-production-canvas .SearchBar-module__scroll___YTCwB ul li { list-style: none; overflow: hidden; white-space: nowrap; }\n.imgLoaded { display: block; }\n.flex { display: flex; }\n.alignCenter { align-items: center; }\n.justifyBetween { justify-content: space-between; }\n.justifyCenter { justify-content: center; }\n.container-fluid { width: 100%; padding-right: 16px; padding-left: 16px; margin-right: auto; margin-left: auto; }\n.paddingBoth-8 { padding: 0px 8px; }\n.bodyMediumRegular { font-size: 14px; font-weight: 400; line-height: 20px; font-family: Figtree, -apple-system, sans-serif; }\n.textMain { color: rgb(24, 26, 31); }"
+  },
+  {
+   "key": "snackbars",
+   "group": "component",
+   "title": "Snackbars",
+   "label": "Component",
+   "description": "Transient feedback matching 1mg mobile production patterns. Uses semantic state colors.",
+   "facts": [],
+   "notes": [],
+   "sections": [
+    {
+     "title": "",
+     "description": "",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "div",
+         "class": "mob-snack success",
+         "text": "✓ Item added to cart successfully",
+         "style": {
+          "width": "225px",
+          "height": "39px",
+          "padding": "12px 16px",
+          "border-radius": "8px",
+          "background-color": "#E0F6E9",
+          "color": "#156437",
+          "font-family": "Figtree",
+          "font-size": "13px",
+          "font-weight": "500",
+          "line-height": "normal",
+          "gap": "8px"
+         }
+        },
+        {
+         "tag": "div",
+         "class": "mob-snack error",
+         "text": "✕ Something went wrong. Please try again.",
+         "style": {
+          "width": "283px",
+          "height": "39px",
+          "padding": "12px 16px",
+          "border-radius": "8px",
+          "background-color": "#FFE0E3",
+          "color": "#87151F",
+          "font-family": "Figtree",
+          "font-size": "13px",
+          "font-weight": "500",
+          "line-height": "normal",
+          "gap": "8px"
+         }
+        },
+        {
+         "tag": "div",
+         "class": "mob-snack warning",
+         "text": "⚠ Limited stock available",
+         "style": {
+          "width": "178px",
+          "height": "39px",
+          "padding": "12px 16px",
+          "border-radius": "8px",
+          "background-color": "#FFF4C0",
+          "color": "#715A09",
+          "font-family": "Figtree",
+          "font-size": "13px",
+          "font-weight": "500",
+          "line-height": "normal",
+          "gap": "8px"
+         }
+        }
+       ]
+      },
+      {
+       "type": "table",
+       "rows": [
+        [
+         "Type",
+         "Usage"
+        ],
+        [
+         "Default+Action",
+         "Neutral with undo/retry"
+        ],
+        [
+         "Success",
+         "Completed — Wellness Green 97/30"
+        ],
+        [
+         "Error",
+         "Failed — Vital Red 95/30"
+        ],
+        [
+         "Warning",
+         "Caution — Sunshine Yellow 95/30"
+        ],
+        [
+         "White",
+         "Neutral on dark overlays"
+        ]
+       ]
+      }
+     ]
+    }
+   ],
+   "css": ".sr .lbl { width: 40px; text-align: right; font-size: 11px; color: rgb(134, 142, 158); font-family: \"SF Mono\", monospace; }\n.pb { background: rgb(250, 250, 250); border: 1px solid rgb(240, 240, 240); border-radius: 8px; padding: 24px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; margin-bottom: 16px; }\n.ph { margin-bottom: 28px; }\n.ph h1 { font-size: 32px; font-weight: 800; color: rgb(24, 26, 31); margin: 0px 0px 6px; letter-spacing: -0.6px; line-height: 1.2; }\n.ph .lbl { font-size: 11px; font-weight: 600; color: rgb(134, 142, 158); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }\n.ph p { font-size: 14px; color: rgb(78, 86, 101); line-height: 1.6; max-width: 600px; margin: 0px 0px 12px; }\n.mob-snack { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; font-family: inherit; }\n.mob-snack.success { background: rgb(224, 246, 233); color: rgb(21, 100, 55); }\n.mob-snack.error { background: rgb(255, 224, 227); color: rgb(135, 21, 31); }\n.mob-snack.warning { background: rgb(255, 244, 192); color: rgb(113, 90, 9); }\n.inp-helper.error { color: rgb(197, 15, 31); }\n.inp-helper.success { color: rgb(48, 137, 86); }"
+  },
+  {
+   "key": "actionbar",
+   "group": "component",
+   "title": "Action Bar",
+   "label": "Component",
+   "description": "Bottom-fixed bars matching 1mg mobile checkout/cart patterns.",
+   "facts": [],
+   "notes": [],
+   "sections": [
+    {
+     "title": "1mg Mobile Production Pattern",
+     "description": "",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "div",
+         "class": "info",
+         "text": "₹2,495 View bill summary",
+         "style": {
+          "width": "207px",
+          "height": "27px",
+          "color": "#181A1F",
+          "font-family": "Figtree",
+          "font-size": "13px",
+          "font-weight": "600",
+          "line-height": "normal"
+         }
+        },
+        {
+         "tag": "div",
+         "class": "cta",
+         "text": "Continue",
+         "style": {
+          "width": "109px",
+          "height": "36px",
+          "padding": "10px 24px",
+          "border-radius": "8px",
+          "background-color": "#FF6F61",
+          "color": "#FFFFFF",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "700",
+          "line-height": "normal"
+         }
+        }
+       ]
+      },
+      {
+       "type": "table",
+       "rows": [
+        [
+         "Type",
+         "Layout"
+        ],
+        [
+         "One button",
+         "Full-width CTA"
+        ],
+        [
+         "Two button",
+         "Side-by-side primary + secondary"
+        ],
+        [
+         "Two button vertical",
+         "Stacked"
+        ],
+        [
+         "Checkout",
+         "Summary + CTA (production pattern above)"
+        ],
+        [
+         "One button + textual",
+         "CTA with text link below"
+        ],
+        [
+         "Billing",
+         "Pharma/Diagno billing CTA"
+        ]
+       ]
+      }
+     ]
+    }
+   ],
+   "css": ".sr .lbl { width: 40px; text-align: right; font-size: 11px; color: rgb(134, 142, 158); font-family: \"SF Mono\", monospace; }\n.pb { background: rgb(250, 250, 250); border: 1px solid rgb(240, 240, 240); border-radius: 8px; padding: 24px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; margin-bottom: 16px; }\n.ph { margin-bottom: 28px; }\n.ph h1 { font-size: 32px; font-weight: 800; color: rgb(24, 26, 31); margin: 0px 0px 6px; letter-spacing: -0.6px; line-height: 1.2; }\n.ph .lbl { font-size: 11px; font-weight: 600; color: rgb(134, 142, 158); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }\n.ph p { font-size: 14px; color: rgb(78, 86, 101); line-height: 1.6; max-width: 600px; margin: 0px 0px 12px; }\n.st { font-size: 18px; font-weight: 700; color: rgb(24, 26, 31); margin: 28px 0px 12px; letter-spacing: -0.2px; }\n.mob-actionbar { display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: rgb(255, 255, 255); border-top: 1px solid rgb(238, 241, 245); }\n.mob-actionbar .info { flex: 1 1 0%; font-size: 13px; color: rgb(24, 26, 31); font-weight: 600; }\n.mob-actionbar .info .sub { font-size: 11px; color: rgb(67, 164, 109); font-weight: 500; }\n.mob-actionbar .cta { background: rgb(255, 111, 97); color: rgb(255, 255, 255); border: none; border-radius: 8px; padding: 10px 24px; font-weight: 700; font-size: 14px; cursor: pointer; font-family: inherit; }"
+  },
+  {
+   "key": "page-header",
+   "group": "component",
+   "title": "Page Header",
+   "label": "Component",
+   "description": "Source-derived mobile headers from the supplied Tata 1mg product and cart pages, reproduced at the 412px reference viewport.",
+   "facts": [
+    {
+     "label": "Viewport",
+     "value": "412px"
+    },
+    {
+     "label": "PDP height",
+     "value": "72px"
+    },
+    {
+     "label": "Cart height",
+     "value": "56px"
+    },
+    {
+     "label": "Action target",
+     "value": "40px"
+    },
+    {
+     "label": "Icon size",
+     "value": "16 / 20px"
+    }
+   ],
+   "notes": [
+    {
+     "label": "ShellHeaderNew-module",
+     "text": "container-fluid: 12px side padding · inner six-column row: 4px gutters · marginLeft8: 8px action gap · normalBorder: 1px solid #f0f2f5 · cart location border: 1px solid #dde2eb · cart badge: #ff5443."
+    }
+   ],
+   "sections": [
+    {
+     "title": "Product Description Page Header",
+     "description": "The captured PDP has an empty title slot. Back sits on the left; Search, Share, and Cart sit on the right with an 8px gap and a 16px cart badge.",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "div",
+         "class": "header-production-canvas",
+         "text": "3",
+         "style": {
+          "width": "412px",
+          "height": "72px",
+          "background-color": "#FFFFFF",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "normal"
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Cart Page Header",
+     "description": "The cart does not use a title or overflow menu. Its center control is the captured delivery-location pill, with one-line truncation between Back and Search.",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "div",
+         "class": "header-production-canvas",
+         "text": "Sector 62Sector 62, Noida, Uttar Pradesh, India",
+         "style": {
+          "width": "412px",
+          "height": "56px",
+          "background-color": "#FFFFFF",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "normal"
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Extracted Specification",
+     "description": "",
+     "blocks": [
+      {
+       "type": "table",
+       "rows": [
+        [
+         "Variant",
+         "Height",
+         "Center",
+         "Actions / treatment",
+         "Surface"
+        ],
+        [
+         "Product detail",
+         "72px",
+         "Empty title slot",
+         "Back · Search · Share · Cart + badge",
+         "White"
+        ],
+        [
+         "Cart",
+         "56px",
+         "36px delivery-location pill",
+         "Back · Search",
+         "White-to-transparent gradient"
+        ],
+        [
+         "Action container",
+         "40 × 40px",
+         "Circular · radius 999999px",
+         "1px #f0f2f5 border",
+         "#ffffff"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Production Rules",
+     "description": "",
+     "blocks": []
+    }
+   ],
+   "css": ".sr .lbl { width: 40px; text-align: right; font-size: 11px; color: rgb(134, 142, 158); font-family: \"SF Mono\", monospace; }\n.pb { background: rgb(250, 250, 250); border: 1px solid rgb(240, 240, 240); border-radius: 8px; padding: 24px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; margin-bottom: 16px; }\n.ph { margin-bottom: 28px; }\n.ph h1 { font-size: 32px; font-weight: 800; color: rgb(24, 26, 31); margin: 0px 0px 6px; letter-spacing: -0.6px; line-height: 1.2; }\n.ph .lbl { font-size: 11px; font-weight: 600; color: rgb(134, 142, 158); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }\n.ph p { font-size: 14px; color: rgb(78, 86, 101); line-height: 1.6; max-width: 600px; margin: 0px 0px 12px; }\n.st { font-size: 18px; font-weight: 700; color: rgb(24, 26, 31); margin: 28px 0px 12px; letter-spacing: -0.2px; }\n.sd { font-size: 13px; color: rgb(78, 86, 101); line-height: 1.55; margin-bottom: 12px; max-width: 560px; }\n.ir { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px; }\n.ic { background: rgb(250, 250, 250); border: 1px solid rgb(240, 240, 240); border-radius: 6px; padding: 12px 14px; }\n.ic .il { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: rgb(134, 142, 158); margin-bottom: 2px; }\n.ic .iv { font-size: 20px; font-weight: 700; color: rgb(24, 26, 31); }\n.un { background: rgb(247, 248, 250); border-left: 3px solid rgb(24, 26, 31); border-radius: 0px 6px 6px 0px; padding: 12px 16px; margin-bottom: 16px; }\n.un .nl { font-size: 11px; font-weight: 700; color: rgb(24, 26, 31); margin-bottom: 2px; }\n.un p { font-size: 13px; color: rgb(78, 86, 101); margin: 0px; line-height: 1.45; }\n.header-production-canvas { width: 412px; max-width: 100%; background: rgb(255, 255, 255); box-sizing: border-box; overflow: hidden; }\n.header-production-canvas * { box-sizing: border-box; }\n.header-production-canvas button { border: 0px; background: transparent; padding: 0px; display: inline-flex; font: inherit; }\n.header-production-row { width: 100%; padding-left: 12px; padding-right: 12px; display: flex; align-items: center; }\n.header-production-pdp { height: 72px; background: rgb(255, 255, 255); }\n.header-production-pdp .header-production-inner { width: calc(100% - 8px); margin-left: 4px; margin-right: 4px; display: flex; align-items: center; justify-content: space-between; }\n.header-production-left { display: flex; align-items: center; justify-content: flex-start; flex: 1 1 0%; min-width: 0px; }\n.header-production-actions { display: flex; align-items: center; justify-content: flex-end; }\n.header-production-icon { position: relative; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid rgb(240, 242, 245); border-radius: 999999px; background: rgb(255, 255, 255); }\n.header-production-actions .header-production-icon { margin-left: 8px; }\n.header-production-badge { position: absolute; right: -4px; top: 0px; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgb(255, 84, 67); color: rgb(255, 255, 255); font-size: 12px; line-height: 16px; font-weight: 700; }\n.header-production-cart { height: 56px; background: linear-gradient(rgb(255, 255, 255), rgba(255, 255, 255, 0)); }\n.header-production-cart .header-production-cart-inner { width: 100%; display: flex; align-items: center; justify-content: space-between; min-width: 0px; }\n.header-production-canvas .header-production-location { height: 36px; min-width: 0px; max-width: calc(100% - 96px); margin-left: 8px; padding: 6px 12px; gap: 8px; display: flex; align-items: center; flex: 1 1 0%; border: 1px solid rgb(221, 226, 235); border-radius: 24px; background: rgb(255, 255, 255); overflow: hidden; }\n.header-production-location-text { min-width: 0px; flex: 1 1 0%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; font-size: 13px; line-height: 18px; }\n.header-production-address-main { font-weight: 600; color: rgb(24, 26, 31); }\n.header-production-address-sub { margin-left: 4px; font-weight: 400; color: rgb(118, 118, 118); }\n.header-production-cart-action { margin-left: 8px; }"
+  },
+  {
+   "key": "sku-cards",
+   "group": "component",
+   "title": "SKU Cards",
+   "label": "Component",
+   "description": "Production HTML from 1mg mobile homepage carousel. Uses VerticalSkuCard-module, Price-module, BestPrice-module, and PrimaryButtonNew-module. Cards are 172px wide in horizontal scroll carousels.",
+   "facts": [
+    {
+     "label": "Module",
+     "value": "VerticalSkuCard"
+    },
+    {
+     "label": "Width",
+     "value": "172px"
+    },
+    {
+     "label": "Image",
+     "value": "1:1 aspect, contain"
+    },
+    {
+     "label": "Name",
+     "value": "2-line clamp"
+    },
+    {
+     "label": "Button",
+     "value": "coralOutlined + elevatedBorder"
+    }
+   ],
+   "notes": [
+    {
+     "label": "VerticalSkuCard-module",
+     "text": "imageContainer → aspect-ratio:1, border-radius:8px, background:#f7f8fa, object-fit:contain · truncate → -webkit-line-clamp:2 · flexExpand → flex:1 · eta → delivery ETA with color:#4E5665"
+    },
+    {
+     "label": "Price-module",
+     "text": "MRP → bodyMediumBold (bold price) · Original → bodySmallRegular textAdditional (gray strikethrough) · discount → bodySmallBold color:#308956 (green percentage)"
+    },
+    {
+     "label": "BestPrice-module",
+     "text": "Gradient pill → radial-gradient(111.03% 151.46% at 50% 0%, rgb(179,86,130) 39.42%, rgb(138,48,89) 100%) · Price text → white bold · \"order for\" → color:#B1527F (Comfort Pink 40) · height24 → height:24px"
+    },
+    {
+     "label": "PrimaryButtonNew-module",
+     "text": "coralOutlined → border:1px solid #dde2eb, color:#FF6F61, background:#fff · elevatedBorder → box-shadow:0 1px 3px rgba(0,0,0,.06) · btnText → bodyMediumBold (14px/700)"
+    },
+    {
+     "label": "VerticalPackageCard-module vs VerticalSkuCard-module",
+     "text": "Package cards use banner images (16:9 aspect) instead of square 1:1. Show \"Contains X tests\" instead of pack size. No delivery ETA or BestPrice gradient. Button reads \"BOOK\" not \"ADD\". Used on 1mg.com/labs for health checkup packages."
+    }
+   ],
+   "sections": [
+    {
+     "title": "Production Cards — Homepage Carousel",
+     "description": "Note: Product images use placeholders because onemg.gumlet.io CDN blocks hotlinking (403). On 1mg.com these show actual product photos. The HTML structure, classes, and layout are exact production code. Exact production HTML from 1mg mobile homepage. Two cards showing the full anatomy: image, name (2-line clamp), pack size, ETA, pricing with strikethrough + discount, BestPrice gradient pill, and ADD button.",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "div",
+         "class": "curved",
+         "text": "The Whole Truth Plant Protein Powder 25g Protein per Scoop Double Cocoa1 kg PowderGet by F",
+         "style": {
+          "width": "172px",
+          "height": "172px",
+          "border-radius": "8px",
+          "background-color": "#F7F8FA",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "normal"
+         }
+        },
+        {
+         "tag": "div",
+         "class": "curved",
+         "text": "Yoga Bar Ultimate Whey Isolate with Fermented Yeast Protein Powder Chocolate500 gm PowderG",
+         "style": {
+          "width": "172px",
+          "height": "172px",
+          "border-radius": "8px",
+          "background-color": "#F7F8FA",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "normal"
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Default RX SKU Image",
+     "description": "Use this supplied blister-pack image whenever an RX SKU needs an image and no product-specific RX image has been provided. Search this HTML for DEFAULT_RX_SKU_IMAGE to fetch the bundled asset. Do not use it for OTC or lab-package cards.",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "div",
+         "class": "",
+         "text": "",
+         "style": {
+          "width": "172px",
+          "height": "172px",
+          "border-radius": "8px",
+          "background-color": "#F7F8FA",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "normal",
+          "border": "1px solid #F0F2F5"
+         }
+        },
+        {
+         "tag": "div",
+         "class": "bodyMediumBold textMain mTop-8",
+         "text": "RX medicine",
+         "style": {
+          "width": "172px",
+          "height": "20px",
+          "color": "#181A1F",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "700",
+          "line-height": "20px"
+         }
+        },
+        {
+         "tag": "div",
+         "class": "bodySmallRegular textSupporting",
+         "text": "Default image fallback",
+         "style": {
+          "width": "172px",
+          "height": "18px",
+          "color": "#626A7A",
+          "font-family": "Figtree",
+          "font-size": "13px",
+          "font-weight": "400",
+          "line-height": "18px"
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Card Anatomy",
+     "description": "",
+     "blocks": []
+    },
+    {
+     "title": "Typography in Card",
+     "description": "",
+     "blocks": [
+      {
+       "type": "table",
+       "rows": [
+        [
+         "Element",
+         "Class",
+         "Spec"
+        ],
+        [
+         "Product name",
+         "bodyMediumBold textMain",
+         "14px / 700 / #181a1f / 2-line clamp"
+        ],
+        [
+         "Pack size",
+         "bodySmallRegular textSupporting",
+         "13px / 400 / #626a7a"
+        ],
+        [
+         "Delivery ETA",
+         "bodySmallRegular textSupporting",
+         "13px / 400 / #4E5665"
+        ],
+        [
+         "Sale price",
+         "bodyMediumBold",
+         "14px / 700 / #181a1f"
+        ],
+        [
+         "MRP (struck)",
+         "bodySmallRegular textAdditional",
+         "13px / 400 / #868e9e / line-through"
+        ],
+        [
+         "Discount %",
+         "bodySmallBold",
+         "13px / 700 / #308956 (Wellness Green)"
+        ],
+        [
+         "Best price",
+         "bodySmallBold",
+         "13px / 700 / #fff on gradient pill"
+        ],
+        [
+         "Order for",
+         "(inline font tag)",
+         "10px / #B1527F (Comfort Pink 40)"
+        ],
+        [
+         "ADD button",
+         "bodyMediumBold",
+         "14px / 700 / #FF6F61 on white, 1px #dde2eb border"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Card States",
+     "description": "",
+     "blocks": [
+      {
+       "type": "table",
+       "rows": [
+        [
+         "State",
+         "Description"
+        ],
+        [
+         "Default",
+         "Standard card as shown above"
+        ],
+        [
+         "Bestseller",
+         "Yellow badge top-left: background:#FFF4C0, color:#967500, bodySmallBold"
+        ],
+        [
+         "Ad / Promoted",
+         "\"Ad\" label, no rating badge shown"
+        ],
+        [
+         "Sold Out",
+         "ADD button disabled: border:#dde2eb, color:#a2a9b8. Card may show opacity"
+        ],
+        [
+         "Previously Bought",
+         "Repeat purchase indicator badge"
+        ],
+        [
+         "Brand Deal",
+         "Special promotion banner overlay"
+        ],
+        [
+         "With Rating",
+         "Green rating pill: ★ 4.2 in bodySmallBold, white on #43a46d background"
+        ],
+        [
+         "Min order qty",
+         "\"Min order qty: 2\" text below ADD button in bodySmallRegular"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Layout Variants",
+     "description": "",
+     "blocks": [
+      {
+       "type": "table",
+       "rows": [
+        [
+         "Layout",
+         "Card Width",
+         "Scroll"
+        ],
+        [
+         "1×N Carousel (Homepage)",
+         "172px per card",
+         "Horizontal scroll, gap:12px"
+        ],
+        [
+         "2×N Grid (Category listing)",
+         "~50% viewport each",
+         "Vertical scroll, 2 columns"
+        ],
+        [
+         "3×N Grid",
+         "~33% viewport each",
+         "Vertical scroll, 3 columns"
+        ],
+        [
+         "1×N Small",
+         "Smaller cards",
+         "Horizontal scroll"
+        ],
+        [
+         "1×N Extra smol",
+         "Compact cards",
+         "Horizontal scroll"
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "title": "VerticalPackageCard — Labs (Production HTML)",
+     "description": "A different card module used for lab test packages on 1mg.com/labs. Banner image (16:9), package name, test count, pricing, and BOOK button. Uses VerticalPackageCard-module instead of VerticalSkuCard-module.",
+     "blocks": [
+      {
+       "type": "demo",
+       "specimens": [
+        {
+         "tag": "img",
+         "class": "",
+         "text": "Comprehensive Gold Full Body Checkup with Smart ReportContains 86 tests₹2499₹499850% offBO",
+         "style": {
+          "width": "172px",
+          "height": "97px",
+          "border-radius": "8px 8px 0px 0px",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "normal"
+         }
+        },
+        {
+         "tag": "img",
+         "class": "",
+         "text": "Comprehensive Silver Full Body Checkup with Smart ReportContains 80 tests₹1999₹399850% off",
+         "style": {
+          "width": "172px",
+          "height": "97px",
+          "border-radius": "8px 8px 0px 0px",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "normal"
+         }
+        },
+        {
+         "tag": "img",
+         "class": "",
+         "text": "Comprehensive Platinum Full Body Checkup with Smart ReportContains 100 tests₹3999₹799850% ",
+         "style": {
+          "width": "172px",
+          "height": "97px",
+          "border-radius": "8px 8px 0px 0px",
+          "color": "rgba(0, 0, 0, 0.88)",
+          "font-family": "Figtree",
+          "font-size": "14px",
+          "font-weight": "400",
+          "line-height": "normal"
+         }
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "css": ".sr .lbl { width: 40px; text-align: right; font-size: 11px; color: rgb(134, 142, 158); font-family: \"SF Mono\", monospace; }\n.pb { background: rgb(250, 250, 250); border: 1px solid rgb(240, 240, 240); border-radius: 8px; padding: 24px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; margin-bottom: 16px; }\n.ph { margin-bottom: 28px; }\n.ph h1 { font-size: 32px; font-weight: 800; color: rgb(24, 26, 31); margin: 0px 0px 6px; letter-spacing: -0.6px; line-height: 1.2; }\n.ph .lbl { font-size: 11px; font-weight: 600; color: rgb(134, 142, 158); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }\n.ph p { font-size: 14px; color: rgb(78, 86, 101); line-height: 1.6; max-width: 600px; margin: 0px 0px 12px; }\n.st { font-size: 18px; font-weight: 700; color: rgb(24, 26, 31); margin: 28px 0px 12px; letter-spacing: -0.2px; }\n.sd { font-size: 13px; color: rgb(78, 86, 101); line-height: 1.55; margin-bottom: 12px; max-width: 560px; }\n.ir { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px; }\n.ic { background: rgb(250, 250, 250); border: 1px solid rgb(240, 240, 240); border-radius: 6px; padding: 12px 14px; }\n.ic .il { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: rgb(134, 142, 158); margin-bottom: 2px; }\n.ic .iv { font-size: 20px; font-weight: 700; color: rgb(24, 26, 31); }\n.un { background: rgb(247, 248, 250); border-left: 3px solid rgb(24, 26, 31); border-radius: 0px 6px 6px 0px; padding: 12px 16px; margin-bottom: 16px; }\n.un .nl { font-size: 11px; font-weight: 700; color: rgb(24, 26, 31); margin-bottom: 2px; }\n.un p { font-size: 13px; color: rgb(78, 86, 101); margin: 0px; line-height: 1.45; }\n.search-production-canvas .flex { display: flex; }\n.search-production-canvas .justifyBetween { justify-content: space-between; }\n.search-production-canvas .alignCenter { align-items: center; }\n.search-production-canvas .textMain { color: rgb(24, 26, 31); }\n.noLinkColor { color: inherit; text-decoration: none; }\n.mTop-2 { margin-top: 2px; }\n.noAnchorColor { color: inherit; text-decoration: none; }\n.textSupporting { color: rgb(98, 106, 122); }\n.textAdditional { color: rgb(134, 142, 158); }\n.smallBorderRadius { border-radius: 4px; }\n.mTop-8 { margin-top: 8px; }\n.pX-4 { padding-left: 4px; padding-right: 4px; }\n.flex { display: flex; }\n.flexColumn { display: flex; flex-direction: column; }\n.alignCenter { align-items: center; }\n.justifyBetween { justify-content: space-between; }\n.justifyEnd { justify-content: flex-end; }\n.gap-4 { gap: 4px; }\n.mLeft-4 { margin-left: 4px; }\n.mTop-4 { margin-top: 4px; }\n.bodySmallRegular { font-size: 13px; font-weight: 400; line-height: 18px; font-family: Figtree, -apple-system, sans-serif; }\n.bodySmallBold { font-size: 13px; font-weight: 700; line-height: 18px; font-family: Figtree, -apple-system, sans-serif; }\n.bodyMediumBold { font-size: 14px; font-weight: 700; line-height: 20px; font-family: Figtree, -apple-system, sans-serif; }\n.textMain { color: rgb(24, 26, 31); }\n.textAdditional { color: rgb(134, 142, 158); }"
+  },
+  {
+   "key": "navigation",
+   "group": "component",
+   "title": "Navigation",
+   "label": "Component",
+   "description": "Chevrons + arrows. 2 weights × 4 directions.",
+   "facts": [],
+   "notes": [],
+   "sections": [
+    {
+     "title": "",
+     "description": "",
+     "blocks": [
+      {
+       "type": "table",
+       "rows": [
+        [
+         "Icon",
+         "Weight",
+         "Directions"
+        ],
+        [
+         "Chevron",
+         "Bold / Regular",
+         "Left, Right, Up, Down"
+        ],
+        [
+         "Arrow",
+         "Bold / Regular",
+         "Left, Right"
+        ]
+       ]
+      }
+     ]
+    }
+   ],
+   "css": ".sr .lbl { width: 40px; text-align: right; font-size: 11px; color: rgb(134, 142, 158); font-family: \"SF Mono\", monospace; }\n.ph { margin-bottom: 28px; }\n.ph h1 { font-size: 32px; font-weight: 800; color: rgb(24, 26, 31); margin: 0px 0px 6px; letter-spacing: -0.6px; line-height: 1.2; }\n.ph .lbl { font-size: 11px; font-weight: 600; color: rgb(134, 142, 158); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }\n.ph p { font-size: 14px; color: rgb(78, 86, 101); line-height: 1.6; max-width: 600px; margin: 0px 0px 12px; }"
+  },
+  {
+   "key": "product-page",
+   "group": "page",
+   "title": "Product Description Page",
+   "label": "Pattern / Page",
+   "description": "Native HTML and CSS reference extracted from the supplied Tata 1mg production snapshot.",
+   "facts": [],
+   "notes": [
+    {
+     "label": "Tata 1mg mobile PDP",
+     "text": "Scroll the native page below to inspect the captured product layout, content, imagery, pricing, offers, delivery, product details, trust content, and recommendations."
+    }
+   ],
+   "sections": [
+    {
+     "title": "",
+     "description": "",
+     "blocks": [
+      {
+       "type": "outline",
+       "text": "- div.pdp-native-root 410×922 (bg #FFFFFF)\n  - div.pdp-native-viewport 410×846 (bg #FFFFFF)\n    - div.pdp-native-document 410×4617 (bg #FFFFFF)\n      - div.flexColumn.App-module__webFallbackForSafeAreaVar___C-IHr 410×4617\n            - div.flex.justifyCenter 16×16 (bg #FF5443, r 50%, 11px/700 #FFFFFF): 3\n            - div.l4SemiBold 96×27 (20px/700 #181A1F): Hi, there!\n            - div.smallRegular.textSecondary 96×18 (14px/400 #414752): Login / Sign Up\n            - div.bodyRegular.NavigationDrawer-module__marginLeft___3d3Vq 104×21 (16px/400 #181A1F): Buy medicines\n            - div.bodyRegular.NavigationDrawer-module__marginLeft___3d3Vq 141×21 (16px/400 #181A1F): Buy health products\n            - div.bodyRegular.NavigationDrawer-module__marginLeft___3d3Vq 101×21 (16px/400 #181A1F): Book lab tests\n            - div.bodyRegular.NavigationDrawer-module__marginLeft___3d3Vq 117×21 (16px/400 #181A1F): Consult a doctor\n            - div.bodyRegular.NavigationDrawer-module__marginLeft___3d3Vq 107×21 (16px/400 #181A1F): 1mg Care Plan\n            - div.bodyRegular.NavigationDrawer-module__marginLeft___3d3Vq 91×21 (16px/400 #181A1F): Cancer Care\n            - div.bodyRegular.NavigationDrawer-module__marginLeft___3d3Vq 67×21 (16px/400 #181A1F): Ayurveda\n            - div.bodyRegular.NavigationDrawer-module__marginLeft___3d3Vq 90×21 (16px/400 #181A1F): Partnerships\n            - span 26×18 (13px/500 #3B3B3B): New\n            - div.bodyRegular.NavigationDrawer-module__marginLeft___3d3Vq 92×21 (16px/400 #181A1F): Hindi articles\n            - div.bodyRegular.NavigationDrawer-module__marginLeft___3d3Vq 43×21 (16px/400 #181A1F): Offers\n            - div.bodyRegular.NavigationDrawer-module__marginLeft___3d3Vq 85×21 (16px/400 #181A1F): All diseases\n            - span 26×18 (13px/500 #3B3B3B): New\n            - div.bodyRegular.NavigationDrawer-module__marginLeft___3d3Vq 94×21 (16px/400 #181A1F): All medicines\n            - div.bodyRegular.NavigationDrawer-module__marginLeft___3d3Vq 218×21 (16px/400 #181A1F): Medicines by therapeutic class\n            - div.bodyRegular.NavigationDrawer-module__marginLeft___3d3Vq 76×21 (16px/400 #181A1F): Contact us\n            - div.bodyRegular.NavigationDrawer-module__marginLeft___3d3Vq 82×21 (16px/400 #181A1F): Need help?\n            - div.bodyRegular.NavigationDrawer-module__marginLeft___3d3Vq 98×21 (16px/400 #181A1F): Privacy policy\n            - div.bodyRegular.NavigationDrawer-module__marginLeft___3d3Vq 93×21 (16px/400 #181A1F): Return policy\n            - div.bodyRegular.NavigationDrawer-module__marginLeft___3d3Vq 151×21 (16px/400 #181A1F): Terms and conditions\n            - div.bodyRegular.NavigationDrawer-module__marginLeft___3d3Vq 103×21 (16px/400 #181A1F): Editorial policy\n            - div.col-5.bodySemiBold 217×42 (16px/700 #181A1F): Get more features! Download the app now\n            - div.gutter-only.smallRegular 128×18 (14px/400 #181A1F): Medicine Reminders\n            - div.gutter-only.smallRegular 181×18 (14px/400 #181A1F): Monthly/weekly subscriptions\n            - div.gutter-only.smallRegular 173×18 (14px/400 #181A1F): Health records and analysis\n            - div.gutter-only.smallRegular 159×18 (14px/400 #181A1F): 24*7 Emergency services\n            - div.titleMediumExtraBold.textMain 91×24 (16px/800 #181A1F): Choose city\n            - div.titleMediumExtraBold.textMain 178×24 (16px/800 #181A1F): Sign in to your account\n            - span.bodyMediumRegular.truncateTo1 183×20 (bg #FFFFFF, 14px/400 #868E9E): Enter 10 digit mobile number\n            - span.bodyMediumRegular.textAdditional 24×20 (14px/400 #868E9E): +91\n            - span.bodyMediumBold.PrimaryButtonNew-module__btnText___EkRJ5 138×20 (14px/700 #FFFFFF): Get verification code\n            - div.smallRegular.gutter-only 12×18 (14px/400 #414752): or\n            - span.bodyMediumBold.PrimaryButtonNew-module__btnText___EkRJ5 118×20 (14px/700 #FF5443): Sign in with email\n            - div.marginTop-16.textCenter 378×36 (13px/400 #626A7A): By signing in you agree to our\n            - u 110×15 (13px/400 #626A7A): Terms & conditions\n            - div 29×18 (13px/400 #626A7A): and\n            - u 79×15 (13px/400 #626A7A): Privacy policy\n            - h1.headingExtraSmallExtraBold.PageTitle-module__textContainer___U29Lq 378×56 (18px/800 #181A1F): TrueBasics Clean Whey Protein Powder Isolate & Concentrate Blend | 25g Protein p\n            - span.absolute.bodyLargeMedium 89×28 (bg #FFFFFF, 16px/500 #626A7A): See more\n            - span.headingExtraSmallExtraBold 20×20 (18px/800 #626A7A): ...\n            - span 63×25 (22px/800 #181A1F): ₹4499\n            - div.bodyLargeRegular.textStrikethrough 85×24 (16px/400 #626A7A): MRP ₹5699\n            - div.bodyLargeBold.PriceWidget-module__successText___rbrPu 57×24 (16px/700 #308956): 21% off\n            - div.bodySmallRegular.marginTop-4 378×16 (12px/400 #868E9E): (Inclusive of applicable taxes)\n            - font 37×14 (12px/500 #FFFFFF): Get for\n            - font 46×17 (16px/700 #FFFFFF): ₹4049\n            - font 125×14 (12px/400 #B1527F): on orders above\n            - b 35×14 (12px/700 #B1527F): ₹1200\n            - font 138×12 (11px/400 #414752): Use Code\n            - b 86×14 (12px/700 #414752): 1MGNEWPLUS\n            - font 37×14 (12px/500 #181A1F): Get for\n            - font 46×17 (16px/700 #181A1F): ₹4139\n            - font 118×14 (12px/400 #414752): on orders above\n            - b 28×14 (12px/700 #414752): ₹300\n            - font 106×12 (11px/400 #414752): Use Code\n            - b 54×14 (12px/700 #414752): 1MGNEW\n            - span 6×11 (10px/400 #414752): 1\n            - span 6×11 (10px/400 #414752): 2\n            - div.bodySmallMedium 208×16 (12px/500 #181A1F): Unlock extra discounts with bank offers\n            - b 106×16 (14px/800 #308956): Save extra ₹179\n            - span 72×16 (14px/500 #414752): on this item\n            - span 102×14 (12px/500 #414752): at ₹165 (3 months)\n            - b 347×53 (22px/800 #181A1F): Are you sure you want to remove Care Plan?\n            - b 103×16 (14px/800 #FFFFFF): Keep Care Plan\n            - b 93×17 (16px/800 #FF5443): Yes, remove\n            - div.Slider-module__x___YIdh0.Slider-module__slides___hZmDV 412×152 (14px/400 #181A1F): 0\n            - div.textAdditional.bodySmallRegular 185×16 (12px/400 #868E9E): Added\n            - div.bodyLargeBold 185×24 (16px/700 #181A1F): 3 items in cart\n            - span.bodyMediumBold.PrimaryButtonNew-module__btnText___EkRJ5 66×20 (14px/700 #FFFFFF): Go to cart\n            - div.titleMediumExtraBold.textMain 303×24 (16px/800 #181A1F): Unlock extra discounts with bank offers\n            - div.bodyMedium 288×63 (16px/500 #181A1F): 10% cashback up to 200 on Min Transaction of Rs.1000, for first time users of Ai\n            - div.smallRegular.textSecondary 288×54 (14px/400 #414752): 10% cashback up to 200 on Min Transaction of Rs.1000, for first time users of Ai\n            - div.bodyMedium 288×63 (16px/500 #181A1F): Get up to ₹75 cashback on a minimum order value (MOV) of ₹499 and above, valid o\n            - div.smallRegular.textSecondary 288×54 (14px/400 #414752): Get up to ₹75 cashback on a minimum order value (MOV) of ₹499 and above, valid o\n            - div.bodyMedium 288×63 (16px/500 #181A1F): Get up to ₹75 cashback on a minimum order value (MOV) of ₹499 and above, valid o\n            - div.smallRegular.textSecondary 288×54 (14px/400 #414752): Get up to ₹75 cashback on a minimum order value (MOV) of ₹499 and above, valid o\n            - div.bodyMedium 288×42 (16px/500 #181A1F): Assured cashback up to ₹300*. T&C Apply*\n            - div.smallRegular.textSecondary 288×18 (14px/400 #414752): Assured cashback up to ₹300*. T&C Apply*\n            - span 37×16 (14px/400 #3B3B3B): Get in\n            - b 73×16 (14px/800 #6A47B4): 60 minutes\n            - span.smallSemiBold.displayBlock 63×18 (14px/700 #181A1F): Sector 62\n            - span 186×12 (11px/500 #767676): Sector 62, Noida, Uttar Pradesh, India\n            - span 205×17 (16px/800 #6E2A79): Payment, Returns & Expiry"
+      }
+     ]
+    }
+   ],
+   "css": ".sr .lbl { width: 40px; text-align: right; font-size: 11px; color: rgb(134, 142, 158); font-family: \"SF Mono\", monospace; }\n.ph { margin-bottom: 28px; }\n.ph h1 { font-size: 32px; font-weight: 800; color: rgb(24, 26, 31); margin: 0px 0px 6px; letter-spacing: -0.6px; line-height: 1.2; }\n.ph .lbl { font-size: 11px; font-weight: 600; color: rgb(134, 142, 158); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }\n.ph p { font-size: 14px; color: rgb(78, 86, 101); line-height: 1.6; max-width: 600px; margin: 0px 0px 12px; }\n.un { background: rgb(247, 248, 250); border-left: 3px solid rgb(24, 26, 31); border-radius: 0px 6px 6px 0px; padding: 12px 16px; margin-bottom: 16px; }\n.un .nl { font-size: 11px; font-weight: 700; color: rgb(24, 26, 31); margin-bottom: 2px; }\n.un p { font-size: 13px; color: rgb(78, 86, 101); margin: 0px; line-height: 1.45; }\n.pdp-native-shell { display: flex; justify-content: center; align-items: flex-start; background: rgb(238, 241, 245); border: 1px solid rgb(221, 226, 235); border-radius: 12px; padding: 20px; margin-bottom: 24px; }"
+  },
+  {
+   "key": "cart-page",
+   "group": "page",
+   "title": "Cart Page",
+   "label": "Pattern / Page",
+   "description": "Native HTML and CSS reference extracted from the supplied Tata 1mg production cart snapshot.",
+   "facts": [],
+   "notes": [
+    {
+     "label": "Tata 1mg mobile cart",
+     "text": "Scroll the native 412 × 924 page below to inspect the captured cart header, savings, delivery, products, coupon entry, recommendations, pricing, and checkout action."
+    }
+   ],
+   "sections": [
+    {
+     "title": "",
+     "description": "",
+     "blocks": [
+      {
+       "type": "outline",
+       "text": "- div.cart-native-root 410×922 (bg #FFFFFF)\n  - div.cart-native-viewport 410×846 (bg #FFFFFF)\n    - div.cart-native-document 410×1574 (bg #FFFFFF)\n      - div.flexColumn.App-module__webFallbackForSafeAreaVar___C-IHr 410×1574\n            - span.ShellHeaderNew-module__addressTextBold___jCifp 59×15 (13px/600 #181A1F): Sector 62\n            - span.ShellHeaderNew-module__addressSubtextLight___-Tdwb 220×15 (13px/400 #767676): Sector 62, Noida, Uttar Pradesh, India\n            - div.l4SemiBold 96×27 (20px/700 #181A1F): Hi, there!\n            - div.smallRegular.textSecondary 96×18 (14px/400 #414752): Login / Sign Up\n            - div.bodyRegular.NavigationDrawer-module__marginLeft___3d3Vq 104×21 (16px/400 #181A1F): Buy medicines\n            - div.bodyRegular.NavigationDrawer-module__marginLeft___3d3Vq 141×21 (16px/400 #181A1F): Buy health products\n            - div.bodyRegular.NavigationDrawer-module__marginLeft___3d3Vq 101×21 (16px/400 #181A1F): Book lab tests\n            - div.bodyRegular.NavigationDrawer-module__marginLeft___3d3Vq 117×21 (16px/400 #181A1F): Consult a doctor\n            - div.bodyRegular.NavigationDrawer-module__marginLeft___3d3Vq 107×21 (16px/400 #181A1F): 1mg Care Plan\n            - div.bodyRegular.NavigationDrawer-module__marginLeft___3d3Vq 91×21 (16px/400 #181A1F): Cancer Care\n            - div.bodyRegular.NavigationDrawer-module__marginLeft___3d3Vq 67×21 (16px/400 #181A1F): Ayurveda\n            - div.bodyRegular.NavigationDrawer-module__marginLeft___3d3Vq 90×21 (16px/400 #181A1F): Partnerships\n            - span 26×18 (13px/500 #3B3B3B): New\n            - div.bodyRegular.NavigationDrawer-module__marginLeft___3d3Vq 92×21 (16px/400 #181A1F): Hindi articles\n            - div.bodyRegular.NavigationDrawer-module__marginLeft___3d3Vq 43×21 (16px/400 #181A1F): Offers\n            - div.bodyRegular.NavigationDrawer-module__marginLeft___3d3Vq 85×21 (16px/400 #181A1F): All diseases\n            - span 26×18 (13px/500 #3B3B3B): New\n            - div.bodyRegular.NavigationDrawer-module__marginLeft___3d3Vq 94×21 (16px/400 #181A1F): All medicines\n            - div.bodyRegular.NavigationDrawer-module__marginLeft___3d3Vq 218×21 (16px/400 #181A1F): Medicines by therapeutic class\n            - div.bodyRegular.NavigationDrawer-module__marginLeft___3d3Vq 76×21 (16px/400 #181A1F): Contact us\n            - div.bodyRegular.NavigationDrawer-module__marginLeft___3d3Vq 82×21 (16px/400 #181A1F): Need help?\n            - div.bodyRegular.NavigationDrawer-module__marginLeft___3d3Vq 98×21 (16px/400 #181A1F): Privacy policy\n            - div.bodyRegular.NavigationDrawer-module__marginLeft___3d3Vq 93×21 (16px/400 #181A1F): Return policy\n            - div.bodyRegular.NavigationDrawer-module__marginLeft___3d3Vq 151×21 (16px/400 #181A1F): Terms and conditions\n            - div.bodyRegular.NavigationDrawer-module__marginLeft___3d3Vq 103×21 (16px/400 #181A1F): Editorial policy\n            - div.col-5.bodySemiBold 217×42 (16px/700 #181A1F): Get more features! Download the app now\n            - div.gutter-only.smallRegular 128×18 (14px/400 #181A1F): Medicine Reminders\n            - div.gutter-only.smallRegular 181×18 (14px/400 #181A1F): Monthly/weekly subscriptions\n            - div.gutter-only.smallRegular 173×18 (14px/400 #181A1F): Health records and analysis\n            - div.gutter-only.smallRegular 159×18 (14px/400 #181A1F): 24*7 Emergency services\n            - div.titleMediumExtraBold.textMain 91×24 (16px/800 #181A1F): Choose city\n            - div.titleMediumExtraBold.textMain 178×24 (16px/800 #181A1F): Sign in to your account\n            - span.bodyMediumRegular.truncateTo1 183×20 (bg #FFFFFF, 14px/400 #868E9E): Enter 10 digit mobile number\n            - span.bodyMediumRegular.textAdditional 24×20 (14px/400 #868E9E): +91\n            - span.bodyMediumBold.PrimaryButtonNew-module__btnText___EkRJ5 138×20 (14px/700 #FFFFFF): Get verification code\n            - div.smallRegular.gutter-only 12×18 (14px/400 #414752): or\n            - span.bodyMediumBold.PrimaryButtonNew-module__btnText___EkRJ5 118×20 (14px/700 #FF5443): Sign in with email\n            - div.marginTop-16.textCenter 378×36 (13px/400 #626A7A): By signing in you agree to our\n            - u 110×15 (13px/400 #626A7A): Terms & conditions\n            - div 29×18 (13px/400 #626A7A): and\n            - u 79×15 (13px/400 #626A7A): Privacy policy\n            - h1.Cart-module__a11y___aMMMY 42×28 (22px/400 #181A1F): Cart\n            - font 40×16 (14px/700 #156437): ₹1770\n            - div.smallSemiBold.CouponSavings-module__prefixText___pptci 129×18 (14px/700 #181A1F): saved on this order\n            - b 184×17 (16px/700 #181A1F): Delivering in\n            - font 84×17 (16px/700 #9D59A8): 60 minutes\n            - div.bodyMediumBold.gutter-only 51×20 (14px/700 #FF5443): Change\n            - div.bodyMediumBold.textPrimary 190×40 (14px/700 #181A1F): TrueBasics Clean Whey Protein Powder Isolate & Concentrate Blend | 25g Protein p\n            - div.flex.flexWrap 190×16 (12px/400 #414752): 1 kg powder\n            - span.pLeft-4 20×20 (14px/700 #FF5443): 1\n            - span.bodySmallRegular.textTertiary 35×16 (12px/400 #626A7A): ₹5699\n            - div.bodyLargeBold.textPrimary 46×24 (16px/700 #181A1F): ₹4499\n            - b 203×17 (16px/700 #181A1F): Delivering by 01 pm, today\n            - div.bodyMediumBold.textPrimary 190×40 (14px/700 #181A1F): Pain Relief Gel for Lower Back Pain, Joint Pain, Neck Pain & Sprain | by Tata 1m\n            - div.flex.flexWrap 190×16 (12px/400 #414752): 75 gm gel\n            - span.pLeft-4 20×20 (14px/700 #FF5443): 1\n            - span.bodySmallRegular.textTertiary 28×16 (12px/400 #626A7A): ₹225\n            - div.bodyLargeBold.textPrimary 37×24 (16px/700 #181A1F): ₹155\n            - b 240×17 (16px/700 #181A1F): Delivering by 14 - 15 september\n            - div.bodyMediumBold.textPrimary 190×40 (14px/700 #181A1F): Avvatar Whey Protein Powder Sugar Free Gluten Free & Soya free Belgian Chocolate\n            - div.flex.flexWrap 190×16 (12px/400 #414752): 2 kg powder\n            - span.pLeft-4 20×20 (14px/700 #FF5443): 1\n            - span.bodySmallRegular.textTertiary 40×16 (12px/400 #626A7A): ₹11549\n            - div.bodyLargeBold.textPrimary 54×24 (16px/700 #181A1F): ₹11087\n            - span.bodyMediumBold.mLeft-16 93×20 (14px/700 #181A1F): Apply coupon\n            - span 178×28 (18px/800 #181A1F): Before you checkout\n            - span 86×16 (12px/700 #FFFFFF): In the spotlight\n            - span 92×16 (12px/400 #181A1F): Last Minute Buys\n            - span.bodySmallRegular 17×16 (12px/400 #FFFFFF): 4.5\n            - span.truncateTo1 15×16 (12px/400 #414752): Ad\n            - div.mTop-4.bodyMediumBold 164×40 (14px/700 #181A1F): PentaSure HP with Whey, Milk & Soy Protein | Flavour Banana Vanilla\n            - div.bodySmallRegular.textSupporting 164×16 (12px/400 #414752): 400 gm Powder\n            - span 32×14 (12px/400 #4E5665): Get in\n            - span 42×14 (12px/400 #9D59A8): 60 mins\n            - div.bodyMediumBold 40×20 (14px/700 #181A1F): ₹1473\n            - strike.bodySmallRegular.mLeft-4 35×16 (12px/400 #868E9E): ₹1550\n            - div.mTop-4.bodySmallBold 164×16 (12px/700 #156437): 5% off\n            - span.bodyMediumBold.PrimaryButtonNew-module__btnText___EkRJ5 30×20 (14px/700 #FF5443): ADD\n            - span.bodySmallRegular 17×16 (12px/400 #FFFFFF): 4.3\n            - span.truncateTo1 15×16 (12px/400 #414752): Ad\n            - div.mTop-4.bodyMediumBold 164×40 (14px/700 #181A1F): Cetaphil Sun Light High Protection Sunscreen Gel | SPF 30 Sensitive Oily Skin\n            - div.bodySmallRegular.textSupporting 164×16 (12px/400 #414752): 100 ml Gel\n            - span 32×14 (12px/400 #4E5665): Get in\n            - span 42×14 (12px/400 #9D59A8): 60 mins\n            - div.bodyMediumBold 40×20 (14px/700 #181A1F): ₹1301\n            - strike.bodySmallRegular.mLeft-4 35×16 (12px/400 #868E9E): ₹1399"
+      }
+     ]
+    }
+   ],
+   "css": ".sr .lbl { width: 40px; text-align: right; font-size: 11px; color: rgb(134, 142, 158); font-family: \"SF Mono\", monospace; }\n.ph { margin-bottom: 28px; }\n.ph h1 { font-size: 32px; font-weight: 800; color: rgb(24, 26, 31); margin: 0px 0px 6px; letter-spacing: -0.6px; line-height: 1.2; }\n.ph .lbl { font-size: 11px; font-weight: 600; color: rgb(134, 142, 158); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }\n.ph p { font-size: 14px; color: rgb(78, 86, 101); line-height: 1.6; max-width: 600px; margin: 0px 0px 12px; }\n.un { background: rgb(247, 248, 250); border-left: 3px solid rgb(24, 26, 31); border-radius: 0px 6px 6px 0px; padding: 12px 16px; margin-bottom: 16px; }\n.un .nl { font-size: 11px; font-weight: 700; color: rgb(24, 26, 31); margin-bottom: 2px; }\n.un p { font-size: 13px; color: rgb(78, 86, 101); margin: 0px; line-height: 1.45; }\n.cart-native-shell { display: flex; justify-content: center; align-items: flex-start; background: rgb(238, 241, 245); border: 1px solid rgb(221, 226, 235); border-radius: 12px; padding: 20px; margin-bottom: 24px; }"
+  },
+  {
+   "key": "labs-home",
+   "group": "page",
+   "title": "Labs Homepage",
+   "label": "Pattern / Page",
+   "description": "Native, source-faithful HTML and CSS reconstruction from the supplied Tata 1mg Labs homepage. This page is not embedded.",
+   "facts": [],
+   "notes": [
+    {
+     "label": "Tata 1mg mobile Labs",
+     "text": "Scroll the native 412 × 924 page below to inspect the location header, search, diagnostic entry points, personalised recommendations, category navigation, lab-package carousels, health concerns, vaccination, trust signals, and bottom navigation."
+    }
+   ],
+   "sections": [
+    {
+     "title": "",
+     "description": "",
+     "blocks": [
+      {
+       "type": "outline",
+       "text": "- div.labs-app 410×922 (bg #F7F8FA)\n  - header.topbar 410×56 (bg #FFFFFF)\n    - button.icon-button 40×40 (bg #FFFFFF, r 999px)\n    - button.location 252×40 (bg #FFFFFF, r 24px)\n      - span.location-copy 94×28\n        - span.eyebrow 94×12 (10px/400 #626A7A): Delivering to\n        - strong 94×16 (12px/700 #181A1F): Sector 62, Noida\n    - button.call 78×16 (12px/700 #FF5443): Call to Book\n  - main.scroll 410×802 (bg #F7F8FA)\n    - div.search-wrap 410×64 (bg #FFFFFF)\n      - div.search 386×48 (bg #FFFFFF, r 30px)\n        - span.search-label 65×20 (14px/400 #181A1F): Search for\n        - span.search-term 255×20 (14px/400 #626A7A): full body package\n    - figure.hero 410×205 (bg #FFFFFF)\n      - img 410×205\n    - section.section.compact 410×172 (bg #FFFFFF)\n      - div.section-title-row 378×28\n        - h2 254×28 (18px/800 #181A1F): What would you like to book?\n      - div.quick-grid 378×92\n            - strong 105×20 (14px/700 #181A1F): Blood Tests\n            - span 105×32 (11px/400 #626A7A): CBC, packages & more\n            - strong 105×20 (14px/700 #181A1F): X-Ray / Scans\n            - span 105×32 (11px/400 #626A7A): Ultrasound, MRI & more\n    - section.section 410×332 (bg #FFFFFF)\n      - div.section-title-row 378×46\n          - h2 176×28 (18px/800 #181A1F): Recommended tests\n          - p.muted 176×16 (12px/400 #626A7A): Based on your health history\n        - button.link 44×24 (12px/700 #FF5443): View all\n      - div.people 378×38\n        - button.person-chip.active 93×36 (bg #FFF4F2, r 18px, 12px/700 #B42318): Akshay\n          - span.avatar 24×24 (bg #EEF1F5, r 50%, 10px/700 #B42318): AM\n        - button.person-chip 119×36 (bg #FFFFFF, r 18px, 12px/400 #181A1F): Add member\n          - span.avatar 24×24 (bg #EEF1F5, r 50%, 10px/700 #181A1F): +\n      - article.due-card 378×176 (bg #FBFCFD, r 12px)\n            - h3 224×20 (14px/700 #181A1F): Pending follow-up tests\n            - p.muted 224×16 (12px/400 #626A7A): Complete your doctor-recommended tests\n          - span.status 42×20 (bg #FFF4C0, r 10px, 10px/700 #715A09): 3 due\n            - span 129×16 (12px/400 #181A1F): Serum Homocysteine\n            - button 46×28 (bg #FFFFFF, r 8px, 11px/700 #FF5443): ADD\n            - span 66×16 (12px/400 #181A1F): Vitamin D\n            - button 46×28 (bg #FFFFFF, r 8px, 11px/700 #FF5443): ADD\n            - span 50×16 (12px/400 #181A1F): HbA1c\n            - button 46×28 (bg #FFFFFF, r 8px, 11px/700 #FF5443): ADD\n    - section.section 410×304 (bg #FFFFFF)\n      - div.section-title-row 378×28\n        - h2 140×28 (18px/800 #181A1F): Recently viewed\n        - button.link 44×24 (12px/700 #FF5443): View all\n      - div.horizontal 378×216\n            - div.package-name 150×36 (13px/700 #181A1F): Comprehensive Gold Full Body Checkup\n            - div.package-meta 150×16 (11px/400 #626A7A): Includes 85 tests\n            - span.price 78×19 (13px/800 #181A1F): ₹2,099\n            - del 31×11 (10px/400 #868E9E): ₹4,198\n            - button.book 55×28 (bg #FFFFFF, r 8px, 11px/800 #FF5443): BOOK\n            - div.package-name 150×36 (13px/700 #181A1F): Comprehensive Silver Full Body Checkup\n            - div.package-meta 150×16 (11px/400 #626A7A): Includes 70 tests\n            - span.price 41×18 (13px/800 #181A1F): ₹1,499\n            - button.book 55×28 (bg #FFFFFF, r 8px, 11px/800 #FF5443): BOOK\n    - section.section 410×242 (bg #FFFFFF)\n      - div.section-title-row 378×28\n        - h2 184×28 (18px/800 #181A1F): Lab tests & packages\n      - div.category-strip 378×102\n          - span 72×14 (11px/700 #181A1F): For Women\n          - span 72×14 (11px/400 #414752): For Men\n          - span 72×14 (11px/400 #414752): For Children\n          - span 72×28 (11px/400 #414752): X-Rays & Scans\n      - div.subcategories 378×36\n        - button.subcat 121×36 (bg #FFFFFF, r 10px, 11px/600 #181A1F): Adult Women\n        - button.subcat 121×36 (bg #FFFFFF, r 10px, 11px/600 #181A1F): Senior Women\n        - button.subcat 121×36 (bg #FFFFFF, r 10px, 11px/600 #181A1F): Fitness\n    - section.section 410×196 (bg #FFFFFF)\n      - div.section-title-row 378×28\n        - h2 253×28 (18px/800 #181A1F): Explore Packages for Women\n        - button.link 44×24 (12px/700 #FF5443): View all\n      - div.feature-links 378×108\n          - strong 103×15 (11px/700 #181A1F): Adult Women\n          - span 103×13 (10px/400 #626A7A): Everyday wellness\n          - strong 103×15 (11px/700 #181A1F): Senior Women\n          - span 103×13 (10px/400 #626A7A): Age-wise care\n          - strong 103×15 (11px/700 #181A1F): Fitness\n          - span 103×13 (10px/400 #626A7A): Track key markers\n    - section.section 410×260 (bg #FFFFFF)\n      - div.section-title-row 378×28\n        - h2 220×28 (18px/800 #181A1F): Ultrasound, MRI, CT Scan\n        - button.link 44×24 (12px/700 #FF5443): View all\n      - div.scan-links 378×172\n            - strong 280×16 (12px/700 #181A1F): Ultrasound\n            - span 280×13 (10px/400 #626A7A): Find centres and available slots\n            - strong 280×16 (12px/700 #181A1F): MRI Scan\n            - span 280×13 (10px/400 #626A7A): Compare nearby diagnostic centres\n            - strong 280×16 (12px/700 #181A1F): CT Scan"
+      }
+     ]
+    }
+   ],
+   "css": ".sr .lbl { width: 40px; text-align: right; font-size: 11px; color: rgb(134, 142, 158); font-family: \"SF Mono\", monospace; }\n.ph { margin-bottom: 28px; }\n.ph h1 { font-size: 32px; font-weight: 800; color: rgb(24, 26, 31); margin: 0px 0px 6px; letter-spacing: -0.6px; line-height: 1.2; }\n.ph .lbl { font-size: 11px; font-weight: 600; color: rgb(134, 142, 158); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }\n.ph p { font-size: 14px; color: rgb(78, 86, 101); line-height: 1.6; max-width: 600px; margin: 0px 0px 12px; }\n.un { background: rgb(247, 248, 250); border-left: 3px solid rgb(24, 26, 31); border-radius: 0px 6px 6px 0px; padding: 12px 16px; margin-bottom: 16px; }\n.un .nl { font-size: 11px; font-weight: 700; color: rgb(24, 26, 31); margin-bottom: 2px; }\n.un p { font-size: 13px; color: rgb(78, 86, 101); margin: 0px; line-height: 1.45; }\n.labs-home-native-shell { display: flex; justify-content: center; align-items: flex-start; background: rgb(238, 241, 245); border: 1px solid rgb(221, 226, 235); border-radius: 12px; padding: 20px; margin-bottom: 24px; overflow-x: auto; }"
+  }
+ ]
+}

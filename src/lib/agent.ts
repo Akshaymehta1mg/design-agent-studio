@@ -12,6 +12,7 @@ import { askUserInput, MAX_QUESTIONS, normalizeAsk } from "./ask-input"
 import { loadPrismDoc, PRISM_ADAPTER, PRISM_CORE, PRISM_DOCS, RX_FALLBACK_IMAGE, searchDesignSystemReference, searchVisualResearch, TATA_1MG_ASSET_BASE, VISUAL_RESEARCH_URL, visualResearchPatterns } from "./prism"
 import { DEVICE_SIZES } from "./wireframe"
 import { imageForModel } from "./relay"
+import { loadDesignReference, referenceIndex, referenceKeys, referenceSection } from "./design-reference"
 import DS_ASSETS from "@/prism/design-system/assets.json"
 import { hasFigmaAccess } from "./figma"
 import { viaServer, type ServerUpstream } from "./server"
@@ -318,17 +319,23 @@ function prismTools(convId: string) {
     }),
     read_design_system: tool({
       description:
-        "Read the project's design system (the Design systems page). Without a query: its full guide and approved asset URLs. With a query: search its portable component reference for a component key (e.g. buttons, chips, sku-cards, actionbar, page-header, labs-home, DEFAULT_RX_SKU_IMAGE, const SEMANTIC=) and return code excerpts.",
-      inputSchema: z.object({ query: z.string().optional() }),
-      execute: async ({ query }) => {
+        "Read the project's design system (the Design systems page). No arguments: the guide, the list of reference sections and approved asset URLs. section: one reference section as structured specs, e.g. 'colors', 'typography', 'spacing', 'corner-radius', 'shadows', 'buttons', 'input-fields', 'chips', 'sku-cards', 'actionbar', 'page-header', 'labs-home'. query: search the raw component reference code for a key when a section isn't enough.",
+      inputSchema: z.object({ section: z.string().optional(), query: z.string().optional() }),
+      execute: async ({ section, query }) => {
         const c = useStore.getState().conversations.find((x) => x.id === convId)
         const ds = c ? designSystemFor(c) : BUILTIN_DESIGN_SYSTEMS[0]
+        const hasReference = ds.id === "ds_tata1mg"
+        if (section?.trim()) {
+          if (!hasReference) return `${ds.name} has no reference sections. Use its guide instead.`
+          return (await referenceSection(section)) ?? `No section "${section}". Sections: colors, ${(await referenceKeys()).join(", ")}.`
+        }
         if (query?.trim()) {
           if (!ds.referenceUrl) return `${ds.name} has no component reference to search. Use its guide instead.`
           return searchDesignSystemReference(query, ds.referenceUrl)
         }
         const assets = ds.id === "ds_tata1mg" ? `\n\nApproved assets (use these URLs in <img>):\n${DS_ASSETS.map((a) => `- ${TATA_1MG_ASSET_BASE}${a}`).join("\n")}\nRX medicine fallback: ${RX_FALLBACK_IMAGE}` : ""
-        return `Design system: ${ds.name}\n\n${ds.profile}${assets}`
+        const index = hasReference ? `\n\nReference sections (read one with section):\n${referenceIndex(await loadDesignReference())}` : ""
+        return `Design system: ${ds.name}\n\n${ds.profile}${index}${assets}`
       },
     }),
     search_visual_research: tool({
