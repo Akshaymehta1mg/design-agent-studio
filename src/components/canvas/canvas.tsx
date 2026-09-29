@@ -191,6 +191,8 @@ export function Canvas({ onAskAbout }: { onAskAbout: (f: FrameNode) => void }) {
       return
     }
     if (tool === "note") {
+      // Keep the rest of this click from moving focus away from the new note's text box.
+      e.preventDefault()
       const p = toWorld(e.clientX, e.clientY)
       const id = uid("n_")
       editCanvas((d) => ({ ...d, nodes: [...d.nodes, { id, kind: "note", x: p.x - 20, y: p.y - 20, w: 240, h: 150, text: "", author: "user", createdAt: Date.now() }] }))

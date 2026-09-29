@@ -248,6 +248,9 @@ interface State {
   /** The prototype frame open in the player */
   playing: string | null
   playPrototype: (id: string | null) => void
+  /** The notes document open in the reader */
+  reading: string | null
+  openNotes: (id: string | null) => void
   settingsOpen: boolean
   busy: boolean
 
@@ -311,6 +314,8 @@ export const useStore = create<State>()(
       focus: null,
       playing: null,
       playPrototype: (id) => set({ playing: id }),
+      reading: null,
+      openNotes: (id) => set({ reading: id }),
       settingsOpen: false,
       busy: false,
 

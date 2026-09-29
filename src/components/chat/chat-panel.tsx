@@ -362,7 +362,12 @@ function AssistantMessage({ m, convId }: { m: ChatMessage; convId: string }) {
               <button
                 key={a.id}
                 disabled={!a.targetId}
-                onClick={() => a.targetId && focusNode(a.targetId)}
+                onClick={() => {
+                  if (!a.targetId) return
+                  // Notes open in the reader; everything else is shown on the canvas.
+                  if (a.tone === "note") useStore.getState().openNotes(a.targetId)
+                  else focusNode(a.targetId)
+                }}
                 title={a.label}
                 className={cn("hover:bg-accent inline-flex h-8 max-w-full min-w-0 items-center gap-1.5 rounded-full border px-3 text-[12.5px] font-medium transition-colors disabled:cursor-default", a.tone === "error" && "text-destructive")}
               >

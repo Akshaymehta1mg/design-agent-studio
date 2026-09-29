@@ -132,7 +132,7 @@ function compactSystemPrompt(c: Conversation, product: ProductLibrary, opts: { m
 
 Rules
 - Every question, decision or approval goes through ask_user (all questions for a moment in one call, 2–4 short options each), never plain chat text. Never ask what's under "Decisions".
-- Never annotate or add notes unless asked for critique, feedback or notes.
+- Never annotate or add notes unless asked for critique, feedback or notes. Notes (add_note) are Markdown with a ## heading per part; reply in chat with one line.
 - Wireframes, screens and flows: build ONE clickable prototype. create_prototype with plan (every screen id + title) and the first 2–3 screens, then add_prototype_screens with the next 2–3 until the plan is built. iterate_prototype for a new version (send only changed screens).
 - Screen HTML: a body fragment, no scripts, width ${mobile.w}px (mobile). Root <div class="wf-screen">; helpers wf-bar, wf-title, wf-body, wf-footer, wf-row, wf-col, wf-between, wf-h1, wf-h2, wf-h3, wf-text, wf-muted, wf-card, wf-img (placeholder, set height), wf-icon, wf-btn, wf-btn-primary, wf-btn-block, wf-input, wf-chip, wf-chip-on, wf-list, wf-tabbar. Inline styles for design-system tokens. Keep markup lean.
 - Links: data-go="screen-id" navigates, data-back goes back, data-open="id" shows <div class="wf-overlay" data-overlay="id"><div class="wf-sheet">…</div></div>, data-close hides it. Error/empty/success states are their own screens.
@@ -168,7 +168,7 @@ Canvas tools
 - iterate_wireframe: revise, try another version, apply feedback or explore a variant of a single-screen wireframe. This ALWAYS creates a new version next to the source (V2, V3…); you cannot edit an existing frame. Iterate from the latest version in a lineage unless the designer points at a specific one. You can also iterate from a screenshot.
 ${opts.markup ? `- annotate: mark regions of a frame (x, y, w, h as fractions 0–1 of the frame from its top-left). Keep each label under 30 words; lead with the problem.
 - comment: a pinned point comment on a frame for a single, local remark.
-- add_note: a sticky note on the canvas for summaries, rationale, open questions or next steps.
+- add_note: a notes document on the canvas (Design Notes, research findings, rationale, open questions, next steps). Write Markdown with a ## heading for each part: the canvas shows a short card and the headings become the reader's contents. Keep your chat reply to a one-line summary of the notes.
 ` : ""}- create_workflow: a user flow, journey, process or decision tree. Nodes are steps (kind start, step, decision or end); mark return paths as kind "loop". Keep titles short; put detail in description, content and footer.
 - update_plan: for multi-step work, call it first with your plan, then as you go. Skip it for single quick actions.
 - ask_user: every question, decision or approval. Put all questions for a moment in one call (up to ${MAX_QUESTIONS}), each with 2–4 short options and allowCustom. Without questions it becomes an approve / request changes / reject card. It waits for the answer.
@@ -470,8 +470,12 @@ function canvasTools(convId: string, msgId: string, log: (r: ActionResult) => vo
       execute: async ({ frame_id, ...c }) => wrap(addMarks(convId, frame_id, [{ ...c, type: "comment" }])),
     }),
     add_note: tool({
-      description: "Place a sticky note on the canvas.",
-      inputSchema: z.object({ title: z.string().optional(), text: z.string(), near_frame_id: z.string().optional() }),
+      description: "Put a notes document on the canvas: Design Notes, research findings, rationale, open questions. Markdown with a ## heading per part (they become its contents).",
+      inputSchema: z.object({
+        title: z.string().optional().describe("Short title, e.g. 'Checkout design notes'"),
+        text: z.string().describe("Markdown with ## headings for each part"),
+        near_frame_id: z.string().optional(),
+      }),
       execute: async (i) => wrap(addNote(convId, i)),
     }),
   }

@@ -309,12 +309,14 @@ export function addNote(convId: string, input: { title?: string; text: string; n
   const c = conv(convId)
   if (!c) return { ok: false, message: "No conversation" }
   const near = input.near_frame_id ? findFrame(convId, input.near_frame_id) : undefined
+  // The agent's notes are documents: a compact card on the canvas, read in full in the notes reader.
   const lines = input.text.split("\n").length
-  const h = Math.min(420, 70 + lines * 20 + Math.ceil(input.text.length / 34) * 6)
+  const w = author === "agent" ? 300 : 260
+  const h = author === "agent" ? 156 : Math.min(420, 70 + lines * 20 + Math.ceil(input.text.length / 34) * 6)
   const pos = near
-    ? findFreeSpot(c.canvas.nodes, { x: near.x + near.w + 40, y: near.y, w: 260, h })
-    : placeNewRow(c.canvas.nodes, 260, h)
-  const note: NoteNode = { id: uid("n_"), kind: "note", ...pos, w: 260, h, title: input.title, text: input.text, author, createdAt: Date.now() }
+    ? findFreeSpot(c.canvas.nodes, { x: near.x + near.w + 40, y: near.y, w, h })
+    : placeNewRow(c.canvas.nodes, w, h)
+  const note: NoteNode = { id: uid("n_"), kind: "note", ...pos, w, h, title: input.title, text: input.text, author, createdAt: Date.now() }
   useStore.getState().editCanvas((d) => ({ ...d, nodes: [...d.nodes, note] }), { convId })
   return { ok: true, message: `Added note${input.title ? ` "${input.title}"` : ""}.`, log: { id: uid(), label: `Note${input.title ? `: ${input.title}` : ""}`, targetId: note.id, tone: "note" } }
 }
