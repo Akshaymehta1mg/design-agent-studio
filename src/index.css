@@ -5,50 +5,50 @@
    (main.tsx adds `.dark` from prefers-color-scheme when no data-theme is set). */
 @custom-variant dark (&:where(.dark, .dark *, [data-theme="dark"], [data-theme="dark"] *));
 
-/* Layout: sidebar | infinite canvas | chat. shadcn neutral grays (zero chroma);
-   ember is the only hue, kept for the agent's marks and live states. */
+/* Layout: sidebar | infinite canvas | chat. shadcn Slate greys + Violet primary;
+   ember aligns with violet so the app has one accent colour. */
 :root {
   --radius: 0.625rem;
 
   --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --foreground: oklch(0.129 0.042 264.695);
   --card: oklch(1 0 0);
   --card-foreground: var(--foreground);
   --popover: oklch(1 0 0);
   --popover-foreground: var(--foreground);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
+  --primary: oklch(0.541 0.281 293.009);
+  --primary-foreground: oklch(0.969 0.016 293.756);
+  --secondary: oklch(0.968 0.007 247.896);
   --secondary-foreground: var(--foreground);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
+  --muted: oklch(0.968 0.007 247.896);
+  --muted-foreground: oklch(0.554 0.046 257.417);
+  --accent: oklch(0.968 0.007 247.896);
   --accent-foreground: var(--foreground);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --border: oklch(0.929 0.013 255.508);
+  --input: oklch(0.929 0.013 255.508);
+  --ring: oklch(0.702 0.183 293.541);
 
-  --sidebar: oklch(0.985 0 0);
+  --sidebar: oklch(0.984 0.003 247.858);
   --sidebar-foreground: var(--foreground);
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
-  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent: oklch(0.968 0.007 247.896);
   --sidebar-accent-foreground: var(--foreground);
-  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-border: oklch(0.929 0.013 255.508);
   --sidebar-ring: var(--ring);
 
   /* studio-specific */
-  --ember: oklch(0.646 0.2 41);          /* agent annotations and live states */
-  --ember-soft: oklch(0.646 0.2 41 / 0.12);
-  --pin: oklch(0.55 0.2 262);            /* selection and your own comments */
-  --canvas: oklch(0.975 0 0);
-  --canvas-dot: oklch(0.86 0 0);
+  --ember: oklch(0.541 0.281 293.009);    /* agent annotations and live states — violet */
+  --ember-soft: oklch(0.541 0.281 293.009 / 0.12);
+  --pin: oklch(0.55 0.2 262);             /* selection and your own comments */
+  --canvas: oklch(0.984 0.003 247.858);
+  --canvas-dot: oklch(0.882 0.013 255.508);
   --note: oklch(0.955 0.07 95);
   --note-foreground: oklch(0.3 0.04 85);
   --ok: oklch(0.6 0.14 155);
-  --bubble: oklch(0.945 0.03 250);          /* your messages */
-  --bubble-foreground: oklch(0.22 0.03 255);
+  --bubble: oklch(0.969 0.016 293.756);   /* your messages — violet-50 tint */
+  --bubble-foreground: oklch(0.129 0.042 293);
 
   --font-display: "Plus Jakarta Sans Variable", "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-sans: "Plus Jakarta Sans Variable", "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -64,32 +64,32 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --popover: oklch(0.205 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
+    --background: oklch(0.129 0.042 264.695);
+    --foreground: oklch(0.984 0.003 247.858);
+    --card: oklch(0.208 0.042 265.755);
+    --popover: oklch(0.208 0.042 265.755);
+    --primary: oklch(0.606 0.25 292.717);
+    --primary-foreground: oklch(0.969 0.016 293.756);
+    --secondary: oklch(0.279 0.041 260.031);
+    --muted: oklch(0.279 0.041 260.031);
+    --muted-foreground: oklch(0.704 0.04 256.788);
+    --accent: oklch(0.279 0.041 260.031);
     --destructive: oklch(0.704 0.191 22.216);
     --border: oklch(1 0 0 / 10%);
     --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
-    --sidebar: oklch(0.175 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
+    --ring: oklch(0.541 0.281 293.009);
+    --sidebar: oklch(0.208 0.042 265.755);
+    --sidebar-accent: oklch(0.279 0.041 260.031);
     --sidebar-border: oklch(1 0 0 / 10%);
-    --ember: oklch(0.72 0.17 45);
-    --ember-soft: oklch(0.72 0.17 45 / 0.16);
+    --ember: oklch(0.702 0.183 293.541);
+    --ember-soft: oklch(0.702 0.183 293.541 / 0.16);
     --pin: oklch(0.7 0.16 262);
-    --canvas: oklch(0.17 0 0);
-    --canvas-dot: oklch(0.3 0 0);
+    --canvas: oklch(0.16 0.04 265);
+    --canvas-dot: oklch(0.279 0.041 260.031);
     --note: oklch(0.38 0.06 90);
     --note-foreground: oklch(0.96 0.03 95);
-    --bubble: oklch(0.3 0.05 255);
-    --bubble-foreground: oklch(0.96 0.01 250);
+    --bubble: oklch(0.283 0.141 291.089);
+    --bubble-foreground: oklch(0.969 0.016 293.756);
     --elev-xs: 0 1px 2px oklch(0 0 0 / 0.3);
     --elev-sm: 0 1px 2px oklch(0 0 0 / 0.3), 0 2px 6px -1px oklch(0 0 0 / 0.3);
     --elev-md: 0 1px 3px oklch(0 0 0 / 0.3), 0 6px 16px -4px oklch(0 0 0 / 0.4);
@@ -99,32 +99,32 @@
   }
 }
 :root[data-theme="dark"], .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --popover: oklch(0.205 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
+  --background: oklch(0.129 0.042 264.695);
+  --foreground: oklch(0.984 0.003 247.858);
+  --card: oklch(0.208 0.042 265.755);
+  --popover: oklch(0.208 0.042 265.755);
+  --primary: oklch(0.606 0.25 292.717);
+  --primary-foreground: oklch(0.969 0.016 293.756);
+  --secondary: oklch(0.279 0.041 260.031);
+  --muted: oklch(0.279 0.041 260.031);
+  --muted-foreground: oklch(0.704 0.04 256.788);
+  --accent: oklch(0.279 0.041 260.031);
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --sidebar: oklch(0.175 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
+  --ring: oklch(0.541 0.281 293.009);
+  --sidebar: oklch(0.208 0.042 265.755);
+  --sidebar-accent: oklch(0.279 0.041 260.031);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --ember: oklch(0.72 0.17 45);
-  --ember-soft: oklch(0.72 0.17 45 / 0.16);
+  --ember: oklch(0.702 0.183 293.541);
+  --ember-soft: oklch(0.702 0.183 293.541 / 0.16);
   --pin: oklch(0.7 0.16 262);
-  --canvas: oklch(0.17 0 0);
-  --canvas-dot: oklch(0.3 0 0);
+  --canvas: oklch(0.16 0.04 265);
+  --canvas-dot: oklch(0.279 0.041 260.031);
   --note: oklch(0.38 0.06 90);
   --note-foreground: oklch(0.96 0.03 95);
-  --bubble: oklch(0.3 0.05 255);
-  --bubble-foreground: oklch(0.96 0.01 250);
+  --bubble: oklch(0.283 0.141 291.089);
+  --bubble-foreground: oklch(0.969 0.016 293.756);
   --elev-xs: 0 1px 2px oklch(0 0 0 / 0.3);
   --elev-sm: 0 1px 2px oklch(0 0 0 / 0.3), 0 2px 6px -1px oklch(0 0 0 / 0.3);
   --elev-md: 0 1px 3px oklch(0 0 0 / 0.3), 0 6px 16px -4px oklch(0 0 0 / 0.4);

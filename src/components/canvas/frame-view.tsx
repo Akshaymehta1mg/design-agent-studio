@@ -58,13 +58,13 @@ export const FrameView = memo(function FrameView({ frame: f, marks, selected, zo
         <Icon className={cn("size-3.5 shrink-0", f.source === "agent" ? "text-ember" : "text-muted-foreground")} />
         <span className={cn("truncate text-[12px] font-medium", selected ? "text-foreground" : "text-muted-foreground")}>{f.title}</span>
         {f.version ? (
-          <span className={cn("tabular rounded-full px-1.5 py-px text-[10.5px] font-semibold", f.source === "agent" ? "bg-ember text-white" : "bg-foreground text-background")}>
+          <span className={cn("tabular rounded-full px-1.5 py-px text-[10.5px] font-semibold", f.source === "agent" ? "bg-ember text-white" : "bg-primary text-primary-foreground")}>
             V{f.version}
           </span>
         ) : null}
         {f.screens?.length ? (
           <button
-            className="bg-foreground text-background hover:bg-foreground/85 ml-0.5 inline-flex items-center gap-1 rounded-full px-2 py-px text-[10.5px] font-semibold"
+            className="bg-primary text-primary-foreground hover:bg-primary/85 ml-0.5 inline-flex items-center gap-1 rounded-full px-2 py-px text-[10.5px] font-semibold"
             onPointerDown={(e) => e.stopPropagation()}
             onClick={() => useStore.getState().playPrototype(f.id)}
             aria-label={`Play ${f.title} prototype`}
