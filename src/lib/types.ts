@@ -266,6 +266,8 @@ export interface ProviderKeyState {
   fetchedAt?: number
   /** Models were loaded through the deployment's key */
   server?: boolean
+  /** How much the agent sends per request: auto switches to compact after a size or rate-limit error */
+  promptSize?: "auto" | "full" | "compact"
 }
 
 export interface Settings {
@@ -278,6 +280,8 @@ export interface Settings {
   profileName?: string
   /** Code for this deployment's server keys (see /api) */
   accessCode?: string
+  /** "provider:modelId" of models that hit a request-size limit, so later turns start compact */
+  compactModels?: Record<string, boolean>
 }
 
 export type Mode = "canvas" | "live"

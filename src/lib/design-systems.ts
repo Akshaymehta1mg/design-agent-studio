@@ -122,6 +122,20 @@ export function allDesignSystems(custom: DesignSystem[]) {
 }
 
 /** Override the wireframe helper palette so wireframes pick up the system's accent, radius and font. */
+/** A short, prompt-ready digest of a design system for models with small request limits. */
+export function designSystemDigest(ds: DesignSystem, maxProfile = 700): string {
+  const profile = ds.profile.replace(/^---\n[\s\S]*?\n---\n+/, "").replace(/\n{3,}/g, "\n\n").trim()
+  const cut = profile.length > maxProfile ? `${profile.slice(0, maxProfile).replace(/\s+\S*$/, "")}…` : profile
+  return [
+    `Design system: ${ds.name}${ds.font ? ` · font ${ds.font}` : ""}${ds.radius != null ? ` · radius ${ds.radius}px` : ""}`,
+    ds.colors.length ? `Colours: ${ds.colors.map((c) => `${c.name} ${c.value}`).join(", ")}` : "",
+    cut,
+    ds.referenceUrl ? "Call read_design_system(section) for exact specs (colors, typography, spacing, buttons, input-fields, chips, sku-cards, actionbar, page-header…) before building with them." : "",
+  ]
+    .filter(Boolean)
+    .join("\n")
+}
+
 export function wireframeVars(ds?: DesignSystem): string {
   if (!ds || ds.id === "ds_wireframe") return ""
   const primary = ds.colors.find((c) => /primary|tint|accent|brand/i.test(c.name))?.value ?? ds.colors[0]?.value

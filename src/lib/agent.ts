@@ -6,13 +6,13 @@ import { getLanguageModel, type KeyedProvider } from "./providers"
 import { addMarks, addNote, addPrototypeScreens, createPrototype, createWireframe, createWorkflow, figmaComment, iteratePrototype, iterateWireframe, type ActionResult } from "./canvas-actions"
 import { addPrototypePart, addWorkflowPart, appendText, askUser, setPlan, upsertPart } from "./message-parts"
 import { dataUrlParts } from "./files"
-import { allDesignSystems, BUILTIN_DESIGN_SYSTEMS } from "./design-systems"
+import { allDesignSystems, BUILTIN_DESIGN_SYSTEMS, designSystemDigest } from "./design-systems"
 import { connectorTools } from "./mcp"
 import { askUserInput, MAX_QUESTIONS, normalizeAsk } from "./ask-input"
 import { answeredDecisions, legacyAnswers, sameQuestion, type Decision } from "./decisions"
 
 const MAX_ASKS_PER_TURN = 2
-import { loadPrismDoc, PRISM_ADAPTER, PRISM_CORE, PRISM_DOCS, RX_FALLBACK_IMAGE, searchDesignSystemReference, searchVisualResearch, TATA_1MG_ASSET_BASE, VISUAL_RESEARCH_URL, visualResearchPatterns } from "./prism"
+import { loadPrismDoc, PRISM_ADAPTER, PRISM_CORE, PRISM_CORE_COMPACT, PRISM_DOCS, RX_FALLBACK_IMAGE, searchDesignSystemReference, searchVisualResearch, TATA_1MG_ASSET_BASE, VISUAL_RESEARCH_URL, visualResearchPatterns } from "./prism"
 import { DEVICE_SIZES } from "./wireframe"
 import { imageForModel } from "./relay"
 import { editsSummary, loadDesignReference, referenceIndex, referenceKeys, referenceSection } from "./design-reference"
@@ -114,7 +114,41 @@ function decisionsSection(c: Conversation) {
   return `Decisions the designer has already made in this project (never ask these again; build on them)\n${list.map((d) => `- ${d.question} → ${d.answer}`).join("\n")}\n\n`
 }
 
-export function systemPrompt(c: Conversation, product: ProductLibrary, opts: { figma: boolean; connectors?: string[]; markup?: boolean }): string {
+/** Tools a compact turn keeps (plus markup tools when the designer asks for critique). */
+const COMPACT_TOOLS = new Set(["create_prototype", "add_prototype_screens", "iterate_prototype", "ask_user", "update_plan", "read_design_system", "prism_reference", "create_workflow", "annotate", "comment", "add_note"])
+
+/**
+ * The same agent in about a quarter of the tokens, for models whose plan caps request size (e.g. Groq's
+ * free tier at 8k tokens per minute): condensed Prism core, a design-system digest instead of the full
+ * guide, one line per tool, and no visual-research or connector tools.
+ */
+function compactSystemPrompt(c: Conversation, product: ProductLibrary, opts: { markup?: boolean }): string {
+  const ctx = productContext(product)
+  const ds = designSystemFor(c)
+  const mobile = ds.viewport ?? DEVICE_SIZES.mobile
+  const edits = editsSummary(useStore.getState().designEdits[ds.id])
+  const inventory = canvasInventory(c).split("\n")
+  return `You are Prism, the design agent in Design Agent Studio, working with a designer on a shared canvas.
+
+Rules
+- Every question, decision or approval goes through ask_user (all questions for a moment in one call, 2–4 short options each), never plain chat text. Never ask what's under "Decisions".
+- Never annotate or add notes unless asked for critique, feedback or notes.
+- Wireframes, screens and flows: build ONE clickable prototype. create_prototype with plan (every screen id + title) and the first 2–3 screens, then add_prototype_screens with the next 2–3 until the plan is built. iterate_prototype for a new version (send only changed screens).
+- Screen HTML: a body fragment, no scripts, width ${mobile.w}px (mobile). Root <div class="wf-screen">; helpers wf-bar, wf-title, wf-body, wf-footer, wf-row, wf-col, wf-between, wf-h1, wf-h2, wf-h3, wf-text, wf-muted, wf-card, wf-img (placeholder, set height), wf-icon, wf-btn, wf-btn-primary, wf-btn-block, wf-input, wf-chip, wf-chip-on, wf-list, wf-tabbar. Inline styles for design-system tokens. Keep markup lean.
+- Links: data-go="screen-id" navigates, data-back goes back, data-open="id" shows <div class="wf-overlay" data-overlay="id"><div class="wf-sheet">…</div></div>, data-close hides it. Error/empty/success states are their own screens.
+- create_workflow for journeys and decision trees. read_design_system(section) for exact specs. prism_reference(name) for a Prism reference when a decision needs it.
+
+Prism core
+${PRISM_CORE_COMPACT}
+
+${designSystemDigest(ds)}
+${edits ? `Team edits (override the above):\n${edits}\n` : ""}
+${decisionsSection(c)}${ctx ? `Product context\n${ctx.slice(0, 1200)}\n\n` : ""}Canvas
+${inventory.slice(-12).join("\n")}`
+}
+
+export function systemPrompt(c: Conversation, product: ProductLibrary, opts: { figma: boolean; connectors?: string[]; markup?: boolean; compact?: boolean }): string {
+  if (opts.compact) return compactSystemPrompt(c, product, opts)
   const ctx = productContext(product)
   const ds = designSystemFor(c)
   const mobile = ds.viewport ?? DEVICE_SIZES.mobile
@@ -169,15 +203,15 @@ ${decisionsSection(c)}${ctx ? `Product context\n${ctx}\n\n` : ""}Canvas right no
 ${canvasInventory(c)}`
 }
 
-function frameParts(f: FrameNode, c: Conversation): ModelMessage["content"] {
+function frameParts(f: FrameNode, c: Conversation, compact = false): ModelMessage["content"] {
   const marks = c.canvas.marks.filter((m) => m.frameId === f.id)
   const header = `[Frame ${f.id} · "${frameLabel(f)}" · ${f.type} · ${f.w}×${f.h}]${marks.length ? `\nExisting marks:\n${marks.map((m) => `  ${m.n}. (${m.type}, ${m.author}) ${m.text}`).join("\n")}` : ""}`
   if (f.type === "wireframe" && f.screens?.length) {
-    const per = Math.floor(30000 / f.screens.length)
+    const per = Math.floor((compact ? 12000 : 30000) / f.screens.length)
     return [{ type: "text", text: `${header}\nPrototype, starts on "${f.startScreen}". Screens:\n${f.screens.map((s) => `── screen id "${s.id}" · ${s.title} ──\n${s.html.slice(0, per)}`).join("\n")}` }]
   }
   if (f.type === "wireframe") {
-    return [{ type: "text", text: `${header}\nHTML source:\n${(f.html ?? "").slice(0, 14000)}` }]
+    return [{ type: "text", text: `${header}\nHTML source:\n${(f.html ?? "").slice(0, compact ? 6000 : 14000)}` }]
   }
   if (f.type === "workflow") {
     return [{ type: "text", text: `${header}\nWorkflow JSON:\n${JSON.stringify(f.workflow).slice(0, 8000)}` }]
@@ -191,14 +225,14 @@ function frameParts(f: FrameNode, c: Conversation): ModelMessage["content"] {
   return parts as ModelMessage["content"]
 }
 
-function attachmentParts(atts: Attachment[], c: Conversation) {
+function attachmentParts(atts: Attachment[], c: Conversation, compact = false) {
   const parts: { type: string; [k: string]: unknown }[] = []
   for (const a of atts) {
     if (a.kind === "frame") {
       const f = c.canvas.nodes.find((n) => n.id === a.frameId)
-      if (f?.kind === "frame") parts.push(...((frameParts(f, c) as unknown) as typeof parts))
+      if (f?.kind === "frame") parts.push(...((frameParts(f, c, compact) as unknown) as typeof parts))
     } else if (a.kind === "file") {
-      if (a.text) parts.push({ type: "text", text: `[File: ${a.name}]\n${a.text.slice(0, 60000)}` })
+      if (a.text) parts.push({ type: "text", text: `[File: ${a.name}]\n${a.text.slice(0, compact ? 8000 : 60000)}` })
       else if (a.dataUrl) {
         const d = dataUrlParts(a.dataUrl)
         if (!d) continue
@@ -212,8 +246,10 @@ function attachmentParts(atts: Attachment[], c: Conversation) {
   return parts
 }
 
-function toModelMessages(c: Conversation, current: ChatMessage): ModelMessage[] {
-  const history = c.messages.filter((m) => m.id !== current.id && m.status !== "error" && (m.text.trim() || m.parts?.length)).slice(-16)
+const clip = (t: string, n: number) => (t.length > n ? `${t.slice(0, n)}…` : t)
+
+function toModelMessages(c: Conversation, current: ChatMessage, compact = false): ModelMessage[] {
+  const history = c.messages.filter((m) => m.id !== current.id && m.status !== "error" && (m.text.trim() || m.parts?.length)).slice(compact ? -6 : -16)
   const msgs: ModelMessage[] = history.map((m) => {
     if (m.role === "assistant") {
       const acts = m.actions?.length ? `\n[Canvas actions: ${m.actions.map((a) => a.label).join("; ")}]` : ""
@@ -225,16 +261,16 @@ function toModelMessages(c: Conversation, current: ChatMessage): ModelMessage[] 
           return qa?.length ? `\n[Asked "${p.title}" and the designer answered: ${qa.map((d) => `${d.question} → ${d.answer}`).join("; ")}]` : `\n[Asked: ${p.title} → ${p.result ?? p.status}]`
         })
         .join("")
-      return { role: "assistant", content: m.text + acts + asks }
+      return { role: "assistant", content: (compact ? clip(m.text, 1500) : m.text) + acts + asks }
     }
     const att = m.attachments?.filter((a) => a.kind === "frame").map((a) => (a as { title: string }).title)
-    return { role: "user", content: m.text + (att?.length ? `\n[Attached: ${att.join(", ")}]` : "") }
+    return { role: "user", content: (compact ? clip(m.text, 1500) : m.text) + (att?.length ? `\n[Attached: ${att.join(", ")}]` : "") }
   })
-  const parts = attachmentParts(current.attachments ?? [], c)
+  const parts = attachmentParts(current.attachments ?? [], c, compact)
   // If nothing is attached but the designer is iterating, give the model the latest wireframes' source.
   const iterating = /iterat|another|version|revis|variant|again|improve|tweak|change/i.test(current.text)
   if (!current.attachments?.some((a) => a.kind === "frame") && iterating) {
-    for (const f of latestPerLineage(c).slice(-2)) parts.push(...((frameParts(f, c) as unknown) as typeof parts))
+    for (const f of latestPerLineage(c).slice(compact ? -1 : -2)) parts.push(...((frameParts(f, c, compact) as unknown) as typeof parts))
   }
   msgs.push({ role: "user", content: [...parts, { type: "text", text: current.text }] as never })
   return msgs
@@ -580,6 +616,42 @@ function trimQuestions(loc: Loc) {
   if (last) upsertPart(loc, { ...last, text: cutQuestions(last.text) })
 }
 
+// ───────────────────────── small request limits ─────────────────────────
+
+const SIZE_LIMIT = /tokens per minute|\bTPM\b|request too large|context[_ ]length|maximum context|too many tokens|prompt is too long|reduce (the length|your message)/i
+
+const selectedKey = () => {
+  const sel = useStore.getState().settings.selectedModel
+  return `${sel.provider}:${sel.id}`
+}
+const promptSizeSetting = () => {
+  const { settings } = useStore.getState()
+  return settings.providers[settings.selectedModel.provider as KeyedProvider]?.promptSize ?? "auto"
+}
+
+/** Whether this turn should use the compact prompt: set per provider, remembered per model, or a small context window. */
+export function wantsCompactPrompt(): boolean {
+  const size = promptSizeSetting()
+  if (size !== "auto") return size === "compact"
+  const { settings } = useStore.getState()
+  if (settings.compactModels?.[selectedKey()]) return true
+  const sel = settings.selectedModel
+  const ctx = settings.providers[sel.provider as KeyedProvider]?.models.find((m) => m.id === sel.id)?.context
+  return !!ctx && ctx < 32000
+}
+
+function rememberCompact() {
+  const s = useStore.getState().settings
+  useStore.getState().patchSettings({ compactModels: { ...(s.compactModels ?? {}), [selectedKey()]: true } })
+}
+
+export function isSizeLimitError(e: unknown): boolean {
+  const err = e as { message?: string; statusCode?: number; responseBody?: string; cause?: unknown }
+  if (err?.statusCode === 413) return true
+  const text = `${err?.message ?? ""} ${err?.responseBody ?? ""} ${(err?.cause as { message?: string })?.message ?? ""}`
+  return SIZE_LIMIT.test(text)
+}
+
 export async function runChat(convId: string, userMsg: ChatMessage) {
   let closeMcp = () => {}
   const store = useStore.getState()
@@ -592,20 +664,23 @@ export async function runChat(convId: string, userMsg: ChatMessage) {
   }
   controller = new AbortController()
   try {
-    if (!model) {
-      throw new Error(NO_MODEL)
-    } else {
+    if (!model) throw new Error(NO_MODEL)
+
+    /** One full agent turn, with the full or the compact prompt. */
+    const turn = async (compact: boolean) => {
       const c = useStore.getState().conversations.find((x) => x.id === convId)!
       const figmaOn = !!(c.figma?.allowComments && hasFigmaAccess(useStore.getState().settings.figmaToken))
       const markup = wantsMarkup(userMsg.text)
-      const live = useStore.getState().connectors.filter((x) => x.enabled && x.status === "ok")
+      // Compact turns leave out connector tools: their schemas alone can exceed a small request limit.
+      const live = compact ? [] : useStore.getState().connectors.filter((x) => x.enabled && x.status === "ok")
       if (live.length) useStore.getState().patchMessage(assistantId, { activity: "Connecting your tools…" }, convId)
       const mcp = live.length ? await connectorTools(live) : { tools: {}, close: () => {}, failed: [] as string[] }
       closeMcp = mcp.close
       const loc = { convId, msgId: assistantId }
-      const tools: ToolSet = { ...mcp.tools, ...prismTools(convId), ...canvasTools(convId, assistantId, pushAction, figmaOn, markup, controller.signal) }
-      const system = systemPrompt(c, useStore.getState().product, { figma: figmaOn, connectors: live.map((x) => x.name).filter((n) => !mcp.failed.includes(n)), markup })
-      const signal = controller.signal
+      const allTools: ToolSet = { ...mcp.tools, ...prismTools(convId), ...canvasTools(convId, assistantId, pushAction, figmaOn, markup, controller!.signal) }
+      const tools: ToolSet = compact ? Object.fromEntries(Object.entries(allTools).filter(([k]) => COMPACT_TOOLS.has(k))) : allTools
+      const system = systemPrompt(c, useStore.getState().product, { figma: figmaOn, connectors: live.map((x) => x.name).filter((n) => !mcp.failed.includes(n)), markup, compact })
+      const signal = controller!.signal
       const readsImages = currentModelReadsImages()
       let text = ""
 
@@ -619,7 +694,9 @@ export async function runChat(convId: string, userMsg: ChatMessage) {
           toolChoice: opts.toolChoice,
           stopWhen: stepCountIs(opts.steps ?? 14),
           abortSignal: signal,
-          maxOutputTokens: 16000,
+          maxOutputTokens: compact ? 4096 : 16000,
+          // Rate-limited plans ask callers to wait (retry-after); the SDK honours it, so allow a few more tries.
+          maxRetries: compact ? 4 : 2,
           // Text-only models reject images anywhere in the history, including tool results.
           ...(readsImages ? {} : { prepareStep: ({ messages: m }: { messages: ModelMessage[] }) => ({ messages: withoutImages(m) }) }),
         })
@@ -659,7 +736,7 @@ export async function runChat(convId: string, userMsg: ChatMessage) {
         return { stepText, messages: (await result.response).messages }
       }
 
-      let history = toModelMessages(c, userMsg)
+      let history = toModelMessages(c, userMsg, compact)
       const first = await pass(history)
 
       // Safety net: questions typed into the chat instead of the question card get turned into one.
@@ -679,6 +756,22 @@ export async function runChat(convId: string, userMsg: ChatMessage) {
         }
       }
       if (!text.trim()) appendText(loc, "Done. The changes are on the canvas.")
+    }
+
+    const compact = wantsCompactPrompt()
+    try {
+      await turn(compact)
+    } catch (e) {
+      // A request-size limit (e.g. Groq's free tier): switch this model to the compact prompt and, if nothing
+      // has happened on the canvas yet, run the turn again right away.
+      if (compact || controller?.signal.aborted || !isSizeLimitError(e) || promptSizeSetting() === "full") throw e
+      rememberCompact()
+      closeMcp()
+      const m = getMessage({ convId, msgId: assistantId })
+      if (m?.actions?.length || m?.parts?.some((p) => p.type !== "text")) throw e
+      useStore.getState().patchMessage(assistantId, { text: "", parts: [], activity: "Retrying with a shorter prompt…" }, convId)
+      appendText({ convId, msgId: assistantId }, "_This model's plan has a small request limit, so I'm using a shorter prompt._\n\n")
+      await turn(true)
     }
     useStore.getState().patchMessage(assistantId, { status: "done", activity: undefined }, convId)
     const final = useStore.getState().conversations.find((x) => x.id === convId)?.messages.find((m) => m.id === assistantId)
@@ -706,6 +799,10 @@ export function friendlyError(e: unknown): string {
   if (/failed to fetch|networkerror|load failed/i.test(msg)) return "Couldn't reach the model provider from this page. If you're viewing the hosted preview, network calls are blocked there; run the app locally or deploy it and try again."
   if (err.statusCode === 401 || /invalid.*key|authentication/i.test(msg)) return `The provider rejected the API key. Check it in Settings. (${msg})`
   if (/image|vision|multimodal/i.test(msg) && /support/i.test(msg)) return `This model can't read images. Pick a vision model in the model menu. (${msg})`
+  if (isSizeLimitError(e)) {
+    const limit = msg.match(/Limit (\d+)/i)?.[1]
+    return `This model's plan only allows ${limit ? `${Number(limit).toLocaleString()} tokens` : "small requests"} per request or minute, and this turn needed more. ${wantsCompactPrompt() ? "The studio is already using its shorter prompt for this model; try again in a minute, start a new project (shorter history), or" : "Your next message will use a shorter prompt. You can also"} pick a model with a larger limit (for example Groq's Dev tier, Gemini, Claude or Kimi). (${msg})`
+  }
   return msg
 }
 

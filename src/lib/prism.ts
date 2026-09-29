@@ -16,6 +16,9 @@ const stripFrontMatter = (md: string) => md.replace(/^---\n[\s\S]*?\n---\n+/, ""
 
 export const PRISM_CORE = stripFrontMatter(PRISM_SKILL)
 
+/** A hand-condensed Prism core for models with small request limits; the full references stay reachable via prism_reference. */
+export { default as PRISM_CORE_COMPACT } from "@/prism/core/SKILL.compact.md?raw"
+
 // ───────── core references (loaded on demand) ─────────
 
 const referenceLoaders = import.meta.glob("/src/prism/core/references/*.md", { query: "?raw", import: "default" }) as Record<string, () => Promise<string>>
