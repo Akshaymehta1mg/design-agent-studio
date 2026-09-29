@@ -1,10 +1,10 @@
-import { streamText, generateText, tool, stepCountIs, type ModelMessage, type LanguageModel } from "ai"
+import { streamText, generateText, tool, stepCountIs, type ModelMessage, type LanguageModel, type ToolChoice, type ToolSet } from "ai"
 import { z } from "zod"
-import type { ActionLog, Attachment, ChatMessage, Conversation, FrameNode, ProductLibrary } from "./types"
+import type { ActionLog, Attachment, ChatMessage, Conversation, FrameNode, MessagePart, ProductLibrary } from "./types"
 import { frameLabel, uid, useStore } from "./store"
 import { getLanguageModel, type KeyedProvider } from "./providers"
 import { addMarks, addNote, createWireframe, createWorkflow, figmaComment, iterateWireframe, type ActionResult } from "./canvas-actions"
-import { addWorkflowPart, appendText, askUser, setPlan } from "./message-parts"
+import { addWorkflowPart, appendText, askUser, setPlan, upsertPart } from "./message-parts"
 import { dataUrlParts } from "./files"
 import { allDesignSystems, BUILTIN_DESIGN_SYSTEMS } from "./design-systems"
 import { connectorTools } from "./mcp"
@@ -317,6 +317,43 @@ const ACTIVITY: Record<string, string> = {
   ask_user: "Preparing a question…",
 }
 
+// ───────────────────────── questions in plain text → question card ─────────────────────────
+
+type Loc = { convId: string; msgId: string }
+
+const ASK_INSTEAD = `(Design Agent Studio) You asked questions in plain chat text. Ask them with ask_user instead: one call, at most ${MAX_QUESTIONS} questions, each with 2–4 short options and allowCustom. Merge related questions. Don't write anything else.`
+
+const getMessage = (loc: Loc) => useStore.getState().conversations.find((c) => c.id === loc.convId)?.messages.find((m) => m.id === loc.msgId)
+
+const textOf = (parts: MessagePart[]) =>
+  parts
+    .filter((p): p is Extract<MessagePart, { type: "text" }> => p.type === "text")
+    .map((p) => p.text)
+    .join("\n\n")
+
+const isQuestionLine = (line: string) => /\?\s*$/.test(line.replace(/[*_)\]]+\s*$/, ""))
+
+/** Two or more lines that end in a question mark: the model is asking, not offering a follow-up. */
+export function looksLikeQuestions(text: string) {
+  return text.split("\n").filter(isQuestionLine).length >= 2
+}
+
+/** Cut a trailing block of questions (and its lead-in heading or rule) out of the reply's last text part. */
+export function cutQuestions(text: string) {
+  const lines = text.split("\n")
+  let i = lines.findIndex(isQuestionLine)
+  if (i < 0) return text
+  // Step back over the numbering, heading, rule or "I need to know:" line that introduces the questions.
+  while (i > 0 && /^\s*$|^\s*(#{1,4}\s|[-*_]{3,}\s*$|\d+[.)]\s|[-*•]\s)|:\s*\**\s*$/.test(lines[i - 1])) i--
+  return lines.slice(0, i).join("\n").trimEnd()
+}
+
+function trimQuestions(loc: Loc) {
+  const parts = getMessage(loc)?.parts ?? []
+  const last = [...parts].reverse().find((p): p is Extract<MessagePart, { type: "text" }> => p.type === "text")
+  if (last) upsertPart(loc, { ...last, text: cutQuestions(last.text) })
+}
+
 export async function runChat(convId: string, userMsg: ChatMessage) {
   let closeMcp = () => {}
   const store = useStore.getState()
@@ -339,45 +376,77 @@ export async function runChat(convId: string, userMsg: ChatMessage) {
       if (live.length) useStore.getState().patchMessage(assistantId, { activity: "Connecting your tools…" }, convId)
       const mcp = live.length ? await connectorTools(live) : { tools: {}, close: () => {}, failed: [] as string[] }
       closeMcp = mcp.close
-      const result = streamText({
-        model,
-        system: systemPrompt(c, useStore.getState().product, { figma: figmaOn, connectors: live.map((x) => x.name).filter((n) => !mcp.failed.includes(n)), markup }),
-        messages: toModelMessages(c, userMsg),
-        tools: { ...mcp.tools, ...canvasTools(convId, assistantId, pushAction, figmaOn, markup, controller.signal) },
-        stopWhen: stepCountIs(10),
-        abortSignal: controller.signal,
-        maxOutputTokens: 16000,
-      })
-      let text = ""
       const loc = { convId, msgId: assistantId }
-      // Batch streamed tokens: one store update per ~50ms instead of one per token.
-      let buffered = ""
-      let lastFlush = 0
-      const flush = () => {
-        if (buffered) appendText(loc, buffered)
-        buffered = ""
-        lastFlush = Date.now()
-      }
-      try {
-        for await (const part of result.fullStream) {
-          if (part.type === "text-delta") {
-            text += part.text
-            buffered += part.text
-            if (Date.now() - lastFlush > 50) flush()
-          } else if (part.type === "tool-input-start") {
-            flush()
-            useStore.getState().patchMessage(assistantId, { activity: ACTIVITY[part.toolName] ?? "Working…" }, convId)
-          } else if (part.type === "start-step" && text) {
-            buffered += "\n\n"
-          } else if (part.type === "tool-error") {
-            flush()
-            pushAction({ ok: false, message: "", log: { id: uid(), label: `${part.toolName.replace(/_/g, " ")} failed`, tone: "error" } })
-          } else if (part.type === "error") {
-            throw part.error
-          }
+      const tools: ToolSet = { ...mcp.tools, ...canvasTools(convId, assistantId, pushAction, figmaOn, markup, controller.signal) }
+      const system = systemPrompt(c, useStore.getState().product, { figma: figmaOn, connectors: live.map((x) => x.name).filter((n) => !mcp.failed.includes(n)), markup })
+      const signal = controller.signal
+      let text = ""
+
+      /** One streamed pass. Returns the text of its last step and the messages it added. */
+      const pass = async (messages: ModelMessage[], opts: { tools?: ToolSet; toolChoice?: ToolChoice<ToolSet>; steps?: number; onAskStart?: () => void } = {}) => {
+        const result = streamText({
+          model,
+          system,
+          messages,
+          tools: opts.tools ?? tools,
+          toolChoice: opts.toolChoice,
+          stopWhen: stepCountIs(opts.steps ?? 10),
+          abortSignal: signal,
+          maxOutputTokens: 16000,
+        })
+        // Batch streamed tokens: one store update per ~50ms instead of one per token.
+        let buffered = ""
+        let lastFlush = 0
+        let stepText = ""
+        const flush = () => {
+          if (buffered) appendText(loc, buffered)
+          buffered = ""
+          lastFlush = Date.now()
         }
-      } finally {
-        flush()
+        try {
+          for await (const part of result.fullStream) {
+            if (part.type === "text-delta") {
+              text += part.text
+              stepText += part.text
+              buffered += part.text
+              if (Date.now() - lastFlush > 50) flush()
+            } else if (part.type === "tool-input-start") {
+              flush()
+              if (part.toolName === "ask_user") opts.onAskStart?.()
+              useStore.getState().patchMessage(assistantId, { activity: ACTIVITY[part.toolName] ?? "Working…" }, convId)
+            } else if (part.type === "start-step") {
+              stepText = ""
+              if (text) buffered += "\n\n"
+            } else if (part.type === "tool-error") {
+              flush()
+              pushAction({ ok: false, message: "", log: { id: uid(), label: `${part.toolName.replace(/_/g, " ")} failed`, tone: "error" } })
+            } else if (part.type === "error") {
+              throw part.error
+            }
+          }
+        } finally {
+          flush()
+        }
+        return { stepText, messages: (await result.response).messages }
+      }
+
+      let history = toModelMessages(c, userMsg)
+      const first = await pass(history)
+
+      // Safety net: questions typed into the chat instead of the question card get turned into one.
+      const asked = () => !!getMessage(loc)?.parts?.some((p) => p.type === "ask")
+      if (!asked() && looksLikeQuestions(first.stepText)) {
+        const before = getMessage(loc)?.parts
+        try {
+          history = [...history, ...first.messages, { role: "user", content: ASK_INSTEAD }]
+          const forced = await pass(history, { tools: { ask_user: tools.ask_user }, toolChoice: { type: "tool", toolName: "ask_user" }, steps: 1, onAskStart: () => trimQuestions(loc) })
+          history = [...history, ...forced.messages]
+          if (asked()) await pass(history)
+        } catch (e) {
+          if (signal.aborted) throw e
+          // Couldn't convert: keep the questions as the model wrote them.
+          if (before) useStore.getState().patchMessage(assistantId, { parts: before, text: textOf(before) }, convId)
+        }
       }
       if (!text.trim()) appendText(loc, "Done. The changes are on the canvas.")
     }

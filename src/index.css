@@ -215,6 +215,7 @@
 .md pre code { background: none; padding: 0; }
 .md h3, .md h4 { font-family: var(--font-sans); font-weight: 600; font-size: 1em; letter-spacing: 0; }
 .md strong { font-weight: 600; }
+.md hr { border: 0; border-top: 1px solid var(--border); margin: 0.9em 0; }
 
 @keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 var(--ember-soft); } 100% { box-shadow: 0 0 0 10px transparent; } }
 .pulse-ring { animation: pulse-ring 1.4s ease-out infinite; }

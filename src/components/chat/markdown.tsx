@@ -33,17 +33,23 @@ export function toHtml(md: string) {
     }
     for (const line of lines) {
       const ul = /^\s*[-*•]\s+(.*)/.exec(line)
-      const ol = /^\s*\d+[.)]\s+(.*)/.exec(line)
+      const ol = /^\s*(\d+)[.)]\s+(.*)/.exec(line)
       const h = /^(#{1,4})\s+(.*)/.exec(line)
-      if (ul || ol) {
+      if (/^\s*([-*_])(\s*\1){2,}\s*$/.test(line)) {
+        flush()
+        closeList()
+        out.push("<hr>")
+      } else if (ul || ol) {
         flush()
         const want = ul ? "ul" : "ol"
         if (list !== want) {
           closeList()
-          out.push(`<${want}>`)
+          // Keep the source numbering: a list broken up by bullets continues at 2, 3… instead of restarting at 1.
+          const start = ol ? Number(ol[1]) : 1
+          out.push(want === "ol" && start !== 1 ? `<ol start="${start}">` : `<${want}>`)
           list = want
         }
-        out.push(`<li>${inline((ul ?? ol)![1])}</li>`)
+        out.push(`<li>${inline(ul ? ul[1] : ol![2])}</li>`)
       } else if (h) {
         flush()
         closeList()
