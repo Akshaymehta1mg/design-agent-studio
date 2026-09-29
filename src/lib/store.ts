@@ -18,6 +18,7 @@ import type {
   Settings,
   Viewport,
 } from "./types"
+import { DEFAULT_DESIGN_SYSTEM_ID } from "./design-systems"
 
 export const uid = (p = "") => p + nanoid(7)
 
@@ -163,6 +164,8 @@ function migrate(persisted: unknown, version: number) {
     const sel = p.settings?.selectedModel as { provider: string } | undefined
     if (p.settings && sel?.provider === "demo") p.settings = { ...p.settings, selectedModel: defaultSettings.selectedModel }
   }
+  // 2 → 3: Prism's Tata 1mg Dopamine system becomes the default unless someone picked another one.
+  if (version < 3 && (!p.defaultDesignSystemId || p.defaultDesignSystemId === "ds_wireframe")) p.defaultDesignSystemId = DEFAULT_DESIGN_SYSTEM_ID
   return p
 }
 
@@ -274,13 +277,13 @@ export const useStore = create<State>()(
       setRoute: (route) => set({ route, selection: [] }),
       openProject: (id, mode = "canvas") => set({ activeId: id, route: "project", mode, selection: [] }),
       designSystems: [],
-      defaultDesignSystemId: "ds_wireframe",
+      defaultDesignSystemId: DEFAULT_DESIGN_SYSTEM_ID,
       upsertDesignSystem: (ds) =>
         set((s) => ({ designSystems: s.designSystems.some((d) => d.id === ds.id) ? s.designSystems.map((d) => (d.id === ds.id ? ds : d)) : [...s.designSystems, ds] })),
       deleteDesignSystem: (id) =>
         set((s) => ({
           designSystems: s.designSystems.filter((d) => d.id !== id),
-          defaultDesignSystemId: s.defaultDesignSystemId === id ? "ds_wireframe" : s.defaultDesignSystemId,
+          defaultDesignSystemId: s.defaultDesignSystemId === id ? DEFAULT_DESIGN_SYSTEM_ID : s.defaultDesignSystemId,
         })),
       setDefaultDesignSystem: (defaultDesignSystemId) => set({ defaultDesignSystemId }),
       connectors: [],
@@ -397,7 +400,7 @@ export const useStore = create<State>()(
     }),
     {
       name: "design-agent-studio",
-      version: 2,
+      version: 3,
       migrate: migrate as (p: unknown, v: number) => Partial<State>,
       storage: safeStorage as PersistStorage<Partial<State>>,
       partialize: (s) => ({

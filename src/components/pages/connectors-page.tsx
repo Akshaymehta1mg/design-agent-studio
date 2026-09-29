@@ -1,10 +1,10 @@
 import { useState } from "react"
-import { AlertCircle, Check, ChevronDown, Loader2, Plug, Plus, RefreshCw, Trash2, Wrench } from "lucide-react"
+import { AlertCircle, Check, ChevronDown, LogIn, LogOut, Loader2, Plug, Plus, RefreshCw, Trash2, Wrench } from "lucide-react"
 import { toast } from "sonner"
 import { motion } from "motion/react"
 import type { Connector } from "@/lib/types"
 import { uid, useStore } from "@/lib/store"
-import { CONNECTOR_CATALOG, testConnector } from "@/lib/mcp"
+import { CONNECTOR_CATALOG, signInConnector, signOutConnector, testConnector } from "@/lib/mcp"
 import { cn } from "@/lib/utils"
 import { EASE_OUT } from "@/lib/ease"
 import { Button } from "@/components/ui/button"
@@ -23,6 +23,22 @@ export async function checkConnector(id: string) {
   patchConnector(id, { status: "checking", error: undefined })
   try {
     const tools = await testConnector(c)
+    patchConnector(id, { status: "ok", tools })
+    toast.success(`${c.name} connected`, { description: `${tools.length} tool${tools.length === 1 ? "" : "s"} available to the agent` })
+  } catch (e) {
+    patchConnector(id, { status: "error", error: (e as Error).message, tools: [] })
+  }
+}
+
+/** Open the sign-in pop-up synchronously (call from a click handler), then finish sign-in and list tools. */
+export async function signIn(id: string) {
+  const popup = window.open("about:blank", "das-oauth", "width=520,height=720")
+  const { connectors, patchConnector } = useStore.getState()
+  const c = connectors.find((x) => x.id === id)
+  if (!c) return popup?.close()
+  patchConnector(id, { status: "checking", error: undefined })
+  try {
+    const tools = await signInConnector(c, popup)
     patchConnector(id, { status: "ok", tools })
     toast.success(`${c.name} connected`, { description: `${tools.length} tool${tools.length === 1 ? "" : "s"} available to the agent` })
   } catch (e) {
@@ -86,7 +102,7 @@ export function ConnectorsPage() {
                         <Check className="size-3.5" /> Added
                       </span>
                     ) : (
-                      <Button size="sm" variant="outline" className="h-8 rounded-full" onClick={() => setEditing({ name: k.name, url: k.url, transport: k.transport, catalogId: k.id })}>
+                      <Button size="sm" variant="outline" className="h-8 rounded-full" onClick={() => setEditing({ name: k.name, url: k.url, transport: k.transport, auth: k.auth, catalogId: k.id })}>
                         <Plus /> Add
                       </Button>
                     )}
@@ -126,14 +142,43 @@ function ConnectorRow({ c, onEdit }: { c: Connector; onEdit: () => void }) {
         {c.status === "ok" && (
           <button onClick={() => setOpen(!open)} className="text-muted-foreground hover:text-foreground hidden items-center gap-1 text-[12.5px] sm:inline-flex">
             <Wrench className="size-3.5" />
-            {c.tools.length} tools
+            {c.tools.length} tool{c.tools.length === 1 ? "" : "s"}
             <ChevronDown className={cn("size-3.5 transition-transform", open && "rotate-180")} />
           </button>
         )}
-        <Button variant="ghost" size="icon" className="size-8" onClick={() => checkConnector(c.id)} disabled={c.status === "checking"} aria-label="Test connection">
-          {c.status === "checking" ? <Loader2 className="animate-spin" /> : <RefreshCw />}
-        </Button>
-        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive size-8" onClick={() => del(c.id)} aria-label={`Remove ${c.name}`}>
+        {c.auth === "oauth" && c.status !== "ok" ? (
+          <Button variant="outline" size="sm" className="h-8 rounded-full" onClick={() => signIn(c.id)} disabled={c.status === "checking"}>
+            {c.status === "checking" ? <Loader2 className="animate-spin" /> : <LogIn />} Sign in
+          </Button>
+        ) : (
+          <Button variant="ghost" size="icon" className="size-8" onClick={() => checkConnector(c.id)} disabled={c.status === "checking"} aria-label="Test connection">
+            {c.status === "checking" ? <Loader2 className="animate-spin" /> : <RefreshCw />}
+          </Button>
+        )}
+        {c.auth === "oauth" && c.status === "ok" && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground size-8"
+            onClick={() => {
+              signOutConnector(c.id)
+              patch(c.id, { status: "untested", tools: [], error: undefined })
+            }}
+            aria-label={`Sign out of ${c.name}`}
+          >
+            <LogOut />
+          </Button>
+        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-muted-foreground hover:text-destructive size-8"
+          onClick={() => {
+            signOutConnector(c.id)
+            del(c.id)
+          }}
+          aria-label={`Remove ${c.name}`}
+        >
           <Trash2 />
         </Button>
         <Switch checked={c.enabled} onCheckedChange={(v) => patch(c.id, { enabled: v })} aria-label="Enabled" />
@@ -180,13 +225,15 @@ function ConnectorDialog({ value, onClose }: { value: Partial<Connector> | null;
     onClose()
   }
   const valid = !!current.name?.trim() && /^https?:\/\//.test(current.url ?? "")
+  const oauth = current.auth === "oauth"
   const save = async () => {
     const c: Connector = {
       id: current.id ?? uid("mcp_"),
       name: current.name!.trim(),
       url: current.url!.trim(),
       transport: current.transport ?? "http",
-      token: current.token?.trim() || undefined,
+      auth: current.auth ?? "token",
+      token: oauth ? undefined : current.token?.trim() || undefined,
       enabled: current.enabled ?? true,
       status: "untested",
       tools: [],
@@ -195,7 +242,8 @@ function ConnectorDialog({ value, onClose }: { value: Partial<Connector> | null;
     }
     upsert(c)
     setSaving(true)
-    await checkConnector(c.id)
+    // OAuth: signIn opens its pop-up before any await, so this must stay the first call.
+    await (oauth ? signIn(c.id) : checkConnector(c.id))
     setSaving(false)
     close()
   }
@@ -233,17 +281,31 @@ function ConnectorDialog({ value, onClose }: { value: Partial<Connector> | null;
             </div>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="mcp-token">Access token</Label>
-            <Input id="mcp-token" type="password" value={current.token ?? ""} onChange={(e) => set({ token: e.target.value })} placeholder="Optional" className="font-mono text-[12.5px]" autoComplete="off" />
-            <p className="text-muted-foreground text-[12px]">{note ?? "Sent as a Bearer token in the Authorization header."}</p>
+            <Label>Access</Label>
+            <div className="bg-muted grid grid-cols-2 rounded-lg p-0.5">
+              {(["oauth", "token"] as const).map((t) => (
+                <button type="button" key={t} onClick={() => set({ auth: t })} className={cn("rounded-md py-1.5 text-[13px] font-medium", (current.auth ?? "token") === t ? "bg-background shadow-xs" : "text-muted-foreground")}>
+                  {t === "oauth" ? "Sign in with browser" : "Access token"}
+                </button>
+              ))}
+            </div>
           </div>
+          {oauth ? (
+            <p className="text-muted-foreground -mt-2 text-[12px]">{note ?? "A sign-in window opens. Your session is stored in this browser only."}</p>
+          ) : (
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="mcp-token">Access token</Label>
+              <Input id="mcp-token" type="password" value={current.token ?? ""} onChange={(e) => set({ token: e.target.value })} placeholder="Optional" className="font-mono text-[12.5px]" autoComplete="off" />
+              <p className="text-muted-foreground text-[12px]">{note ?? "Sent as a Bearer token in the Authorization header."}</p>
+            </div>
+          )}
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={close}>
               Cancel
             </Button>
             <Button type="submit" disabled={!valid || saving}>
               {saving && <Loader2 className="animate-spin" />}
-              {value?.id ? "Save and test" : "Add and test"}
+              {oauth ? (value?.id ? "Save and sign in" : "Add and sign in") : value?.id ? "Save and test" : "Add and test"}
             </Button>
           </DialogFooter>
         </form>

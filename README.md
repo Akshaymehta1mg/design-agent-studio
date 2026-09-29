@@ -39,6 +39,18 @@ The agent needs a model: open **Settings**, add a key, click **Connect**, and th
 | Figma | `src/lib/figma.ts` | Link parsing, frame export, comments, library styles and components. |
 | Live | `src/components/live/` | Screen share, voice, frame capture, on-screen marks, snapshots. |
 
+## Prism
+
+The agent runs as **Prism** (`src/prism`, `src/lib/prism.ts`), split into three parts:
+
+| Part | Where | How the agent uses it |
+|---|---|---|
+| Prism core | `src/prism/core/` (SKILL.md, references, the Mobbin visual-pattern skill) | `SKILL.md` is in the system prompt for every brief. References load on demand through the `prism_reference` tool. Shown on the **Prism** page. |
+| Design system | `src/prism/design-system/` (guide), `public/prism/design-system/` (component reference HTML, approved assets, source snapshots) | Built in as **Tata 1mg Dopamine**, the default for new projects. `read_design_system` returns the guide and asset URLs or searches the component reference by key. |
+| Visual research | `src/prism/visual-research/` (index, catalogue), `public/prism/visual-research/visual-research.html` | The **Visual research** page. `search_visual_research` shortlists screens; `view_visual_research` shows the model up to five. Images load from each reference's original Pinterest URL. |
+
+**Mobbin:** add it from **Connectors → Suggested → Mobbin** and sign in. Sign-in uses the connector OAuth flow (pop-up, `public/oauth-callback.html`); tokens stay in the browser. When a server blocks browser requests, calls go through `/api/relay`, which only forwards to an allowlist (Mobbin, Pinterest images; add more with `MCP_RELAY_HOSTS`).
+
 ## Agent UI components
 
 | Component | Where | Used for |

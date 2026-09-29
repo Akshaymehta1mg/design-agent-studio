@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react"
 import { motion } from "motion/react"
-import { AlertCircle, ArrowLeft, Check, Copy, FileJson, Images, Loader2, PenLine, Plus, RefreshCw, Star, Trash2, Upload, Shapes as Figma } from "lucide-react"
+import { AlertCircle, ArrowLeft, Check, Copy, ExternalLink, FileJson, Images, Loader2, PenLine, Plus, RefreshCw, Star, Trash2, Upload, Shapes as Figma } from "lucide-react"
 import { toast } from "sonner"
 import type { DesignSystem } from "@/lib/types"
 import { uid, useStore } from "@/lib/store"
@@ -416,6 +416,22 @@ function DesignSystemEditor({ ds, onBack, onOpen }: { ds: DesignSystem; onBack: 
                 className="min-h-72 font-mono text-[12.5px] leading-relaxed"
               />
             </Section>
+
+            {ds.referenceUrl && (
+              <Section
+                title="Component reference"
+                description="The portable component library. Prism searches it by component key when building wireframes."
+                action={
+                  <Button variant="outline" size="sm" className="rounded-full" asChild>
+                    <a href={ds.referenceUrl} target="_blank" rel="noreferrer">
+                      <ExternalLink /> Open in a new tab
+                    </a>
+                  </Button>
+                }
+              >
+                <iframe title={`${ds.name} component reference`} src={ds.referenceUrl} loading="lazy" className="h-[80vh] w-full rounded-2xl border bg-white shadow-xs" />
+              </Section>
+            )}
           </div>
 
           <aside className="lg:sticky lg:top-6 lg:self-start">

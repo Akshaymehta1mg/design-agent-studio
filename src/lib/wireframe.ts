@@ -62,7 +62,10 @@ body{font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica
 
 export function buildSrcDoc(html: string, extraCss = ""): string {
   const clean = sanitizeWireframe(html)
-  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${WF_BASE_CSS}${extraCss}</style></head><body>${clean}</body></html>`
+  // @import must come before any other rule.
+  const imports = (extraCss.match(/@import[^;]+;/g) ?? []).join("")
+  const rest = extraCss.replace(/@import[^;]+;/g, "")
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${imports}${WF_BASE_CSS}${rest}</style></head><body>${clean}</body></html>`
 }
 
 /** Strip anything executable or remote. The iframe is sandboxed as well; this is belt and braces. */

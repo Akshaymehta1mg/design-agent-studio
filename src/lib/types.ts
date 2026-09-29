@@ -270,7 +270,7 @@ export interface Settings {
 
 export type Mode = "canvas" | "live"
 
-export type Page = "home" | "files" | "connectors" | "context" | "design-systems" | "settings" | "project"
+export type Page = "home" | "files" | "connectors" | "context" | "prism" | "design-systems" | "visual-research" | "settings" | "project"
 
 // ───────────────────────────── Design systems ─────────────────────────────
 
@@ -288,6 +288,10 @@ export interface DesignSystem {
   colors: { name: string; value: string }[]
   font?: string
   radius?: number
+  /** Portable component reference page for this system (searched by the agent, shown on its page) */
+  referenceUrl?: string
+  /** Mobile frame size when it differs from the default 390 × 844 */
+  viewport?: { w: number; h: number }
   updatedAt: number
   status?: "idle" | "syncing" | "error"
   error?: string
@@ -300,6 +304,8 @@ export interface Connector {
   name: string
   url: string
   transport: "http" | "sse"
+  /** "oauth": sign in through the browser; "token" (default): a pasted bearer token */
+  auth?: "token" | "oauth"
   token?: string
   enabled: boolean
   status: "untested" | "checking" | "ok" | "error"

@@ -2,6 +2,7 @@ import type { ActionLog, FrameNode, Mark, NoteNode, Device } from "./types"
 import { frameLabel, placeNewRow, placeNextVersion, findFreeSpot, uid, useStore } from "./store"
 import { DEVICE_SIZES, sanitizeWireframe } from "./wireframe"
 import { hasFigmaAccess, postComment } from "./figma"
+import { allDesignSystems } from "./design-systems"
 
 /**
  * The only ways the agent can change the canvas. There is deliberately no
@@ -19,11 +20,18 @@ function findFrame(convId: string, frameId: string): FrameNode | undefined {
 
 const dsIdFor = (convId: string) => conv(convId)?.designSystemId ?? useStore.getState().defaultDesignSystemId
 
+/** Frame size for a device; mobile follows the design system's viewport when it defines one. */
+function frameSize(convId: string, device: Device) {
+  if (device !== "mobile") return DEVICE_SIZES[device]
+  const ds = allDesignSystems(useStore.getState().designSystems).find((d) => d.id === dsIdFor(convId))
+  return ds?.viewport ?? DEVICE_SIZES.mobile
+}
+
 export type ActionResult = { ok: boolean; message: string; log?: ActionLog }
 
 export function createWireframe(convId: string, input: { title: string; html: string; device?: Device; summary?: string; height?: number }): ActionResult {
   const device = input.device ?? "mobile"
-  const size = DEVICE_SIZES[device]
+  const size = frameSize(convId, device)
   const nodes = conv(convId)?.canvas.nodes ?? []
   const h = Math.max(size.h, Math.min(input.height ?? size.h, 4000))
   const pos = placeNewRow(nodes, size.w, h)
@@ -58,7 +66,7 @@ export function iterateWireframe(convId: string, input: { source_frame_id: strin
   const lineage = nodes.filter((n): n is FrameNode => n.kind === "frame" && n.lineageId === lineageId)
   const version = src.lineageId ? Math.max(...lineage.map((f) => f.version ?? 1)) + 1 : 2
   const device = input.device ?? src.device ?? (src.w < 600 ? "mobile" : "desktop")
-  const size = DEVICE_SIZES[device]
+  const size = frameSize(convId, device)
   const h = Math.max(size.h, Math.min(input.height ?? size.h, 4000))
   let patchSrc: FrameNode | null = null
   if (!src.lineageId) patchSrc = { ...src, lineageId, version: 1 }

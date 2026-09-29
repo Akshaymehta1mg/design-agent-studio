@@ -9,6 +9,10 @@ import { dataUrlParts } from "./files"
 import { allDesignSystems, BUILTIN_DESIGN_SYSTEMS } from "./design-systems"
 import { connectorTools } from "./mcp"
 import { askUserInput, MAX_QUESTIONS, normalizeAsk } from "./ask-input"
+import { loadPrismDoc, PRISM_ADAPTER, PRISM_CORE, PRISM_DOCS, RX_FALLBACK_IMAGE, searchDesignSystemReference, searchVisualResearch, TATA_1MG_ASSET_BASE, VISUAL_RESEARCH_URL, visualResearchPatterns } from "./prism"
+import { DEVICE_SIZES } from "./wireframe"
+import { imageForModel } from "./relay"
+import DS_ASSETS from "@/prism/design-system/assets.json"
 import { hasFigmaAccess } from "./figma"
 import { viaServer, type ServerUpstream } from "./server"
 
@@ -77,34 +81,39 @@ export const wantsMarkup = (text: string) => MARKUP_REQUEST.test(text)
 export function systemPrompt(c: Conversation, product: ProductLibrary, opts: { figma: boolean; connectors?: string[]; markup?: boolean }): string {
   const ctx = productContext(product)
   const ds = designSystemFor(c)
-  return `You are Design Agent, a senior product design lead working with a designer in Design Agent Studio. You share a canvas with them: screenshots, Figma exports and your own wireframes sit on it side by side.
+  const mobile = ds.viewport ?? DEVICE_SIZES.mobile
+  return `You are Prism, the design agent in Design Agent Studio, working with a designer on a shared canvas: screenshots, Figma exports and your own wireframes sit on it side by side. Prism core (below) governs how you work on every brief.
 
-How you work
-- Be specific and grounded in what you can see. Name the element, say what's wrong or right, say why it matters for the user or the business, and say what to do. No generic advice.
-- Keep chat replies short (2–6 sentences or a tight list).
-- Only do what was asked. Never annotate, comment on or add notes to the canvas unless the designer asks for critique, feedback, annotations or notes.
-- If you're unsure what they want, make a sensible call and say what you assumed.
+Studio rules
+- Be specific and grounded in what you can see. No generic advice.
+- Never annotate, comment on or add notes to the canvas unless the designer asks for critique, feedback, annotations or notes.
+- Never ask the designer questions in plain chat text: every question goes through ask_user.
 
 Canvas tools
-- create_wireframe: when asked for a wireframe, mockup, layout, screen or flow step that doesn't exist yet. For a multi-screen flow, call it once per screen.
-- iterate_wireframe: when asked to iterate, revise, try another version, apply feedback or explore a variant. This ALWAYS creates a new version next to the source (V2, V3…). You cannot and must not edit an existing frame. Iterate from the latest version in a lineage unless the designer points at a specific one. You can also iterate from a screenshot to produce a wireframe proposal.
-${opts.markup ? `- annotate: mark regions of a frame (x, y, w, h as fractions 0–1 of the frame from its top-left). Use for critique. Keep each label under 30 words; lead with the problem.
+- create_wireframe: a new screen or state that doesn't exist yet. Call it once per screen or essential state.
+- iterate_wireframe: revise, try another version, apply feedback or explore a variant. This ALWAYS creates a new version next to the source (V2, V3…); you cannot edit an existing frame. Iterate from the latest version in a lineage unless the designer points at a specific one. You can also iterate from a screenshot.
+${opts.markup ? `- annotate: mark regions of a frame (x, y, w, h as fractions 0–1 of the frame from its top-left). Keep each label under 30 words; lead with the problem.
 - comment: a pinned point comment on a frame for a single, local remark.
 - add_note: a sticky note on the canvas for summaries, rationale, open questions or next steps.
-` : ""}- create_workflow: when asked for a user flow, journey, process, decision tree or any step-by-step flow. Nodes are steps (kind start, step, decision or end); edges connect them. Mark return paths (retry, go back, iterate until good) as kind "loop". Keep titles short; put the detail in description, content and footer.
-
-Working with the designer
-- update_plan: for multi-step work (several screens, a flow plus wireframes, a review then an iteration), call it first with your plan, then again as you go, marking items in-progress and completed. Skip it for single quick actions.
-- ask_user: when a decision genuinely changes what you'll make (direction, scope, which variant) or before something the designer might not want (posting to Figma, replacing many items). Put every question in one ask_user call (up to ${MAX_QUESTIONS}), each with 2–4 short options and allowCustom. Without questions it becomes an approve / request changes / reject card. It waits for the answer.
-- Never ask the designer questions in plain chat text. If you need their input, call ask_user; otherwise make a sensible call, say what you assumed, and carry on.${opts.figma ? "\n- figma_comment: post a comment into the linked Figma file. Only when the designer asks for Figma comments, or when they've enabled it and you're giving critique on Figma frames." : ""}
+` : ""}- create_workflow: a user flow, journey, process or decision tree. Nodes are steps (kind start, step, decision or end); mark return paths as kind "loop". Keep titles short; put detail in description, content and footer.
+- update_plan: for multi-step work, call it first with your plan, then as you go. Skip it for single quick actions.
+- ask_user: every question, decision or approval. Put all questions for a moment in one call (up to ${MAX_QUESTIONS}), each with 2–4 short options and allowCustom. Without questions it becomes an approve / request changes / reject card. It waits for the answer.
+- prism_reference, read_design_system, search_visual_research, view_visual_research: Prism's references, design system and visual research (see below).${opts.figma ? "\n- figma_comment: post a comment into the linked Figma file. Only when the designer asks for Figma comments, or when they've enabled it and you're giving critique on Figma frames." : ""}
 
 Wireframe HTML
-- Write an HTML fragment for the page body. No <script>, no external images or fonts, no <html>/<head>. Placeholder images: <div class="wf-img" style="height:160px"></div>.
-- Low-fidelity grayscale with real, specific copy from the product context. Width is fixed by the device (mobile 390px, tablet 820px, desktop 1280px); design for that width.
-- Helper classes: wf-screen (root, full height column), wf-status (phone status bar), wf-bar + wf-title (top bar), wf-body (padded column), wf-footer (bottom action area), wf-row, wf-col, wf-grid, wf-between, wf-h1, wf-h2, wf-h3, wf-text, wf-muted, wf-label, wf-card, wf-fill, wf-divider, wf-img, wf-avatar, wf-icon, wf-btn, wf-btn-primary, wf-btn-block, wf-btn-sm, wf-input, wf-chip, wf-chip-on, wf-tag, wf-list, wf-scroll-x, wf-tabbar, wf-sheet, wf-handle, wf-note. Inline styles are fine for anything else.
-- Follow the project's design system below: its structure, components, spacing and voice. The canvas applies its accent color, radius and font to your wireframes automatically.
-${opts.connectors?.length ? `\nConnected tools\n- You can also use tools from: ${opts.connectors.join(", ")}. Tool names are prefixed with the connector. Use them when the designer refers to those products.\n` : ""}
-Design system: ${ds.name}
+- Write an HTML fragment for the page body. No <script>, no external fonts, no <html>/<head>.
+- Images: only the design system's approved asset URLs (read_design_system lists them) or supplied images. Otherwise use placeholders: <div class="wf-img" style="height:160px"></div>.
+- Width is fixed by the device (mobile ${mobile.w}px, tablet 820px, desktop 1280px); design for that width. Use real, specific copy.
+- Helper classes: wf-screen (root, full height column), wf-status (phone status bar), wf-bar + wf-title (top bar), wf-body (padded column), wf-footer (bottom action area), wf-row, wf-col, wf-grid, wf-between, wf-h1, wf-h2, wf-h3, wf-text, wf-muted, wf-label, wf-card, wf-fill, wf-divider, wf-img, wf-avatar, wf-icon, wf-btn, wf-btn-primary, wf-btn-block, wf-btn-sm, wf-input, wf-chip, wf-chip-on, wf-tag, wf-list, wf-scroll-x, wf-tabbar, wf-sheet, wf-handle, wf-note. Use inline styles to apply the design system's tokens (colours, type, spacing, radii) wherever the helpers don't match it.
+- The canvas applies the design system's accent colour, radius and font to the helpers automatically.
+${opts.connectors?.length ? `\nConnected tools\n- You can also use tools from: ${opts.connectors.join(", ")}. Tool names are prefixed with the connector.\n` : ""}
+${PRISM_ADAPTER}
+
+══════════ Prism core ══════════
+${PRISM_CORE}
+══════════ end of Prism core ══════════
+
+Design system for this project: ${ds.name}${ds.referenceUrl ? " (component reference searchable with read_design_system)" : ""}
 ${ds.profile}
 
 ${ctx ? `Product context\n${ctx}\n\n` : ""}Canvas right now
@@ -298,6 +307,66 @@ function canvasTools(convId: string, msgId: string, log: (r: ActionResult) => vo
   }
 }
 
+// ───────────────────────── Prism: references, design system, visual research ─────────────────────────
+
+function prismTools(convId: string) {
+  return {
+    prism_reference: tool({
+      description: `Load one of Prism's reference documents by name. Available: ${PRISM_DOCS.join(", ")}.`,
+      inputSchema: z.object({ name: z.string().describe("Reference name, e.g. 'product-thinking-gate' or 'wireframe'") }),
+      execute: async ({ name }) => (await loadPrismDoc(name)) ?? `No Prism reference called "${name}". Available: ${PRISM_DOCS.join(", ")}.`,
+    }),
+    read_design_system: tool({
+      description:
+        "Read the project's design system (the Design systems page). Without a query: its full guide and approved asset URLs. With a query: search its portable component reference for a component key (e.g. buttons, chips, sku-cards, actionbar, page-header, labs-home, DEFAULT_RX_SKU_IMAGE, const SEMANTIC=) and return code excerpts.",
+      inputSchema: z.object({ query: z.string().optional() }),
+      execute: async ({ query }) => {
+        const c = useStore.getState().conversations.find((x) => x.id === convId)
+        const ds = c ? designSystemFor(c) : BUILTIN_DESIGN_SYSTEMS[0]
+        if (query?.trim()) {
+          if (!ds.referenceUrl) return `${ds.name} has no component reference to search. Use its guide instead.`
+          return searchDesignSystemReference(query, ds.referenceUrl)
+        }
+        const assets = ds.id === "ds_tata1mg" ? `\n\nApproved assets (use these URLs in <img>):\n${DS_ASSETS.map((a) => `- ${TATA_1MG_ASSET_BASE}${a}`).join("\n")}\nRX medicine fallback: ${RX_FALLBACK_IMAGE}` : ""
+        return `Design system: ${ds.name}\n\n${ds.profile}${assets}`
+      },
+    }),
+    search_visual_research: tool({
+      description:
+        "Search the curated visual-research library (300 app screens, the Visual research page). Filter by pattern cluster and/or words describing the user job, information shape and state. Returns ids, patterns and descriptions; inspect the chosen ones with view_visual_research.",
+      inputSchema: z.object({
+        query: z.string().optional().describe("User job, information shape, state or unresolved element, e.g. 'compare plans recommended choice bottom sheet'"),
+        pattern: z.string().optional().describe("A pattern cluster name or part of it, e.g. 'Comparison' or 'Onboarding'"),
+        limit: z.number().optional(),
+      }),
+      execute: async ({ query, pattern, limit }) => {
+        const found = await searchVisualResearch({ query, pattern, limit: Math.min(limit ?? 12, 20) })
+        const clusters = (await visualResearchPatterns()).join("; ")
+        if (!found.length) return `No references matched. Pattern clusters: ${clusters}. If nothing fits, record "no local fit".`
+        return `${found.length} references (page: ${VISUAL_RESEARCH_URL}):\n${found
+          .map((r) => `- ${r.id} · ${r.patterns.join(", ") || "unclustered"} · ${r.description}${r.visible_text ? ` · text: ${r.visible_text.slice(0, 120)}` : ""} · source: ${r.pin_url}`)
+          .join("\n")}\n\nPattern clusters: ${clusters}`
+      },
+    }),
+    view_visual_research: tool({
+      description: "Look at up to five visual-research screenshots by id (e.g. ref-019) so you can decode them. Never infer a pattern without viewing it.",
+      inputSchema: z.object({ ids: z.array(z.string()).min(1).describe("Up to five reference ids") }),
+      execute: async ({ ids }) => {
+        const refs = await searchVisualResearch({ ids: ids.slice(0, 5) })
+        const images = await Promise.all(refs.map((r) => imageForModel(r.image)))
+        return refs.map((r, i) => ({ id: r.id, source: r.pin_url, patterns: r.patterns, description: r.description, image: images[i] }))
+      },
+      toModelOutput: (items) => ({
+        type: "content",
+        value: items.flatMap((r) => [
+          { type: "text" as const, text: `${r.id} · ${r.patterns.join(", ") || "unclustered"} · source ${r.source}${r.image ? "" : " · (image couldn't be loaded; don't infer its layout)"}` },
+          ...(r.image ? [{ type: "media" as const, data: r.image.data, mediaType: r.image.mediaType }] : []),
+        ]),
+      }),
+    }),
+  }
+}
+
 // ───────────────────────── run a chat turn ─────────────────────────
 
 let controller: AbortController | null = null
@@ -315,6 +384,10 @@ const ACTIVITY: Record<string, string> = {
   create_workflow: "Mapping the flow…",
   update_plan: "Planning…",
   ask_user: "Preparing a question…",
+  prism_reference: "Reading Prism's references…",
+  read_design_system: "Checking the design system…",
+  search_visual_research: "Searching visual research…",
+  view_visual_research: "Looking at references…",
 }
 
 // ───────────────────────── questions in plain text → question card ─────────────────────────
@@ -377,7 +450,7 @@ export async function runChat(convId: string, userMsg: ChatMessage) {
       const mcp = live.length ? await connectorTools(live) : { tools: {}, close: () => {}, failed: [] as string[] }
       closeMcp = mcp.close
       const loc = { convId, msgId: assistantId }
-      const tools: ToolSet = { ...mcp.tools, ...canvasTools(convId, assistantId, pushAction, figmaOn, markup, controller.signal) }
+      const tools: ToolSet = { ...mcp.tools, ...prismTools(convId), ...canvasTools(convId, assistantId, pushAction, figmaOn, markup, controller.signal) }
       const system = systemPrompt(c, useStore.getState().product, { figma: figmaOn, connectors: live.map((x) => x.name).filter((n) => !mcp.failed.includes(n)), markup })
       const signal = controller.signal
       let text = ""
