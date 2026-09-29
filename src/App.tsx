@@ -80,7 +80,7 @@ export default function App() {
       ) : (
         <SidebarProvider style={{ "--sidebar-width": "16.5rem" } as React.CSSProperties} className="h-full min-h-0">
           <DashboardSidebar onSearch={() => setSearch(true)} />
-          <SidebarInset className="min-h-0 overflow-hidden md:peer-data-[variant=inset]:shadow-xs">
+          <SidebarInset className="min-h-0 overflow-clip md:peer-data-[variant=inset]:shadow-xs">
             <div className="absolute top-3 left-3 z-10 md:hidden">
               <SidebarTrigger />
             </div>

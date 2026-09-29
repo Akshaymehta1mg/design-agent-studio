@@ -138,7 +138,9 @@ export function ChatPanel() {
   }
 
   return (
-    <div className="bg-background relative flex h-full min-w-0 flex-col">
+    // overflow-clip, not hidden: a clipped box can't be scrolled by focus() or scrollIntoView, so the
+    // composer can never drift up from the bottom.
+    <div className="bg-background relative flex h-full min-w-0 flex-col overflow-clip">
       <header className="flex h-14 shrink-0 items-center border-b px-4">
         <div className="min-w-0 flex-1 text-[13.5px] font-semibold">Chat</div>
         <span className="text-muted-foreground max-w-[60%] truncate text-[12px]">{model}</span>
@@ -146,7 +148,7 @@ export function ChatPanel() {
 
       <div
         ref={scroller}
-        className="min-h-0 flex-1 overflow-y-auto"
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
         data-scrollable
         onScroll={(e) => {
           const el = e.currentTarget
@@ -445,7 +447,7 @@ function Composer({ busy }: { busy: boolean }) {
   useEffect(() => {
     const onCompose = (e: Event) => {
       setText((e as CustomEvent<{ text: string }>).detail.text)
-      requestAnimationFrame(() => ta.current?.focus())
+      requestAnimationFrame(() => ta.current?.focus({ preventScroll: true }))
     }
     window.addEventListener("das:compose", onCompose)
     return () => window.removeEventListener("das:compose", onCompose)

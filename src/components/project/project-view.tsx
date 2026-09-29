@@ -169,7 +169,7 @@ export function ProjectView() {
         <DesignSystemMenu />
       </header>
 
-      <div className="min-h-0 flex-1">
+      <div className="min-h-0 flex-1 overflow-clip">
         {isMobile ? (
           <div className="flex h-full flex-col">
             <div className="bg-muted m-2 grid shrink-0 grid-cols-2 rounded-lg p-0.5">
@@ -179,7 +179,7 @@ export function ProjectView() {
                 </button>
               ))}
             </div>
-            <div className="min-h-0 flex-1">{pane === "main" ? main : side}</div>
+            <div className="min-h-0 flex-1 overflow-clip">{pane === "main" ? main : side}</div>
           </div>
         ) : (
           <ResizablePanelGroup orientation="horizontal" className="h-full">
@@ -187,7 +187,7 @@ export function ProjectView() {
               {main}
             </ResizablePanel>
             <ResizableHandle />
-            <ResizablePanel id="right" defaultSize={420} minSize={340} maxSize={680}>
+            <ResizablePanel id="right" defaultSize={420} minSize={340} maxSize={680} className="overflow-clip">
               {side}
             </ResizablePanel>
           </ResizablePanelGroup>
