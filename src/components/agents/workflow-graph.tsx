@@ -285,7 +285,7 @@ export function WorkflowCard({ workflow, onOpen }: { workflow: Workflow; onOpen?
           </button>
         )}
       </div>
-      <div ref={box} className="canvas-grid relative overflow-hidden border-t" style={{ height: L.height * scale, backgroundSize: "18px 18px" }}>
+      <div ref={box} className="canvas-grid relative overflow-hidden border-t" style={{ height: L.height * scale }}>
         <div className="absolute top-0 left-1/2 origin-top" style={{ transform: `translateX(-50%) scale(${scale})`, width: L.width }}>
           <WorkflowGraph workflow={workflow} runKey={runKey} compact />
         </div>

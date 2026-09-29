@@ -355,17 +355,31 @@ export async function runChat(convId: string, userMsg: ChatMessage) {
       })
       let text = ""
       const loc = { convId, msgId: assistantId }
-      for await (const part of result.fullStream) {
-        if (part.type === "text-delta") {
-          text += part.text
-          appendText(loc, part.text)
-        } else if (part.type === "tool-input-start") {
-          useStore.getState().patchMessage(assistantId, { activity: ACTIVITY[part.toolName] ?? "Working…" }, convId)
-        } else if (part.type === "start-step" && text) {
-          appendText(loc, "\n\n")
-        } else if (part.type === "error") {
-          throw part.error
+      // Batch streamed tokens: one store update per ~50ms instead of one per token.
+      let buffered = ""
+      let lastFlush = 0
+      const flush = () => {
+        if (buffered) appendText(loc, buffered)
+        buffered = ""
+        lastFlush = Date.now()
+      }
+      try {
+        for await (const part of result.fullStream) {
+          if (part.type === "text-delta") {
+            text += part.text
+            buffered += part.text
+            if (Date.now() - lastFlush > 50) flush()
+          } else if (part.type === "tool-input-start") {
+            flush()
+            useStore.getState().patchMessage(assistantId, { activity: ACTIVITY[part.toolName] ?? "Working…" }, convId)
+          } else if (part.type === "start-step" && text) {
+            buffered += "\n\n"
+          } else if (part.type === "error") {
+            throw part.error
+          }
         }
+      } finally {
+        flush()
       }
       if (!text.trim()) appendText(loc, "Done. The changes are on the canvas.")
     }

@@ -1,5 +1,5 @@
 import { create } from "zustand"
-import { persist, createJSONStorage, type StateStorage } from "zustand/middleware"
+import { persist, type PersistStorage, type StorageValue } from "zustand/middleware"
 import { get as idbGet, set as idbSet, del as idbDel } from "idb-keyval"
 import { nanoid } from "nanoid"
 import type {
@@ -25,24 +25,54 @@ import { DEVICE_SIZES, EXAMPLE_WIREFRAMES } from "./wireframe"
 export const uid = (p = "") => p + nanoid(7)
 
 // ───────── storage: IndexedDB with an in-memory fallback (private windows, sandboxes) ─────────
+// Writes are debounced: the persisted state holds every screenshot as a data URL, so serialising
+// it on each store update (every streamed token) exhausts memory and crashes the tab.
 const memory = new Map<string, string>()
-const safeStorage: StateStorage = {
-  getItem: async (k) => {
-    try {
-      return ((await idbGet(k)) as string | undefined) ?? memory.get(k) ?? null
-    } catch {
-      return memory.get(k) ?? null
-    }
-  },
-  setItem: async (k, v) => {
-    memory.set(k, v)
-    try {
-      await idbSet(k, v)
-    } catch {
+const WRITE_DELAY = 800
+const pending = new Map<string, unknown>()
+let writeTimer = 0
+
+function flushWrites() {
+  clearTimeout(writeTimer)
+  writeTimer = 0
+  for (const [k, v] of pending) {
+    const text = JSON.stringify(v)
+    memory.set(k, text)
+    idbSet(k, text).catch(() => {
       /* stay in memory */
+    })
+  }
+  pending.clear()
+}
+
+/** Drop queued writes, e.g. before clearing storage and reloading. */
+export function discardPendingWrites() {
+  clearTimeout(writeTimer)
+  writeTimer = 0
+  pending.clear()
+}
+
+if (typeof window !== "undefined") {
+  window.addEventListener("pagehide", flushWrites)
+  document.addEventListener("visibilitychange", () => document.visibilityState === "hidden" && flushWrites())
+}
+
+const safeStorage: PersistStorage<unknown> = {
+  getItem: async (k) => {
+    let text: string | null
+    try {
+      text = ((await idbGet(k)) as string | undefined) ?? memory.get(k) ?? null
+    } catch {
+      text = memory.get(k) ?? null
     }
+    return text ? (JSON.parse(text) as StorageValue<unknown>) : null
+  },
+  setItem: (k, v) => {
+    pending.set(k, v)
+    if (!writeTimer) writeTimer = window.setTimeout(flushWrites, WRITE_DELAY)
   },
   removeItem: async (k) => {
+    pending.delete(k)
     memory.delete(k)
     try {
       await idbDel(k)
@@ -434,7 +464,7 @@ export const useStore = create<State>()(
     {
       name: "design-agent-studio",
       version: 1,
-      storage: createJSONStorage(() => safeStorage),
+      storage: safeStorage as PersistStorage<Partial<State>>,
       partialize: (s) => ({
         conversations: s.conversations,
         activeId: s.activeId,

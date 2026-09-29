@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { Check, Eye, EyeOff, Loader2, RefreshCw, ExternalLink, Trash2, AlertCircle } from "lucide-react"
 import { toast } from "sonner"
-import { useStore, defaultSettings } from "@/lib/store"
+import { useStore, defaultSettings, discardPendingWrites } from "@/lib/store"
 import { checkServer, useServer, viaServer } from "@/lib/server"
 import { fetchModels, pickDefaultModel, PROVIDERS, PROVIDER_ORDER, type KeyedProvider } from "@/lib/providers"
 import { PageHeader } from "@/components/pages/page-header"
@@ -222,6 +222,7 @@ function Card({ title, description, children }: { title: string; description?: s
 function DataControls() {
   const [confirm, setConfirm] = useState(false)
   const reset = async () => {
+    discardPendingWrites()
     try {
       const { clear } = await import("idb-keyval")
       await clear()
