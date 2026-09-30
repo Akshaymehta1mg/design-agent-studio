@@ -747,7 +747,7 @@ export async function runChat(convId: string, userMsg: ChatMessage, opts: { dept
           toolChoice: opts.toolChoice,
           stopWhen: [stepCountIs(opts.steps ?? 14), ...stopAt],
           abortSignal: signal,
-          maxOutputTokens: compact ? (phase === "build" ? 8000 : 4096) : (phase === "build" ? 8000 : 16000),
+          maxOutputTokens: compact ? (phase === "build" ? 12000 : 4096) : (phase === "build" ? 16000 : 16000),
           // Rate-limited plans ask callers to wait (retry-after); the SDK honours it, so allow a few more tries.
           maxRetries: compact ? 4 : 2,
           // Text-only models reject images anywhere in the history, including tool results.
