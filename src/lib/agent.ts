@@ -11,6 +11,7 @@ import { connectorTools } from "./mcp"
 import { askUserInput, MAX_QUESTIONS, normalizeAsk } from "./ask-input"
 import { answeredDecisions, legacyAnswers, sameQuestion, type Decision } from "./decisions"
 import { pushDebugLog, type DebugToolCall } from "./debug-log"
+import { ScreenStream, type StreamedScreen } from "./screen-stream"
 
 const MAX_ASKS_PER_TURN = 2
 import { loadPrismDoc, PRISM_ADAPTER, PRISM_CORE, PRISM_CORE_COMPACT, PRISM_DOCS, RX_FALLBACK_IMAGE, searchDesignSystemReference, searchVisualResearch, TATA_1MG_ASSET_BASE, TATA_1MG_TOKENS, VISUAL_RESEARCH_URL, visualResearchPatterns } from "./prism"
@@ -116,6 +117,16 @@ function decisionsSection(c: Conversation) {
   return `Decisions the designer has already made in this project (never ask these again; build on them)\n${list.map((d) => `- ${d.question} → ${d.answer}`).join("\n")}\n\n`
 }
 
+/** How prototype screens are delivered: raw HTML in the reply, not inside tool-call JSON. */
+const SCREEN_BLOCKS = `Screen blocks (how prototype screens are delivered)
+- After create_prototype or iterate_prototype, write each screen in your reply as raw HTML in a block:
+<screen id="cart" title="Cart">
+<div class="wf-screen">…</div>
+</screen>
+- One block per screen, one after another, in plan order. Plain HTML: no code fences, no JSON escaping. Each screen is saved the moment its </screen> arrives, so always finish a block before starting the next.
+- Write every screen in the plan. To fix or replace a screen, write it again with the same id.
+- Keep chat text outside the blocks to a sentence or two; the blocks never show in the chat.`
+
 /** Tools a compact turn keeps (plus markup tools when the designer asks for critique). */
 const COMPACT_TOOLS = new Set(["create_prototype", "add_prototype_screens", "iterate_prototype", "ask_user", "update_plan", "read_design_system", "prism_reference", "create_workflow", "annotate", "comment", "add_note"])
 
@@ -135,10 +146,12 @@ function compactSystemPrompt(c: Conversation, product: ProductLibrary, opts: { m
 Rules
 - Every question, decision or approval goes through ask_user (all questions for a moment in one call, 2–4 short options each), never plain chat text. Never ask what's under "Decisions".
 - Never annotate or add notes unless asked for critique, feedback or notes. Notes (add_note) are Markdown with a ## heading per part; reply in chat with one line.
-- Wireframes, screens and flows: build ONE clickable prototype. create_prototype with plan (every screen id + title) and the first 2–3 screens, then add_prototype_screens with the next 2–3 until the plan is built. iterate_prototype for a new version (send only changed screens).
+- Wireframes, screens and flows: build ONE clickable prototype. create_prototype with the title and plan (every screen id + title), then write every screen as a <screen> block (below). iterate_prototype for a new version, then write only the new or changed screens as blocks.
 - Screen HTML: a body fragment, no scripts, width ${mobile.w}px (mobile). Root <div class="wf-screen">; helpers wf-bar, wf-title, wf-body, wf-footer, wf-row, wf-col, wf-between, wf-h1, wf-h2, wf-h3, wf-text, wf-muted, wf-card, wf-img (placeholder, set height), wf-icon, wf-btn, wf-btn-primary, wf-btn-block, wf-input, wf-chip, wf-chip-on, wf-list, wf-tabbar. Inline styles for design-system tokens. Keep markup lean.
 - Links: data-go="screen-id" navigates, data-back goes back, data-open="id" shows <div class="wf-overlay" data-overlay="id"><div class="wf-sheet">…</div></div>, data-close hides it. Error/empty/success states are their own screens.
 - create_workflow for journeys and decision trees. read_design_system(section) for exact specs. prism_reference(name) for a Prism reference when a decision needs it.
+
+${SCREEN_BLOCKS}
 
 Prism core
 ${PRISM_CORE_COMPACT}
@@ -167,9 +180,9 @@ Studio rules
 - Never ask the designer questions in plain chat text: every question goes through ask_user.
 
 Canvas tools
-- create_prototype: the default whenever the designer asks for a wireframe, screens, a flow or a prototype. It makes ONE interactive HTML file holding every screen and essential state, which the designer clicks through. Build it in 2–3 smaller calls, never one huge one: create_prototype with the plan (every screen id and title) and the first 2–4 screens, then add_prototype_screens with the next 2–4 until the plan is built. Link the screens (see Prototype links) so the whole flow works end to end; links to planned screens you haven't built yet are fine.
-- add_prototype_screens: add the next screens to the prototype you're building in this turn (or re-send a screen to fix it). The result says what's still to build.
-- iterate_prototype: the next version of a prototype (V2, V3…) beside the source. Send only new or changed screens (up to 4); unchanged ones carry over, and remove drops screens. Add further screens with add_prototype_screens. Also turns an existing wireframe into a clickable flow.
+- create_prototype: the default whenever the designer asks for a wireframe, screens, a flow or a prototype. It makes ONE interactive HTML file holding every screen and essential state, which the designer clicks through. Call it with the title, summary and plan (every screen id and title) and no HTML, then write every screen as a <screen> block (see Screen blocks). Link the screens (see Prototype links) so the whole flow works end to end.
+- iterate_prototype: the next version of a prototype (V2, V3…) beside the source. Call it with the change summary (and plan / remove if the screen list changes), then write only the new or changed screens as <screen> blocks; unchanged ones carry over. Also turns an existing wireframe into a clickable flow.
+- add_prototype_screens: fallback only, if you can't write screen blocks.
 - create_wireframe: only for a single standalone static screen when the designer explicitly asks for one frame, or for exploring layout variants side by side.
 - iterate_wireframe: revise, try another version, apply feedback or explore a variant of a single-screen wireframe. This ALWAYS creates a new version next to the source (V2, V3…); you cannot edit an existing frame. Iterate from the latest version in a lineage unless the designer points at a specific one. You can also iterate from a screenshot.
 ${opts.markup ? `- annotate: mark regions of a frame (x, y, w, h as fractions 0–1 of the frame from its top-left). Keep each label under 30 words; lead with the problem.
@@ -193,7 +206,9 @@ Prototype links (create_prototype / iterate_prototype)
 - Overlays (bottom sheets, dialogs, menus, pickers) live inside the screen that opens them: <div class="wf-overlay" data-overlay="coupon"><div class="wf-sheet">…<div class="wf-btn" data-close>Close</div></div></div>. Add wf-center to the overlay for a centred dialog. They start hidden.
 - Represent other states (empty, error, loading, success) as their own screens and link to them from where they'd happen.
 - Real <input>, <select> and <textarea> elements work, so forms can be typed into. No scripts, no onclick; the studio adds the behaviour.
-- Keep markup lean (helper classes, few inline styles). At most 4 screens per call; up to 12 screens in a prototype.
+- Keep markup lean (helper classes, few inline styles). Up to 12 screens in a prototype.
+
+${SCREEN_BLOCKS}
 ${opts.connectors?.length ? `\nConnected tools\n- You can also use tools from: ${opts.connectors.join(", ")}. Tool names are prefixed with the connector.\n` : ""}
 ${PRISM_ADAPTER}
 
@@ -306,45 +321,68 @@ const screensInput = z
       html: z.string().describe("HTML fragment for this screen, with data-go / data-back / data-open / data-close links"),
     }),
   )
-  .min(1)
   .max(4)
-  .describe("2–4 screens per call")
+  .optional()
+  .describe("Fallback only. Leave out and write the screens as <screen> blocks in your reply instead")
 const planInput = z
   .array(z.object({ id: z.string(), title: z.string() }))
   .max(12)
   .describe("Every screen of the flow in order (id and title), including ones you'll add in later calls")
 
-function canvasTools(convId: string, msgId: string, log: (r: ActionResult) => void, figma: boolean, markup: boolean, signal?: AbortSignal) {
+/** The prototype this turn is building, so streamed <screen> blocks know where to go. */
+interface ProtoState {
+  /** Prototypes started in this turn, which may still get screens. */
+  building: Set<string>
+  active?: string
+  /** Screens that arrived before any prototype existed in this turn. */
+  pending: StreamedScreen[]
+}
+
+/** Put streamed screens into the prototype being built, or hold them until one exists. */
+function placeScreens(convId: string, proto: ProtoState, screens: StreamedScreen[]): ActionResult | null {
+  if (!screens.length) return null
+  if (!proto.active) {
+    proto.pending.push(...screens)
+    return { ok: true, message: `Holding ${screens.length} screen(s) until the prototype exists.` }
+  }
+  return addPrototypeScreens(convId, { frame_id: proto.active, screens }, proto.building)
+}
+
+function canvasTools(convId: string, msgId: string, log: (r: ActionResult) => void, figma: boolean, markup: boolean, proto: ProtoState, signal?: AbortSignal) {
   const loc = { convId, msgId }
   let asks = 0
-  /** Prototypes started in this turn, which add_prototype_screens may extend. */
-  const building = new Set<string>()
+  const building = proto.building
+  /** A new prototype becomes the target for streamed screens, including any that arrived first. */
+  const started = (frameId: string) => {
+    building.add(frameId)
+    proto.active = frameId
+    addPrototypePart(loc, frameId)
+    const held = proto.pending.splice(0)
+    if (held.length) log(addPrototypeScreens(convId, { frame_id: frameId, screens: held }, building))
+  }
   const wrap = (r: ActionResult) => {
     log(r)
     return r.message
   }
   const tools = {
     create_prototype: tool({
-      description: "Start ONE interactive, clickable HTML prototype on the canvas (version 1 of a new lineage): the plan for every screen, and the first 2–4 screens. Add the rest with add_prototype_screens.",
+      description: "Start ONE interactive, clickable HTML prototype on the canvas (version 1 of a new lineage) with its title and the plan for every screen. No HTML here: after this call, write each screen as a <screen id=\"…\" title=\"…\">…</screen> block in your reply.",
       inputSchema: z.object({
         title: z.string().describe("Name of the flow, e.g. 'Checkout'"),
         device: deviceEnum.default("mobile"),
         summary: z.string().describe("One sentence on the flow and the idea behind it"),
-        plan: planInput.optional().describe("Every screen of the flow in order (id and title), including ones you'll add in later calls. Leave out only when all screens are in this call."),
+        plan: planInput.describe("Every screen of the flow in order (id and title). You'll write each one as a <screen> block after this call."),
         start: z.string().describe("Id of the first screen"),
         screens: screensInput,
       }),
       execute: async (i) => {
         const r = createPrototype(convId, i)
-        if (r.frameId) {
-          building.add(r.frameId)
-          addPrototypePart(loc, r.frameId)
-        }
+        if (r.frameId) started(r.frameId)
         return wrap(r)
       },
     }),
     add_prototype_screens: tool({
-      description: "Add the next 2–4 screens to the prototype you're building in this turn, or re-send a screen (same id) to replace it.",
+      description: "Fallback only: add screens to the prototype you're building through a tool call. Prefer writing <screen> blocks in your reply.",
       inputSchema: z.object({
         frame_id: z.string(),
         screens: screensInput,
@@ -353,7 +391,7 @@ function canvasTools(convId: string, msgId: string, log: (r: ActionResult) => vo
       execute: async (i) => wrap(addPrototypeScreens(convId, i, building)),
     }),
     iterate_prototype: tool({
-      description: "Create the NEXT VERSION of a prototype (or turn a wireframe into one) as a new frame beside it. Send only new or changed screens (up to 4); unchanged ones carry over. Add more with add_prototype_screens.",
+      description: "Create the NEXT VERSION of a prototype (or turn a wireframe into one) as a new frame beside it. Unchanged screens carry over. No HTML here: after this call, write only the new or changed screens as <screen id=\"…\" title=\"…\">…</screen> blocks in your reply.",
       inputSchema: z.object({
         source_frame_id: z.string(),
         change_summary: z.string().describe("What changed vs the source and why, one or two sentences"),
@@ -366,10 +404,7 @@ function canvasTools(convId: string, msgId: string, log: (r: ActionResult) => vo
       }),
       execute: async (i) => {
         const r = iteratePrototype(convId, i)
-        if (r.frameId) {
-          building.add(r.frameId)
-          addPrototypePart(loc, r.frameId)
-        }
+        if (r.frameId) started(r.frameId)
         return wrap(r)
       },
     }),
@@ -709,6 +744,7 @@ export async function runChat(convId: string, userMsg: ChatMessage, opts: { dept
       const live = compact ? [] : useStore.getState().connectors.filter((x) => x.enabled && x.status === "ok")
       if (live.length) useStore.getState().patchMessage(assistantId, { activity: "Connecting your tools…" }, convId)
       const mcp = live.length ? await connectorTools(live) : { tools: {}, close: () => {}, failed: [] as string[] }
+      const proto: ProtoState = { building: new Set(), pending: [] }
       closeMcp = mcp.close
       const loc = { convId, msgId: assistantId }
       const nextPhase = tool({
@@ -722,7 +758,7 @@ export async function runChat(convId: string, userMsg: ChatMessage, opts: { dept
           return `Moving to ${phaseLabel(to)}: ${reason}`
         },
       })
-      const everything: ToolSet = { ...mcp.tools, ...prismTools(convId, assistantId), ...canvasTools(convId, assistantId, pushAction, figmaOn, markup, controller!.signal), next_phase: nextPhase }
+      const everything: ToolSet = { ...mcp.tools, ...prismTools(convId, assistantId), ...canvasTools(convId, assistantId, pushAction, figmaOn, markup, proto, controller!.signal), next_phase: nextPhase }
       // Each step only gets the tools it needs, so a reply can't run ahead to the prototype.
       const allowed = PHASE_TOOLS[phase]
       const markupNames = markup ? ["annotate", "comment", "add_note"] : []
@@ -737,6 +773,8 @@ export async function runChat(convId: string, userMsg: ChatMessage, opts: { dept
       const signal = controller!.signal
       const readsImages = currentModelReadsImages()
       let text = ""
+      /** The latest pass's full conversation (sent + added), for follow-up passes. */
+      let latest: ModelMessage[] = []
 
       /** One streamed pass. Returns the text of its last step and the messages it added. */
       const pass = async (messages: ModelMessage[], opts: { tools?: ToolSet; toolChoice?: ToolChoice<ToolSet>; steps?: number; onAskStart?: () => void } = {}) => {
@@ -747,6 +785,8 @@ export async function runChat(convId: string, userMsg: ChatMessage, opts: { dept
         const stepFinishes: string[] = []
         let stepIn = 0
         let stepOut = 0
+        let screensPlaced = 0
+        const screens = new ScreenStream()
         const result = streamText({
           model,
           system,
@@ -771,13 +811,39 @@ export async function runChat(convId: string, userMsg: ChatMessage, opts: { dept
           buffered = ""
           lastFlush = Date.now()
         }
+        const show = (t: string) => {
+          text += t
+          stepText += t
+          buffered += t
+        }
+        /** Save finished screens as they arrive; a failed one is reported, not fatal. */
+        const place = (done: StreamedScreen[]) => {
+          if (!done.length) return
+          flush()
+          const r = placeScreens(convId, proto, done)
+          if (r) {
+            if (r.ok) screensPlaced += done.length
+            else pushAction({ ok: false, message: "", log: { id: uid(), label: `Screen ${done.map((d) => d.title).join(", ")} failed`, tone: "error" } })
+            debugToolCalls.push({ name: "screen", input: done.map((d) => ({ id: d.id, title: d.title, htmlChars: d.html.length })), result: r.ok ? r.message : undefined, error: r.ok ? undefined : r.message })
+          }
+        }
+        /** End of a step: flush trailing text and note a screen the step cut off. */
+        const settle = () => {
+          const rest = screens.end()
+          if (rest.text) show(rest.text)
+          if (rest.partial) debugToolCalls.push({ name: "screen", input: rest.partial, error: `Screen "${rest.partial.title}" was cut off after ${rest.partial.chars} characters and was not saved.` })
+        }
         try {
           for await (const part of result.fullStream) {
             if (part.type === "text-delta") {
-              text += part.text
-              stepText += part.text
               passStepText += part.text
-              buffered += part.text
+              const out = screens.push(part.text)
+              if (out.text) show(out.text)
+              if (out.started.length) {
+                flush()
+                useStore.getState().patchMessage(assistantId, { activity: `Drawing ${out.started[out.started.length - 1]}…` }, convId)
+              }
+              place(out.screens)
               if (Date.now() - lastFlush > 50) flush()
             } else if (part.type === "tool-input-start") {
               flush()
@@ -794,6 +860,7 @@ export async function runChat(convId: string, userMsg: ChatMessage, opts: { dept
               stepText = ""
               if (text) buffered += "\n\n"
             } else if (part.type === "finish-step") {
+              settle()
               stepFinishes.push(part.finishReason)
               stepIn += part.usage?.inputTokens ?? 0
               stepOut += part.usage?.outputTokens ?? 0
@@ -814,6 +881,7 @@ export async function runChat(convId: string, userMsg: ChatMessage, opts: { dept
           if (!passError) passError = e instanceof Error ? e.message : String(e)
           throw e
         } finally {
+          settle()
           flush()
           try {
             const usage = await result.usage.catch(() => undefined)
@@ -842,7 +910,9 @@ export async function runChat(convId: string, userMsg: ChatMessage, opts: { dept
             /* logging must never break the turn */
           }
         }
-        return { stepText, messages: (await result.response).messages }
+        const added = (await result.response).messages
+        latest = [...messages, ...added]
+        return { stepText, messages: added, screensPlaced }
       }
 
       let history = toModelMessages(c, userMsg, compact)
@@ -864,6 +934,31 @@ export async function runChat(convId: string, userMsg: ChatMessage, opts: { dept
           // Couldn't convert: keep the questions as the model wrote them.
           if (before) useStore.getState().patchMessage(assistantId, { parts: before, text: textOf(before) }, convId)
         }
+      }
+      // Screens written before any prototype existed: start one so they aren't lost.
+      if (proto.pending.length && !proto.active) {
+        const r = createPrototype(convId, { title: "Prototype", screens: proto.pending.splice(0) })
+        if (r.frameId) {
+          proto.building.add(r.frameId)
+          proto.active = r.frameId
+          addPrototypePart(loc, r.frameId)
+        }
+        pushAction(r)
+      }
+      // A reply that ran out before every planned screen was written: ask for just the rest, a few rounds at most.
+      const remaining = () => {
+        const f = useStore.getState().conversations.find((x) => x.id === convId)?.canvas.nodes.find((n): n is FrameNode => n.id === proto.active && n.kind === "frame")
+        return f ? (f.plannedScreens ?? []).filter((p) => !f.screens?.some((s) => s.id === p.id)) : []
+      }
+      for (let round = 0; round < 3 && proto.active && !signal.aborted; round++) {
+        const todo = remaining()
+        if (!todo.length) break
+        useStore.getState().patchMessage(assistantId, { activity: `Drawing the remaining ${todo.length} screen${todo.length === 1 ? "" : "s"}…` }, convId)
+        await pass([
+          ...latest,
+          { role: "user", content: `Continue prototype ${proto.active}: write the remaining screens now as <screen id="…" title="…">…</screen> blocks, in this order: ${todo.map((t) => `${t.id} (${t.title})`).join(", ")}. Only the blocks, no other text.` },
+        ])
+        if (remaining().length >= todo.length) break
       }
       const mine = getMessage(loc)
       if (!text.trim() && !mine?.parts?.some((p) => p.type === "ask") && mine?.actions?.length) appendText(loc, "Done. The changes are on the canvas.")
