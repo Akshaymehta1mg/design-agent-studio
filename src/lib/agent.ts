@@ -142,7 +142,7 @@ Rules
 Prism core
 ${PRISM_CORE_COMPACT}
 
-${ds.id === "tata-1mg-development" ? `Design system for this project: ${ds.name}\n${TATA_1MG_TOKENS}` : designSystemDigest(ds)}
+${ds.id === "ds_tata1mg" ? `Design system for this project: ${ds.name}\n${TATA_1MG_TOKENS}` : designSystemDigest(ds)}
 ${edits ? `Team edits (override the above):\n${edits}\n` : ""}
 ${decisionsSection(c)}${ctx ? `Product context\n${ctx.slice(0, 1200)}\n\n` : ""}Canvas
 ${inventory.slice(-12).join("\n")}`
@@ -201,7 +201,7 @@ ${PRISM_CORE}
 ══════════ end of Prism core ══════════
 
 Design system for this project: ${ds.name}${ds.referenceUrl ? " (component reference searchable with read_design_system)" : ""}
-${ds.id === "tata-1mg-development" ? TATA_1MG_TOKENS : designSystemDigest(ds, 2000)}
+${ds.id === "ds_tata1mg" ? TATA_1MG_TOKENS : designSystemDigest(ds, 2000)}
 ${edits ? `\nTeam edits to this design system (these override the guide above and the original reference)\n${edits}\n` : ""}
 
 ${decisionsSection(c)}${ctx ? `Product context\n${ctx}\n\n` : ""}Canvas right now
