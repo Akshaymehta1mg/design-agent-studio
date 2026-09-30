@@ -149,6 +149,19 @@ export function createPrototype(convId: string, input: { title: string; screens?
   }
 }
 
+/** Set a prototype's shared behaviour (its <prototype-script>). A script that doesn't parse isn't saved. */
+export function setPrototypeScript(convId: string, frameId: string, script: string): ActionResult {
+  const src = findFrame(convId, frameId)
+  if (!src?.screens) return { ok: false, message: `No prototype with id ${frameId}.` }
+  try {
+    new Function(script)
+  } catch (e) {
+    return { ok: false, message: `The prototype-script has a syntax error (${(e as Error).message}); it was not saved.` }
+  }
+  useStore.getState().editCanvas((d) => ({ ...d, nodes: d.nodes.map((n) => (n.id === src.id ? { ...src, script } : n)) }), { convId, record: false })
+  return { ok: true, message: `Saved the interactions script for ${frameLabel(src)} (${script.length} chars).` }
+}
+
 /** Add or replace screens in a prototype that's being built in this turn. */
 export function addPrototypeScreens(convId: string, input: { frame_id: string; screens?: ScreenInput[]; start?: string }, building: Set<string>): ActionResult {
   const src = findFrame(convId, input.frame_id)
@@ -202,6 +215,7 @@ export function iteratePrototype(
       screens: merged,
       plannedScreens: plan,
       startScreen: src.startScreen,
+      script: src.script,
       device,
       source: "agent",
       designSystemId: dsIdFor(convId),

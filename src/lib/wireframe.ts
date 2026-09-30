@@ -150,7 +150,7 @@ export const PROTOTYPE_CSS = `
 export const PHONE_SAFE_AREA_CSS = `.wf-status{height:54px;padding:0 30px}.wf-screen:not(:has(>.wf-status)){padding-top:54px}.wf-footer{padding-bottom:30px}.wf-overlay>.wf-sheet{padding-bottom:34px}`
 
 const PROTOTYPE_RUNTIME = `(function(){
-var cur=null,stack=[];
+var cur=null,stack=[],state={},showFns=[];
 function q(s){return document.querySelector(s)}
 function esc(v){return String(v).replace(/["\\\\]/g,"\\\\$&")}
 function screen(id){return q('[data-screen="'+esc(id)+'"]')}
@@ -160,7 +160,15 @@ document.querySelectorAll("[data-screen]").forEach(function(s){s.hidden=s!==t});
 document.querySelectorAll("[data-overlay]").forEach(function(o){o.hidden=true;o.classList.remove("wf-closing")});
 if(mode!=="back"&&mode!=="none"&&cur&&cur!==id)stack.push(cur);
 if(mode!=="none"&&cur&&cur!==id){t.classList.remove("wf-in-fwd","wf-in-back");void t.offsetWidth;t.classList.add(mode==="back"?"wf-in-back":"wf-in-fwd")}
-cur=id;window.scrollTo(0,0);tell()}
+cur=id;window.scrollTo(0,0);tell();render();showFns.forEach(function(f){run(f,id,t)})}
+function report(e){try{parent.postMessage({type:"proto:error",message:String(e&&e.message||e).slice(0,300)},"*")}catch(_){}}
+function run(f,a,b){try{f(a,b)}catch(e){report(e)}}
+function render(){document.querySelectorAll("[data-bind]").forEach(function(el){var k=el.getAttribute("data-bind");if(k in state)el.textContent=state[k]});document.querySelectorAll("[data-show-if]").forEach(function(el){el.hidden=!state[el.getAttribute("data-show-if")]})}
+function openO(id){var s=screen(cur),k=esc(id);var o=(s&&s.querySelector('[data-overlay="'+k+'"]'))||q('[data-overlay="'+k+'"]');if(o){o.classList.remove("wf-closing");o.hidden=false}}
+window.addEventListener("error",function(e){report(e.message)});
+window.prism={state:state,go:function(id){show(id)},back:function(){back()},open:openO,close:function(id){closeO(id?q('[data-overlay="'+esc(id)+'"]'):[].slice.call(document.querySelectorAll("[data-overlay]")).filter(function(x){return!x.hidden}).pop())},
+set:function(k,v){if(k&&typeof k==="object"){for(var x in k)state[x]=k[x]}else state[k]=v;render()},get:function(k){return state[k]},current:function(){return cur},
+onShow:function(f){showFns.push(f);if(cur)run(f,cur,screen(cur))},error:report};
 function back(){if(stack.length)show(stack.pop(),"back")}
 function closeO(o){if(!o||o.hidden||o.classList.contains("wf-closing"))return;o.classList.add("wf-closing");setTimeout(function(){o.hidden=true;o.classList.remove("wf-closing")},200)}
 function hint(){document.body.classList.add("wf-proto-hint");clearTimeout(hint.t);hint.t=setTimeout(function(){document.body.classList.remove("wf-proto-hint")},700)}
@@ -171,7 +179,7 @@ if(!el){if(!e.target.closest("input,textarea,select,label,summary,.wf-proto-nav"
 e.preventDefault();
 if(el.hasAttribute("data-back"))back();
 else if(el.getAttribute("data-go"))show(el.getAttribute("data-go"));
-else if(el.getAttribute("data-open")){var s=screen(cur),id=esc(el.getAttribute("data-open"));var o=(s&&s.querySelector('[data-overlay="'+id+'"]'))||q('[data-overlay="'+id+'"]');if(o){o.classList.remove("wf-closing");o.hidden=false}}
+else if(el.getAttribute("data-open"))openO(el.getAttribute("data-open"));
 else if(el.hasAttribute("data-close")){var n=el.getAttribute("data-close");var o2=n?q('[data-overlay="'+esc(n)+'"]'):el.closest("[data-overlay]");closeO(o2)}
 else if(el.matches("a[href^='#']")){var h=decodeURIComponent(el.getAttribute("href").slice(1));if(screen(h))show(h);if(el.closest(".wf-proto-nav"))el.closest("details").open=false}
 },true);
@@ -241,7 +249,10 @@ export function checkPrototype(screens: PrototypeScreen[], start: string, planne
 }
 
 /** The whole prototype as one document. `standalone` adds a title and a screen menu for the downloaded file. */
-export function buildPrototypeDoc(screens: PrototypeScreen[], start: string, extraCss = "", opts: { title?: string; standalone?: boolean; width?: number } = {}): string {
+/** Prototypes may run model-written script: allow inline code, styles, fonts and images, but no network calls or form posts. */
+const PROTOTYPE_CSP = `default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; img-src * data: blob:; media-src * data: blob:; connect-src 'none'; form-action 'none'`
+
+export function buildPrototypeDoc(screens: PrototypeScreen[], start: string, extraCss = "", opts: { title?: string; standalone?: boolean; width?: number; script?: string } = {}): string {
   const imports = (extraCss.match(/@import[^;]+;/g) ?? []).join("")
   const rest = extraCss.replace(/@import[^;]+;/g, "")
   const first = screens.some((s) => s.id === start) ? start : screens[0]?.id
@@ -250,7 +261,9 @@ export function buildPrototypeDoc(screens: PrototypeScreen[], start: string, ext
     ? `<details class="wf-proto-nav"><summary>Screens</summary><div>${screens.map((s) => `<a href="#${encodeURIComponent(s.id)}">${escapeHtml(s.title)}</a>`).join("")}</div></details>`
     : ""
   const body = screens.map((s) => `<section data-screen="${escapeHtml(s.id)}" data-title="${escapeHtml(s.title)}"${s.id === first ? "" : " hidden"}>${prepareScreenHtml(s.html)}</section>`).join("\n")
-  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${opts.title ? `<title>${escapeHtml(opts.title)}</title>` : ""}<style>${imports}${WF_BASE_CSS}${PROTOTYPE_CSS}${frame}${rest}</style></head><body data-start="${escapeHtml(first ?? "")}">${body}${nav}<script>${PROTOTYPE_RUNTIME}</script></body></html>`
+  // The model's script runs after the runtime, so window.prism exists; a closing tag inside it can't end the block early.
+  const script = opts.script?.trim() ? `<script>(function(){try{\n${opts.script.replace(/<\/script/gi, "<\\/script")}\n}catch(e){prism.error(e)}})()</script>` : ""
+  return `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${PROTOTYPE_CSP}"><meta name="viewport" content="width=device-width,initial-scale=1">${opts.title ? `<title>${escapeHtml(opts.title)}</title>` : ""}<style>${imports}${WF_BASE_CSS}${PROTOTYPE_CSS}${frame}${rest}</style></head><body data-start="${escapeHtml(first ?? "")}">${body}${nav}<script>${PROTOTYPE_RUNTIME}</script>${script}</body></html>`
 }
 
 function escapeHtml(s: string) {

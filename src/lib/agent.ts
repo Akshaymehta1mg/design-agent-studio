@@ -3,7 +3,7 @@ import { z } from "zod"
 import type { ActionLog, Attachment, ChatMessage, Conversation, FrameNode, MessagePart, ProductLibrary } from "./types"
 import { frameLabel, uid, useStore } from "./store"
 import { getLanguageModel, type KeyedProvider } from "./providers"
-import { addMarks, addNote, addPrototypeScreens, createPrototype, createWireframe, createWorkflow, figmaComment, iteratePrototype, iterateWireframe, type ActionResult } from "./canvas-actions"
+import { addMarks, addNote, addPrototypeScreens, setPrototypeScript, createPrototype, createWireframe, createWorkflow, figmaComment, iteratePrototype, iterateWireframe, type ActionResult } from "./canvas-actions"
 import { addPrototypePart, addVisualResearchPart, addWorkflowPart, appendText, askUser, setPlan, upsertPart } from "./message-parts"
 import { dataUrlParts } from "./files"
 import { allDesignSystems, BUILTIN_DESIGN_SYSTEMS, designSystemDigest } from "./design-systems"
@@ -125,14 +125,23 @@ const SCREEN_BLOCKS = `Screen blocks (how prototype screens are delivered)
 </screen>
 - One block per screen, one after another, in plan order. Plain HTML: no code fences, no JSON escaping. Each screen is saved the moment its </screen> arrives, so always finish a block before starting the next.
 - Write every screen in the plan. To fix or replace a screen, write it again with the same id.
+- After the screens, optionally one <prototype-script>…</prototype-script> block for real state (see Interactions).
 - Keep chat text outside the blocks to a sentence or two; the blocks never show in the chat.`
 
 /** Fidelity, interaction and motion rules for every prototype screen. */
 const PROTOTYPE_QUALITY = `Prototype quality (every screen)
 - Mid-fidelity: real layout, hierarchy and content with the design system's colours, type scale, spacing, radii and component shapes (headers, buttons, inputs, cards, chips, lists, tabs, bottom bars), applied with inline styles and the helpers. Real, specific copy, prices, counts and states. Simple inline SVG icons (20–24px, stroke). Images: approved assets or placeholders. Not grey boxes, and not pixel-perfect final UI: no decorative illustration or marketing polish.
 - Every important piece of information is clickable: every button, card, list row, product, price or offer, chip, tab, icon, badge, link and "View details" / "Know more" text. Each tap goes to a real screen (data-go), opens a sheet or dialog with the detail (data-open), or goes back (data-back). No dead taps: when a destination isn't in the plan, open an overlay with its content instead.
-- Only taps work. Never ask the user to swipe, drag, pinch or long-press; give a visible button for every action (e.g. Yes / No buttons on a card, not "swipe right").
-- Motion: screen transitions, sheet slides and dialog pops are automatic. Add your own CSS motion where it helps the flow, in a <style> block with @keyframes inside the screen (a progress bar filling, a success check drawing in, cards entering, a loading shimmer, a badge popping). It plays each time the screen or overlay opens. No scripts.`
+- Every action has a visible button (e.g. Yes / No on a card). A gesture like swipe is only ever an extra, built in the <prototype-script>.
+- Motion: screen transitions, sheet slides and dialog pops are automatic. Add your own CSS motion where it helps the flow, in a <style> block with @keyframes inside the screen (a progress bar filling, a success check drawing in, cards entering, a loading shimmer, a badge popping). It plays each time the screen or overlay opens.`
+
+/** How a prototype gets real state and behaviour. */
+const SCRIPT_RULES = `Interactions (<prototype-script>)
+- Taps between screens and overlays need no code. For behaviour they can't express (a running total or count, selections that change what's shown, a card deck that advances, steppers, filters, form validation, undo), write ONE <prototype-script> block after the screens: plain JavaScript using the prism API. No imports, no network.
+- prism.set(key, value) or prism.set({…}) updates state and fills every [data-bind="key"] element with the value; [data-show-if="key"] is shown only while that state is truthy. Also prism.get(key), prism.go(screenId), prism.back(), prism.open(overlayId), prism.close(), prism.current(), prism.onShow((screenId, el) => …).
+- Wire events with one document.addEventListener("click", e => { const b = e.target.closest("[data-action]"); … }) and data-action / data-* attributes in the screens. Swipe is fine with pointer events, as long as a visible button does the same thing.
+- Screens must still be complete, correct HTML without the script (they're shown as static thumbnails), with initial values in the markup; the script only adds behaviour.
+- Keep it short and defensive (check elements exist). To change it, write the whole block again; later versions keep it until you replace it.`
 
 /** Tools a compact turn keeps (plus markup tools when the designer asks for critique). */
 const COMPACT_TOOLS = new Set(["create_prototype", "add_prototype_screens", "iterate_prototype", "ask_user", "update_plan", "read_design_system", "prism_reference", "create_workflow", "annotate", "comment", "add_note"])
@@ -161,6 +170,8 @@ Rules
 ${SCREEN_BLOCKS}
 
 ${PROTOTYPE_QUALITY}
+
+${SCRIPT_RULES}
 
 Prism core
 ${PRISM_CORE_COMPACT}
@@ -203,7 +214,7 @@ ${opts.markup ? `- annotate: mark regions of a frame (x, y, w, h as fractions 0�
 - prism_reference, read_design_system, search_visual_research, view_visual_research: Prism's references, design system and visual research (see below).${opts.figma ? "\n- figma_comment: post a comment into the linked Figma file. Only when the designer asks for Figma comments, or when they've enabled it and you're giving critique on Figma frames." : ""}
 
 Wireframe HTML
-- Write an HTML fragment for the page body. No <script>, no external fonts, no <html>/<head>.
+- Write an HTML fragment for the page body. No <script> inside screens (behaviour goes in the <prototype-script>), no <html>/<head>.
 - Images: only the design system's approved asset URLs (read_design_system lists them) or supplied images. Otherwise use placeholders: <div class="wf-img" style="height:160px"></div>.
 - Width is fixed by the device (mobile ${mobile.w}px, tablet 820px, desktop 1280px); design for that width. Use real, specific copy.
 - Helper classes: wf-screen (root, full height column), wf-status (phone status bar), wf-bar + wf-title (top bar), wf-body (padded column), wf-footer (bottom action area), wf-row, wf-col, wf-grid, wf-between, wf-h1, wf-h2, wf-h3, wf-text, wf-muted, wf-label, wf-card, wf-fill, wf-divider, wf-img, wf-avatar, wf-icon, wf-btn, wf-btn-primary, wf-btn-block, wf-btn-sm, wf-input, wf-chip, wf-chip-on, wf-tag, wf-list, wf-scroll-x, wf-tabbar, wf-sheet, wf-handle, wf-note. Use inline styles to apply the design system's tokens (colours, type, spacing, radii) wherever the helpers don't match it.
@@ -214,12 +225,14 @@ Prototype links (create_prototype / iterate_prototype)
 - Make every tappable element do something: data-go="screen-id" navigates, data-back goes to the previous screen (use it on back arrows), data-open="overlay-id" shows an overlay, data-close hides the overlay it's inside.
 - Overlays (bottom sheets, dialogs, menus, pickers) live inside the screen that opens them: <div class="wf-overlay" data-overlay="coupon"><div class="wf-sheet">…<div class="wf-btn" data-close>Close</div></div></div>. Add wf-center to the overlay for a centred dialog. They start hidden.
 - Represent other states (empty, error, loading, success) as their own screens and link to them from where they'd happen.
-- Real <input>, <select> and <textarea> elements work, so forms can be typed into. No scripts, no onclick; the studio adds the behaviour.
+- Real <input>, <select> and <textarea> elements work, so forms can be typed into. No onclick attributes: taps use the data-* links, and anything more goes in the <prototype-script>.
 - Up to 12 screens in a prototype.
 
 ${PROTOTYPE_QUALITY}
 
 ${SCREEN_BLOCKS}
+
+${SCRIPT_RULES}
 ${opts.connectors?.length ? `\nConnected tools\n- You can also use tools from: ${opts.connectors.join(", ")}. Tool names are prefixed with the connector.\n` : ""}
 ${PRISM_ADAPTER}
 
@@ -247,7 +260,8 @@ function frameParts(f: FrameNode, c: Conversation, compact = false, building = f
       return [{ type: "text", text: `${header}\nPrototype in progress — ${f.screens.length} screens built: ${manifest}${pendingStr}` }]
     }
     const per = Math.floor((compact ? 12000 : 30000) / f.screens.length)
-    return [{ type: "text", text: `${header}\nPrototype, starts on "${f.startScreen}". Screens:\n${f.screens.map((s) => `── screen id "${s.id}" · ${s.title} ──\n${s.html.slice(0, per)}`).join("\n")}` }]
+    const script = f.script ? `\n── prototype-script ──\n${f.script.slice(0, compact ? 3000 : 8000)}` : ""
+    return [{ type: "text", text: `${header}\nPrototype, starts on "${f.startScreen}". Screens:\n${f.screens.map((s) => `── screen id "${s.id}" · ${s.title} ──\n${s.html.slice(0, per)}`).join("\n")}${script}` }]
   }
   if (f.type === "wireframe") {
     return [{ type: "text", text: `${header}\nHTML source:\n${(f.html ?? "").slice(0, compact ? 6000 : 14000)}` }]
@@ -347,6 +361,9 @@ interface ProtoState {
   active?: string
   /** Screens that arrived before any prototype existed in this turn. */
   pending: StreamedScreen[]
+  pendingScript?: string
+  /** Why the last <prototype-script> wasn't saved, for the repair pass. */
+  scriptError?: string
 }
 
 /** Put streamed screens into the prototype being built, or hold them until one exists. */
@@ -370,6 +387,11 @@ function canvasTools(convId: string, msgId: string, log: (r: ActionResult) => vo
     addPrototypePart(loc, frameId)
     const held = proto.pending.splice(0)
     if (held.length) log(addPrototypeScreens(convId, { frame_id: frameId, screens: held }, building))
+    if (proto.pendingScript) {
+      const r = setPrototypeScript(convId, frameId, proto.pendingScript)
+      proto.scriptError = r.ok ? undefined : r.message
+      proto.pendingScript = undefined
+    }
   }
   const wrap = (r: ActionResult) => {
     log(r)
@@ -855,6 +877,15 @@ export async function runChat(convId: string, userMsg: ChatMessage, opts: { dept
                 useStore.getState().patchMessage(assistantId, { activity: `Drawing ${out.started[out.started.length - 1]}…` }, convId)
               }
               place(out.screens)
+              for (const code of out.scripts) {
+                if (!proto.active) {
+                  proto.pendingScript = code
+                  continue
+                }
+                const r = setPrototypeScript(convId, proto.active, code)
+                proto.scriptError = r.ok ? undefined : r.message
+                debugToolCalls.push({ name: "prototype-script", input: { chars: code.length }, result: r.ok ? r.message : undefined, error: r.ok ? undefined : r.message })
+              }
               if (Date.now() - lastFlush > 50) flush()
             } else if (part.type === "tool-input-start") {
               flush()
@@ -953,6 +984,10 @@ export async function runChat(convId: string, userMsg: ChatMessage, opts: { dept
           proto.building.add(r.frameId)
           proto.active = r.frameId
           addPrototypePart(loc, r.frameId)
+          if (proto.pendingScript) {
+            const s = setPrototypeScript(convId, r.frameId, proto.pendingScript)
+            proto.scriptError = s.ok ? undefined : s.message
+          }
         }
         pushAction(r)
       }
@@ -974,12 +1009,13 @@ export async function runChat(convId: string, userMsg: ChatMessage, opts: { dept
       // Taps that go nowhere (a missing overlay or screen): one pass to rewrite the screens that have them.
       const built = useStore.getState().conversations.find((x) => x.id === convId)?.canvas.nodes.find((n): n is FrameNode => n.id === proto.active && n.kind === "frame")
       const dead = built?.screens?.length && !signal.aborted ? checkPrototype(built.screens, built.startScreen ?? "", (built.plannedScreens ?? []).map((p) => p.id)).broken : []
-      if (built && dead.length) {
-        useStore.getState().patchMessage(assistantId, { activity: "Fixing taps that go nowhere…" }, convId)
-        await pass([
-          ...latest,
-          { role: "user", content: `Some taps in prototype ${built.id} go nowhere: ${dead.slice(0, 24).join("; ")}. Write each affected screen again as a <screen> block with the same id: add the missing overlay (<div class="wf-overlay" data-overlay="…">) inside that screen, or point the tap at an existing screen. Only the blocks.` },
-        ])
+      if (built && !signal.aborted && (dead.length || proto.scriptError)) {
+        useStore.getState().patchMessage(assistantId, { activity: dead.length ? "Fixing taps that go nowhere…" : "Fixing the interactions…" }, convId)
+        const asks = [
+          dead.length ? `Some taps in prototype ${built.id} go nowhere: ${dead.slice(0, 24).join("; ")}. Write each affected screen again as a <screen> block with the same id: add the missing overlay (<div class="wf-overlay" data-overlay="…">) inside that screen, or point the tap at an existing screen.` : "",
+          proto.scriptError ? `${proto.scriptError} Write the whole <prototype-script> block again, fixed.` : "",
+        ]
+        await pass([...latest, { role: "user", content: `${asks.filter(Boolean).join("\n\n")}\n\nOnly the blocks, no other text.` }])
       }
       const mine = getMessage(loc)
       if (!text.trim() && !mine?.parts?.some((p) => p.type === "ask") && mine?.actions?.length) appendText(loc, "Done. The changes are on the canvas.")

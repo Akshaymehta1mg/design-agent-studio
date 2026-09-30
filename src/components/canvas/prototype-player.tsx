@@ -21,7 +21,7 @@ export function prototypeDoc(f: FrameNode, systems: DesignSystem[], standalone =
   // A downloaded file has no server behind it: point the design system's asset paths at this site.
   const origin = typeof location !== "undefined" ? location.origin : ""
   const screens = standalone && origin ? (f.screens ?? []).map((s) => ({ ...s, html: s.html.replace(/(["'(])\/prism\//g, `$1${origin}/prism/`) })) : (f.screens ?? [])
-  return buildPrototypeDoc(screens, f.startScreen ?? "", css, standalone ? { title: f.title, standalone: true, width: phone ? PHONE.w : f.w } : {})
+  return buildPrototypeDoc(screens, f.startScreen ?? "", css, standalone ? { title: f.title, standalone: true, width: phone ? PHONE.w : f.w, script: f.script } : { script: f.script })
 }
 
 const fileName = (f: FrameNode) => `${f.title.replace(/[^\w -]+/g, "").trim().replace(/\s+/g, "-").toLowerCase() || "prototype"}${f.version ? `-v${f.version}` : ""}.html`
@@ -61,15 +61,19 @@ export function PrototypePlayer() {
   const [current, setCurrent] = useState<string | undefined>()
   const [canBack, setCanBack] = useState(false)
   const [scale, setScale] = useState(1)
+  const [scriptError, setScriptError] = useState<string | null>(null)
 
   useEffect(() => {
     setCurrent(f?.startScreen)
     setCanBack(false)
+    setScriptError(null)
   }, [f?.id, f?.startScreen])
 
   useEffect(() => {
     const onMsg = (e: MessageEvent) => {
-      if (e.source !== iframe.current?.contentWindow || e.data?.type !== "proto:screen") return
+      if (e.source !== iframe.current?.contentWindow) return
+      if (e.data?.type === "proto:error") return setScriptError(String(e.data.message ?? "Script error"))
+      if (e.data?.type !== "proto:screen") return
       setCurrent(e.data.id)
       setCanBack(!!e.data.canBack)
     }
@@ -157,6 +161,11 @@ export function PrototypePlayer() {
                     </div>
                   </div>
                 </div>
+                {scriptError && (
+                  <div className="bg-destructive/10 text-destructive absolute right-3 bottom-3 max-w-[360px] rounded-lg border border-destructive/30 px-3 py-2 text-[12px]" role="status">
+                    Interactions script error: {scriptError}
+                  </div>
+                )}
                 {index >= 0 && (
                   <div className="bg-background/90 text-muted-foreground absolute top-3 left-3 rounded-full border px-3 py-1 text-[12px] shadow-xs backdrop-blur">
                     {index + 1} / {screens.length} · {screens[index].title}
