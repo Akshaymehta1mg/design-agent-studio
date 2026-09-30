@@ -61,7 +61,7 @@ class BrowserOAuthProvider implements OAuthClientProvider {
     return OAUTH_CALLBACK()
   }
   get clientMetadata(): OAuthClientMetadata {
-    return { client_name: "Design Agent Studio", redirect_uris: [OAUTH_CALLBACK()], grant_types: ["authorization_code", "refresh_token"], response_types: ["code"], token_endpoint_auth_method: "none" }
+    return { client_name: "Prismu", redirect_uris: [OAUTH_CALLBACK()], grant_types: ["authorization_code", "refresh_token"], response_types: ["code"], token_endpoint_auth_method: "none" }
   }
   state() {
     const state = crypto.randomUUID()
@@ -144,7 +144,7 @@ function friendlyConnectError(e: unknown, c: Connector) {
 
 /** Connect with stored credentials. Never opens a sign-in window. */
 export async function connect(c: Connector): Promise<Client> {
-  const client = new Client({ name: "design-agent-studio", version: "0.1.0" })
+  const client = new Client({ name: "prismu", version: "0.1.0" })
   try {
     await client.connect(transportFor(c))
   } catch (e) {
@@ -160,7 +160,7 @@ export async function connect(c: Connector): Promise<Client> {
 export async function signInConnector(c: Connector, popup: Window | null) {
   if (!popup) throw new Error("Your browser blocked the sign-in window. Allow pop-ups for this site and try again.")
   const provider = new BrowserOAuthProvider(c.id, popup)
-  const first = new Client({ name: "design-agent-studio", version: "0.1.0" })
+  const first = new Client({ name: "prismu", version: "0.1.0" })
   const transport = transportFor(c, provider)
   try {
     await first.connect(transport)

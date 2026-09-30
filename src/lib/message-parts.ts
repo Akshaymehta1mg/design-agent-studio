@@ -83,3 +83,8 @@ export function addWorkflowPart(loc: Loc, frameId: string, workflow: Workflow) {
 export function addPrototypePart(loc: Loc, frameId: string) {
   upsertPart(loc, { type: "prototype", id: uid("pr_"), frameId })
 }
+
+// ───────── visual research ─────────
+export function addVisualResearchPart(loc: Loc, query: string, results: { id: string; title: string; image: string; patterns: string[]; description: string; pin_url: string }[]) {
+  upsertPart(loc, { type: "visual_research", id: uid("vr_"), query, results })
+}

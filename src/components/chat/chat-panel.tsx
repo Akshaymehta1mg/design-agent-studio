@@ -16,6 +16,7 @@ import {
   Paperclip,
   Plus,
   Package,
+  Pencil,
   RotateCcw,
   Settings2,
   Square,
@@ -25,6 +26,7 @@ import {
   MessageSquareText,
   StickyNote,
   AlertCircle,
+  Images,
 } from "@/components/ui/icons"
 import { toast } from "sonner"
 import type { ActionLog, Attachment, ChatMessage, FrameNode } from "@/lib/types"
@@ -32,6 +34,7 @@ import { frameLabel, uid, useActiveConversation, useStore } from "@/lib/store"
 import { runChat, speak, stopAgent } from "@/lib/agent"
 import { addImageFiles } from "@/lib/canvas-actions"
 import { PrototypeCard } from "@/components/canvas/prototype-player"
+import { PHASES, phaseLabel } from "@/lib/phases"
 import { formatBytes, isTextFile, readAsDataUrl, readAsText } from "@/lib/files"
 import { cn } from "@/lib/utils"
 import { hasFigmaAccess } from "@/lib/figma"
@@ -64,6 +67,44 @@ import { WorkflowCard } from "@/components/agents/workflow-graph"
 import { answerAsk, isWaiting } from "@/lib/message-parts"
 import { legacyAnswers } from "@/lib/decisions"
 
+type VisualResearchPart = Extract<MessagePart, { type: "visual_research" }>
+
+function VisualResearchCard({ part }: { part: VisualResearchPart }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="bg-muted/50 rounded-xl border">
+      <button
+        className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left"
+        onClick={() => setOpen((v) => !v)}
+      >
+        <Images className="text-muted-foreground size-3.5 shrink-0" />
+        <span className="text-[13px] font-medium flex-1 truncate">
+          Visual research{part.query ? ` · ${part.query}` : ""}
+        </span>
+        <span className="text-muted-foreground text-[12px]">{part.results.length} screens</span>
+        <ChevronDown className={cn("text-muted-foreground size-3.5 shrink-0 transition-transform", open && "rotate-180")} />
+      </button>
+      {open && (
+        <div className="grid grid-cols-3 gap-2 px-3 pb-3">
+          {part.results.map((r) => (
+            <a key={r.id} href={r.pin_url} target="_blank" rel="noreferrer" className="group flex flex-col gap-1">
+              <div className="bg-background overflow-hidden rounded-lg border">
+                <img
+                  src={r.image}
+                  alt={r.title}
+                  className="block h-28 w-full object-cover object-top transition-opacity group-hover:opacity-90"
+                  loading="lazy"
+                />
+              </div>
+              <p className="text-muted-foreground truncate px-0.5 text-[10.5px] leading-tight">{r.title || r.id}</p>
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 type AskPart = Extract<MessagePart, { type: "ask" }>
 
 function answerList(part: AskPart, answers: ApprovalCardAnswers) {
@@ -87,6 +128,7 @@ function PartView({ part, loc }: { part: MessagePart; loc: { convId: string; msg
   if (part.type === "plan") return <TodoList title={part.title} items={part.items} />
   if (part.type === "workflow") return <WorkflowCard workflow={part.workflow} onOpen={() => focusNode(part.frameId)} />
   if (part.type === "prototype") return <PrototypeCard frameId={part.frameId} />
+  if (part.type === "visual_research") return <VisualResearchCard part={part} />
   // ask
   const live = isWaiting(part.id)
   const status = part.status === "pending" && !live ? "rejected" : part.status
@@ -163,7 +205,7 @@ export function ChatPanel() {
           <div className="mx-auto flex max-w-[760px] flex-col gap-6 px-4 pt-5 pb-44">
             {conv.messages.map((m) => (
               <motion.div key={m.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: EASE_OUT }}>
-                {m.role === "user" ? <UserMessage m={m} /> : <AssistantMessage m={m} convId={conv.id} />}
+                {m.role === "user" ? <UserMessage m={m} convId={conv.id} /> : <AssistantMessage m={m} convId={conv.id} />}
               </motion.div>
             ))}
           </div>
@@ -246,16 +288,102 @@ function Thumb({ a }: { a: Attachment }) {
 
 const COLLAPSED_H = 168
 
-function UserMessage({ m }: { m: ChatMessage }) {
+function UserMessage({ m, convId }: { m: ChatMessage; convId: string }) {
   const atts = m.attachments ?? []
   const body = useRef<HTMLDivElement>(null)
   const [long, setLong] = useState(false)
   const [open, setOpen] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState("")
+  const [copied, setCopied] = useState(false)
+  const [hovered, setHovered] = useState(false)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
   useLayoutEffect(() => {
     if (body.current) setLong(body.current.scrollHeight > COLLAPSED_H + 24)
   }, [m.text])
+
+  // Auto-grow the edit textarea
+  useLayoutEffect(() => {
+    if (editing && textareaRef.current) {
+      const el = textareaRef.current
+      el.style.height = "auto"
+      el.style.height = `${el.scrollHeight}px`
+      el.focus()
+      el.setSelectionRange(el.value.length, el.value.length)
+    }
+  }, [editing, draft])
+
+  const startEdit = () => {
+    setDraft(m.text)
+    setEditing(true)
+  }
+
+  const cancelEdit = () => setEditing(false)
+
+  const saveEdit = () => {
+    const newText = draft.trim()
+    if (!newText || newText === m.text) { setEditing(false); return }
+    const store = useStore.getState()
+    const c = store.conversations.find((x) => x.id === convId)
+    if (!c) { setEditing(false); return }
+    // Find this message's index, keep messages up to and including it, drop everything after
+    const idx = c.messages.findIndex((x) => x.id === m.id)
+    const updatedMsg: ChatMessage = { ...m, text: newText }
+    store.updateConversation(convId, (cc) => ({
+      ...cc,
+      messages: [...cc.messages.slice(0, idx), updatedMsg],
+    }))
+    setEditing(false)
+    runChat(convId, updatedMsg)
+  }
+
+  const copy = () => {
+    navigator.clipboard?.writeText(m.text).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1400)
+    }).catch(() => toast.error("Couldn't copy here."))
+  }
+
+  if (editing) {
+    return (
+      <div className="flex flex-col items-end gap-2 w-full">
+        {atts.length > 0 && (
+          <div className="flex max-w-[90%] flex-wrap justify-end gap-1.5">
+            {atts.map((a, i) => <Thumb key={i} a={a} />)}
+          </div>
+        )}
+        <div className="w-full max-w-[85%]">
+          <textarea
+            ref={textareaRef}
+            value={draft}
+            onChange={(e) => {
+              setDraft(e.target.value)
+              e.target.style.height = "auto"
+              e.target.style.height = `${e.target.scrollHeight}px`
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); saveEdit() }
+              if (e.key === "Escape") cancelEdit()
+            }}
+            className="bg-bubble text-bubble-foreground w-full resize-none overflow-hidden rounded-[20px] px-4 py-2.5 text-[14.5px] leading-[1.6] outline-none ring-2 ring-ring"
+            rows={1}
+          />
+          <div className="mt-1.5 flex justify-end gap-2">
+            <Button variant="ghost" size="sm" className="h-7 text-[13px]" onClick={cancelEdit}>Cancel</Button>
+            <Button size="sm" className="h-7 text-[13px]" onClick={saveEdit}><ArrowUp className="size-3.5" /> Send</Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="flex flex-col items-end gap-1.5">
+    <div
+      className="flex flex-col items-end gap-1.5"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       {atts.length > 0 && (
         <div className="flex max-w-[90%] flex-wrap justify-end gap-1.5">
           {atts.map((a, i) => (
@@ -284,6 +412,43 @@ function UserMessage({ m }: { m: ChatMessage }) {
           </button>
         )}
       </div>
+      {/* hover actions */}
+      <AnimatePresence>
+        {hovered && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.12 }}
+            className="flex items-center gap-0.5"
+          >
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={copy}
+                  aria-label="Copy message"
+                  className="text-muted-foreground hover:text-foreground hover:bg-accent grid size-7 place-items-center rounded-md transition-colors"
+                >
+                  {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Copy</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={startEdit}
+                  aria-label="Edit message"
+                  className="text-muted-foreground hover:text-foreground hover:bg-accent grid size-7 place-items-center rounded-md transition-colors"
+                >
+                  <Pencil className="size-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Edit</TooltipContent>
+            </Tooltip>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -309,6 +474,19 @@ function IconAction({ label, onClick, children }: { label: string; onClick: () =
   )
 }
 
+/** Which step of the Prism loop a reply covered. */
+function StepChip({ phase }: { phase: NonNullable<ChatMessage["phase"]> }) {
+  const i = PHASES.findIndex((p) => p.id === phase)
+  return (
+    <div className="mb-2 flex items-center gap-1.5" aria-label={`Step: ${phaseLabel(phase)}`}>
+      {PHASES.slice(0, 4).map((p, j) => (
+        <span key={p.id} className={cn("h-1 w-5 rounded-full", phase === "refine" || j <= i ? "bg-ember" : "bg-muted")} />
+      ))}
+      <span className="text-muted-foreground ml-1 text-[11.5px] font-medium">{phase === "refine" ? "Refine" : `Step ${i + 1} of 4 · ${phaseLabel(phase)}`}</span>
+    </div>
+  )
+}
+
 function AssistantMessage({ m, convId }: { m: ChatMessage; convId: string }) {
   const focusNode = useStore((s) => s.focusNode)
   const [copied, setCopied] = useState(false)
@@ -330,6 +508,7 @@ function AssistantMessage({ m, convId }: { m: ChatMessage; convId: string }) {
   }
   return (
     <div className="group/msg min-w-0">
+      {m.phase && <StepChip phase={m.phase} />}
       {m.parts?.length ? (
         <div className="flex flex-col gap-4">
           {m.parts.map((p) => (

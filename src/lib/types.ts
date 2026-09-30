@@ -147,6 +147,12 @@ export type MessagePart =
     }
   | { type: "workflow"; id: string; frameId: string; workflow: Workflow }
   | { type: "prototype"; id: string; frameId: string }
+  | {
+      type: "visual_research"
+      id: string
+      query: string
+      results: { id: string; title: string; image: string; patterns: string[]; description: string; pin_url: string }[]
+    }
 
 
 export type Attachment =
@@ -174,6 +180,8 @@ export interface ChatMessage {
   status?: "streaming" | "done" | "error"
   /** what the agent is doing right now, shown while streaming */
   activity?: string
+  /** The Prism step this reply covered */
+  phase?: "discover" | "research" | "directions" | "build" | "refine"
   error?: string
   createdAt: number
 }
@@ -196,6 +204,8 @@ export interface Conversation {
   figma?: FigmaLink
   /** Design system this project designs with */
   designSystemId?: string
+  /** Which step of Prism's loop the agent is on (see src/lib/phases.ts) */
+  phase?: "discover" | "research" | "directions" | "build" | "refine"
 }
 
 // ───────────────────────────── Product library ─────────────────────────────

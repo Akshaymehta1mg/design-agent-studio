@@ -57,7 +57,7 @@ function Assets() {
     <section className="pb-16">
       <div className="mb-4 flex flex-wrap gap-1.5">
         {(Object.keys(LABEL) as (keyof typeof LABEL)[]).map((k) => (
-          <button key={k} onClick={() => setType(k)} className={cn("h-8 rounded-full border px-3 text-[13px] font-medium transition-colors", type === k ? "bg-foreground text-background border-foreground" : "hover:bg-accent")}>
+          <button key={k} onClick={() => setType(k)} className={cn("h-8 rounded-full border px-3 text-[13px] font-medium transition-colors", type === k ? "bg-primary text-primary-foreground border-primary" : "hover:bg-accent")}>
             {LABEL[k]}
           </button>
         ))}

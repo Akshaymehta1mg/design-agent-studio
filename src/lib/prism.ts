@@ -9,8 +9,10 @@
  */
 import PRISM_SKILL from "@/prism/core/SKILL.md?raw"
 import TATA_1MG_GUIDE from "@/prism/design-system/tata-1mg-development-design-system.md?raw"
+import TATA_1MG_TOKENS_RAW from "@/prism/design-system/tata-1mg.tokens.md?raw"
 
 export { TATA_1MG_GUIDE }
+export const TATA_1MG_TOKENS = TATA_1MG_TOKENS_RAW
 
 const stripFrontMatter = (md: string) => md.replace(/^---\n[\s\S]*?\n---\n+/, "")
 
@@ -119,7 +121,7 @@ export async function visualResearchPatterns(): Promise<string[]> {
 
 // ───────── how Prism's file references map onto this studio ─────────
 
-export const PRISM_ADAPTER = `How Prism runs inside Design Agent Studio
+export const PRISM_ADAPTER = `How Prism runs inside Prismu
 Prism below was written for a coding agent reading files. Here, its files are reached through tools:
 - "prism-core/references/<name>.md" and "prism-core/skills/mobbin-visual-pattern-research/SKILL.md": call prism_reference with the file name (e.g. "wireframe", "mobbin-visual-pattern-research"). Load a reference only when the current output needs it, as Prism says.
 - "tata-1mg-development-design-system.md" and "tata-1mg-development-design-system/design-system.html": the project's design system (the Design systems page). Its guide is included below when the project uses it. Call read_design_system with a section ("colors", "typography", "spacing", "corner-radius", "shadows", "buttons", "input-fields", "chips", "sku-cards", "actionbar", "page-header", "labs-home"…) to get that part of the component reference as exact specs, before building anything that uses it. With no arguments it lists every section and the approved asset URLs.
