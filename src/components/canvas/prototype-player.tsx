@@ -1,17 +1,62 @@
 import { useEffect, useMemo, useRef, useState } from "react"
-import { ArrowLeft, Download, ExternalLink, Play, RotateCcw, Smartphone } from "@/components/ui/icons"
+import { ArrowLeft, Download, ExternalLink, LayoutGrid, Play, RotateCcw, Smartphone } from "@/components/ui/icons"
 import type { DesignSystem, FrameNode } from "@/lib/types"
 import { useStore } from "@/lib/store"
 import { allDesignSystems, wireframeVars } from "@/lib/design-systems"
-import { buildPrototypeDoc } from "@/lib/wireframe"
+import { buildPrototypeDoc, DEVICE_SIZES, PHONE_SAFE_AREA_CSS } from "@/lib/wireframe"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
 
+const isPhone = (f: FrameNode) => (f.device ?? (f.w < 600 ? "mobile" : "desktop")) === "mobile"
+/** Phones play on an iPhone 17 screen, whatever size the frame was drawn at. */
+const PHONE = DEVICE_SIZES.mobile
+const BEZEL = 12
+
 /** The prototype as one HTML document; `standalone` is the downloadable file. */
 export function prototypeDoc(f: FrameNode, systems: DesignSystem[], standalone = false) {
   const ds = systems.find((d) => d.id === f.designSystemId)
-  return buildPrototypeDoc(f.screens ?? [], f.startScreen ?? "", wireframeVars(ds), standalone ? { title: f.title, standalone: true, width: f.w } : {})
+  const phone = isPhone(f)
+  const css = wireframeVars(ds) + (phone && !standalone ? PHONE_SAFE_AREA_CSS : "")
+  // A downloaded file has no server behind it: point the design system's asset paths at this site.
+  const origin = typeof location !== "undefined" ? location.origin : ""
+  const screens = standalone && origin ? (f.screens ?? []).map((s) => ({ ...s, html: s.html.replace(/(["'(])\/prism\//g, `$1${origin}/prism/`) })) : (f.screens ?? [])
+  return buildPrototypeDoc(screens, f.startScreen ?? "", css, standalone ? { title: f.title, standalone: true, width: phone ? PHONE.w : f.w, script: f.script } : { script: f.script })
+}
+
+/** Scale of each phone in the storyboard. */
+const BOARD = 0.56
+
+/** Every screen side by side as a static phone; clicking one opens the flow there. */
+function Storyboard({ f, systems, onPick }: { f: FrameNode; systems: DesignSystem[]; onPick: (id: string) => void }) {
+  const phone = isPhone(f)
+  const w = phone ? PHONE.w : f.w
+  const h = phone ? PHONE.h : f.h
+  const css = useMemo(() => wireframeVars(systems.find((d) => d.id === f.designSystemId)) + (phone ? PHONE_SAFE_AREA_CSS : ""), [f.designSystemId, systems, phone])
+  return (
+    <div className="bg-canvas absolute inset-0 z-10 overflow-auto p-8" data-scrollable>
+      <div className="flex flex-wrap gap-x-8 gap-y-10">
+        {(f.screens ?? []).map((s, i) => (
+          <button key={s.id} onClick={() => onPick(s.id)} className="group flex flex-col gap-2 text-left" title={`Open ${s.title} in the flow`}>
+            <span className="text-muted-foreground group-hover:text-foreground text-[12px] font-medium">
+              {i + 1} · {s.title}
+            </span>
+            <span className={cn("block overflow-hidden bg-white shadow-md ring-1 ring-black/10 transition-shadow group-hover:shadow-xl group-hover:ring-black/25", phone ? "rounded-[30px]" : "rounded-xl")} style={{ width: w * BOARD, height: h * BOARD }}>
+              <iframe
+                title={s.title}
+                srcDoc={buildPrototypeDoc([s], s.id, css)}
+                sandbox="allow-scripts"
+                tabIndex={-1}
+                loading="lazy"
+                className="pointer-events-none block origin-top-left border-0 bg-white"
+                style={{ width: w, height: h, transform: `scale(${BOARD})` }}
+              />
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 const fileName = (f: FrameNode) => `${f.title.replace(/[^\w -]+/g, "").trim().replace(/\s+/g, "-").toLowerCase() || "prototype"}${f.version ? `-v${f.version}` : ""}.html`
@@ -51,15 +96,21 @@ export function PrototypePlayer() {
   const [current, setCurrent] = useState<string | undefined>()
   const [canBack, setCanBack] = useState(false)
   const [scale, setScale] = useState(1)
+  const [scriptError, setScriptError] = useState<string | null>(null)
+  const [board, setBoard] = useState(false)
 
   useEffect(() => {
     setCurrent(f?.startScreen)
     setCanBack(false)
+    setScriptError(null)
   }, [f?.id, f?.startScreen])
+  useEffect(() => setBoard(false), [f?.id])
 
   useEffect(() => {
     const onMsg = (e: MessageEvent) => {
-      if (e.source !== iframe.current?.contentWindow || e.data?.type !== "proto:screen") return
+      if (e.source !== iframe.current?.contentWindow) return
+      if (e.data?.type === "proto:error") return setScriptError(String(e.data.message ?? "Script error"))
+      if (e.data?.type !== "proto:screen") return
       setCurrent(e.data.id)
       setCanBack(!!e.data.canBack)
     }
@@ -68,8 +119,11 @@ export function PrototypePlayer() {
   }, [])
 
   // Fit the device into the stage (the stage mounts with the dialog, hence the callback ref).
-  const fw = f?.w ?? 0
-  const fh = f?.h ?? 0
+  const phone = !!f && isPhone(f)
+  const sw = phone ? PHONE.w : (f?.w ?? 0)
+  const sh = phone ? PHONE.h : (f?.h ?? 0)
+  const fw = phone ? sw + BEZEL * 2 : sw
+  const fh = phone ? sh + BEZEL * 2 : sh
   useEffect(() => {
     if (!stage || !fw) return
     const fit = () => setScale(Math.max(0.3, Math.min(1, (stage.clientHeight - 32) / fh, (stage.clientWidth - 32) / fw)))
@@ -98,10 +152,18 @@ export function PrototypePlayer() {
                   {screens.length} screens · click through it like the real thing. Esc closes an open sheet, or goes back.
                 </DialogDescription>
               </div>
-              <Button variant="ghost" size="sm" className="h-8" disabled={!canBack} onClick={() => send({ type: "proto:back" })}>
+              <div className="bg-muted flex rounded-md p-0.5" role="tablist" aria-label="View">
+                <button role="tab" aria-selected={!board} onClick={() => setBoard(false)} className={cn("flex h-7 items-center gap-1.5 rounded px-2.5 text-[12.5px]", !board ? "bg-background font-medium shadow-xs" : "text-muted-foreground")}>
+                  <Play className="size-3.5" /> Flow
+                </button>
+                <button role="tab" aria-selected={board} onClick={() => setBoard(true)} className={cn("flex h-7 items-center gap-1.5 rounded px-2.5 text-[12.5px]", board ? "bg-background font-medium shadow-xs" : "text-muted-foreground")}>
+                  <LayoutGrid className="size-3.5" /> Storyboard
+                </button>
+              </div>
+              <Button variant="ghost" size="sm" className="h-8" disabled={!canBack || board} onClick={() => send({ type: "proto:back" })}>
                 <ArrowLeft /> Back
               </Button>
-              <Button variant="ghost" size="sm" className="h-8" onClick={() => send({ type: "proto:restart" })}>
+              <Button variant="ghost" size="sm" className="h-8" disabled={board} onClick={() => send({ type: "proto:restart" })}>
                 <RotateCcw /> Restart
               </Button>
               <Button variant="ghost" size="sm" className="h-8" onClick={() => openPrototypeInTab(f)}>
@@ -111,7 +173,17 @@ export function PrototypePlayer() {
                 <Download /> Download HTML
               </Button>
             </header>
-            <div className="flex min-h-0 flex-1">
+            <div className="relative flex min-h-0 flex-1">
+              {board && (
+                <Storyboard
+                  f={f}
+                  systems={allDesignSystems(custom)}
+                  onPick={(id) => {
+                    setBoard(false)
+                    send({ type: "proto:go", id })
+                  }}
+                />
+              )}
               <nav className="bg-sidebar hidden w-[220px] shrink-0 flex-col gap-px overflow-y-auto border-r p-2 md:flex" aria-label="Screens" data-scrollable>
                 <div className="text-muted-foreground px-2 pt-1 pb-1.5 text-[11px] font-medium">Screens</div>
                 {screens.map((s, i) => (
@@ -128,17 +200,27 @@ export function PrototypePlayer() {
                 ))}
               </nav>
               <div ref={setStage} className="bg-canvas relative grid min-w-0 flex-1 place-items-center overflow-hidden">
-                <div className="overflow-hidden rounded-[22px] border bg-white shadow-lg" style={{ width: f.w * scale, height: f.h * scale }}>
-                  <iframe
-                    ref={iframe}
-                    key={f.id}
-                    title={`${f.title} prototype`}
-                    srcDoc={doc}
-                    sandbox="allow-scripts allow-forms"
-                    className="origin-top-left border-0 bg-white"
-                    style={{ width: f.w, height: f.h, transform: `scale(${scale})` }}
-                  />
+                <div style={{ width: fw * scale, height: fh * scale }}>
+                  <div
+                    className={cn("relative origin-top-left", phone ? "rounded-[68px] bg-[#0b0b0c] shadow-2xl ring-1 ring-black/40" : "overflow-hidden rounded-[22px] border bg-white shadow-lg")}
+                    style={{ width: fw, height: fh, padding: phone ? BEZEL : 0, transform: `scale(${scale})` }}
+                  >
+                    <div className={cn("relative h-full w-full overflow-hidden bg-white", phone && "rounded-[56px]")}>
+                      <iframe ref={iframe} key={f.id} title={`${f.title} prototype`} srcDoc={doc} sandbox="allow-scripts allow-forms" className="block border-0 bg-white" style={{ width: sw, height: sh }} />
+                      {phone && (
+                        <>
+                          <div aria-hidden className="pointer-events-none absolute top-[11px] left-1/2 h-[37px] w-[125px] -translate-x-1/2 rounded-full bg-black" />
+                          <div aria-hidden className="pointer-events-none absolute bottom-[8px] left-1/2 h-[5px] w-[139px] -translate-x-1/2 rounded-full bg-black/80" />
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
+                {scriptError && (
+                  <div className="bg-destructive/10 text-destructive absolute right-3 bottom-3 max-w-[360px] rounded-lg border border-destructive/30 px-3 py-2 text-[12px]" role="status">
+                    Interactions script error: {scriptError}
+                  </div>
+                )}
                 {index >= 0 && (
                   <div className="bg-background/90 text-muted-foreground absolute top-3 left-3 rounded-full border px-3 py-1 text-[12px] shadow-xs backdrop-blur">
                     {index + 1} / {screens.length} · {screens[index].title}

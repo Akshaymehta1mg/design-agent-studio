@@ -23,6 +23,8 @@ export interface FrameNode {
   startScreen?: string
   /** Every screen the agent planned, including ones it hasn't added yet */
   plannedScreens?: { id: string; title: string }[]
+  /** A prototype's shared behaviour: JavaScript run in the player with the prism API (see wireframe.ts) */
+  script?: string
   /** Graph for workflow frames */
   workflow?: Workflow
   device?: Device

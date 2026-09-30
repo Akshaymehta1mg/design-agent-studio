@@ -278,6 +278,10 @@ interface State {
   patchSettings: (patch: Partial<Settings>) => void
   patchProvider: (id: ProviderId, patch: Partial<ProviderKeyState>) => void
   patchProduct: (patch: Partial<ProductLibrary> | ((p: ProductLibrary) => Partial<ProductLibrary>)) => void
+
+  debugLogs: import("./debug-log").DebugLogEntry[]
+  appendDebugLog: (log: import("./debug-log").DebugLogEntry) => void
+  clearDebugLogs: () => void
 }
 
 export const useStore = create<State>()(
@@ -318,6 +322,9 @@ export const useStore = create<State>()(
       openNotes: (id) => set({ reading: id }),
       settingsOpen: false,
       busy: false,
+      debugLogs: [],
+      appendDebugLog: (log) => set((s) => ({ debugLogs: [log, ...s.debugLogs].slice(0, 100) })),
+      clearDebugLogs: () => set({ debugLogs: [] }),
 
       setMode: (mode) => set({ mode }),
       setTool: (tool) => set({ tool }),
@@ -430,6 +437,7 @@ export const useStore = create<State>()(
         defaultDesignSystemId: s.defaultDesignSystemId,
         designEdits: s.designEdits,
         connectors: s.connectors.map((c) => ({ ...c, status: c.status === "checking" ? ("untested" as const) : c.status })),
+        debugLogs: s.debugLogs,
       }),
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<State>

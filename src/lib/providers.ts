@@ -140,9 +140,9 @@ export function getLanguageModel(provider: KeyedProvider, modelId: string, state
       case "google":
         return createGoogleGenerativeAI({ apiKey: "server", baseURL: `${base}/v1beta`, headers })(modelId)
       case "openrouter":
-        return createOpenAICompatible({ name: "openrouter", baseURL: `${base}/v1`, apiKey: "server", headers: { ...headers, "X-Title": "Prismu" } })(modelId)
+        return createOpenAICompatible({ name: "openrouter", baseURL: `${base}/v1`, apiKey: "server", headers: { ...headers, "X-Title": "Prismu" }, includeUsage: true })(modelId)
       case "moonshot":
-        return createOpenAICompatible({ name: "moonshot", baseURL: `${base}/v1`, apiKey: "server", headers })(modelId)
+        return createOpenAICompatible({ name: "moonshot", baseURL: `${base}/v1`, apiKey: "server", headers, includeUsage: true })(modelId)
     }
   }
   switch (provider) {
@@ -158,11 +158,12 @@ export function getLanguageModel(provider: KeyedProvider, modelId: string, state
         baseURL: "https://openrouter.ai/api/v1",
         apiKey: key,
         headers: { "HTTP-Referer": typeof location !== "undefined" ? location.origin : "", "X-Title": "Prismu" },
+        includeUsage: true,
       })(modelId)
     case "moonshot":
-      return createOpenAICompatible({ name: "moonshot", baseURL: `${MOONSHOT_BASE}/v1`, apiKey: key })(modelId)
+      return createOpenAICompatible({ name: "moonshot", baseURL: `${MOONSHOT_BASE}/v1`, apiKey: key, includeUsage: true })(modelId)
     case "custom":
-      return createOpenAICompatible({ name: "custom", baseURL: (state.baseUrl ?? "").replace(/\/+$/, ""), apiKey: key || undefined })(modelId)
+      return createOpenAICompatible({ name: "custom", baseURL: (state.baseUrl ?? "").replace(/\/+$/, ""), apiKey: key || undefined, includeUsage: true })(modelId)
   }
 }
 
