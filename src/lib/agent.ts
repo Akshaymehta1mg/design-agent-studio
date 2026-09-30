@@ -15,7 +15,8 @@ import { ScreenStream, type StreamedScreen } from "./screen-stream"
 
 const MAX_ASKS_PER_TURN = 2
 import { loadPrismDoc, PRISM_ADAPTER, PRISM_CORE, PRISM_CORE_COMPACT, PRISM_DOCS, RX_FALLBACK_IMAGE, searchDesignSystemReference, searchVisualResearch, TATA_1MG_ASSET_BASE, TATA_1MG_TOKENS, VISUAL_RESEARCH_URL, visualResearchPatterns } from "./prism"
-import { checkPrototype, DEVICE_SIZES } from "./wireframe"
+import { checkPrototype, DEVICE_SIZES, screenSlug } from "./wireframe"
+import { screenshotScreens } from "./screen-shot"
 import { imageForModel } from "./relay"
 import { editsSummary, loadDesignReference, referenceIndex, referenceKeys, referenceSection } from "./design-reference"
 import DS_ASSETS from "@/prism/design-system/assets.json"
@@ -146,6 +147,9 @@ Visual craft
 - Real names, numbers, prices and dates at realistic lengths; tabular figures for numbers; long text truncates cleanly.
 - The details that make it feel real: a sticky bottom action bar where there's a primary action, a selected state for everything selectable, designed empty / loading / success states, 44px minimum touch targets, one icon style and size.
 - Use the design system's font, always with a fallback stack (e.g. Figtree, system-ui, sans-serif). For display headings you may @import one Google Font at the top of a screen's <style>, if the design system allows a display face.`
+
+/** Sent with screenshots of the screens the model just wrote. */
+const SELF_REVIEW = `Here is how the screens you just wrote actually render on the phone (at rest, before any taps). Review them as a senior visual designer against your Direction and the Visual craft rules: broken or overlapping layout, clipped or overflowing text, content hidden under the status bar or bottom bar, misaligned edges, weak hierarchy, cramped or uneven spacing, inconsistent components, areas that look unfinished. Rewrite only the screens that need it, as <screen> blocks with the same ids. If they all look right, reply with one short line and nothing else.`
 
 /** How a prototype gets real state and behaviour. */
 const SCRIPT_RULES = `Interactions (<prototype-script>)
@@ -376,6 +380,8 @@ interface ProtoState {
   pendingScript?: string
   /** Why the last <prototype-script> wasn't saved, for the repair pass. */
   scriptError?: string
+  /** Screens written in this turn, for the self-review. */
+  touched: Set<string>
 }
 
 /** Put streamed screens into the prototype being built, or hold them until one exists. */
@@ -789,7 +795,7 @@ export async function runChat(convId: string, userMsg: ChatMessage, opts: { dept
       const live = compact ? [] : useStore.getState().connectors.filter((x) => x.enabled && x.status === "ok")
       if (live.length) useStore.getState().patchMessage(assistantId, { activity: "Connecting your tools…" }, convId)
       const mcp = live.length ? await connectorTools(live) : { tools: {}, close: () => {}, failed: [] as string[] }
-      const proto: ProtoState = { building: new Set(), pending: [] }
+      const proto: ProtoState = { building: new Set(), pending: [], touched: new Set() }
       closeMcp = mcp.close
       const loc = { convId, msgId: assistantId }
       const nextPhase = tool({
@@ -857,6 +863,8 @@ export async function runChat(convId: string, userMsg: ChatMessage, opts: { dept
           lastFlush = Date.now()
         }
         const show = (t: string) => {
+          // Blocks leave blank lines behind; don't let them pile up in the chat.
+          if (!t.trim() && /\n\s*$/.test(text + buffered)) return
           text += t
           stepText += t
           buffered += t
@@ -867,7 +875,10 @@ export async function runChat(convId: string, userMsg: ChatMessage, opts: { dept
           flush()
           const r = placeScreens(convId, proto, done)
           if (r) {
-            if (r.ok) screensPlaced += done.length
+            if (r.ok) {
+              screensPlaced += done.length
+              for (const d of done) proto.touched.add(screenSlug(d.id || d.title))
+            }
             else pushAction({ ok: false, message: "", log: { id: uid(), label: `Screen ${done.map((d) => d.title).join(", ")} failed`, tone: "error" } })
             debugToolCalls.push({ name: "screen", input: done.map((d) => ({ id: d.id, title: d.title, htmlChars: d.html.length })), result: r.ok ? r.message : undefined, error: r.ok ? undefined : r.message })
           }
@@ -1028,6 +1039,19 @@ export async function runChat(convId: string, userMsg: ChatMessage, opts: { dept
           proto.scriptError ? `${proto.scriptError} Write the whole <prototype-script> block again, fixed.` : "",
         ]
         await pass([...latest, { role: "user", content: `${asks.filter(Boolean).join("\n\n")}\n\nOnly the blocks, no other text.` }])
+      }
+      // Self-review: show a vision model how its screens actually render, once, and let it fix what looks off.
+      const done = useStore.getState().conversations.find((x) => x.id === convId)?.canvas.nodes.find((n): n is FrameNode => n.id === proto.active && n.kind === "frame")
+      if (done?.screens?.length && proto.touched.size && readsImages && !signal.aborted) {
+        useStore.getState().patchMessage(assistantId, { activity: "Reviewing how the screens look…" }, convId)
+        const shots = await screenshotScreens(done, designSystemFor(c), [...proto.touched])
+        if (shots.length && !signal.aborted) {
+          const images = shots.flatMap((s) => {
+            const d = dataUrlParts(s.jpeg)
+            return d ? [{ type: "text" as const, text: `Screen "${s.id}" · ${s.title}` }, { type: "image" as const, image: d.base64, mediaType: d.mediaType }] : []
+          })
+          await pass([...latest, { role: "user", content: [{ type: "text", text: SELF_REVIEW }, ...images] as never }])
+        }
       }
       const mine = getMessage(loc)
       if (!text.trim() && !mine?.parts?.some((p) => p.type === "ask") && mine?.actions?.length) appendText(loc, "Done. The changes are on the canvas.")
