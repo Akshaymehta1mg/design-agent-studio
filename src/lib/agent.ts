@@ -142,7 +142,7 @@ Rules
 Prism core
 ${PRISM_CORE_COMPACT}
 
-${designSystemDigest(ds)}
+${ds.id === "tata-1mg-development" ? `Design system for this project: ${ds.name}\n${TATA_1MG_TOKENS}` : designSystemDigest(ds)}
 ${edits ? `Team edits (override the above):\n${edits}\n` : ""}
 ${decisionsSection(c)}${ctx ? `Product context\n${ctx.slice(0, 1200)}\n\n` : ""}Canvas
 ${inventory.slice(-12).join("\n")}`
