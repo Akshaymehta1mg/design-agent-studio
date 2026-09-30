@@ -133,7 +133,18 @@ const PROTOTYPE_QUALITY = `Prototype quality (every screen)
 - Mid-fidelity: real layout, hierarchy and content with the design system's colours, type scale, spacing, radii and component shapes (headers, buttons, inputs, cards, chips, lists, tabs, bottom bars), applied with inline styles and the helpers. Real, specific copy, prices, counts and states. Simple inline SVG icons (20–24px, stroke). Images: approved assets or placeholders. Not grey boxes, and not pixel-perfect final UI: no decorative illustration or marketing polish.
 - Every important piece of information is clickable: every button, card, list row, product, price or offer, chip, tab, icon, badge, link and "View details" / "Know more" text. Each tap goes to a real screen (data-go), opens a sheet or dialog with the detail (data-open), or goes back (data-back). No dead taps: when a destination isn't in the plan, open an overlay with its content instead.
 - Every action has a visible button (e.g. Yes / No on a card). A gesture like swipe is only ever an extra, built in the <prototype-script>.
-- Motion: screen transitions, sheet slides and dialog pops are automatic. Add your own CSS motion where it helps the flow, in a <style> block with @keyframes inside the screen (a progress bar filling, a success check drawing in, cards entering, a loading shimmer, a badge popping). It plays each time the screen or overlay opens.`
+- Motion: screen transitions, sheet slides and dialog pops are automatic. Add your own CSS motion where it helps the flow, in a <style> block with @keyframes inside the screen (a progress bar filling, a success check drawing in, cards entering, a loading shimmer, a badge popping). It plays each time the screen or overlay opens.
+
+Visual craft
+- Decide the visual direction once, before the first screen, and say it in one line of chat ("Direction: …": display type, how the accent is used, density, surface style). Apply it to every screen. Stay inside the design system's tokens, but choose within them deliberately.
+- One clear focal point per screen. Few type steps (title, section, body, caption); size and weight carry hierarchy, not colour.
+- An 8-point spacing rhythm: related items close together, groups clearly apart, one page margin and one left edge.
+- Mostly neutral surfaces. The accent only on the primary action and key highlights; semantic colours only for status; light tints for chips, badges and selected states.
+- Flat layout with dividers or subtle fills; shadows only on floating things (sheets, sticky bars, raised cards).
+- The same component always looks the same across screens (header, card, list row, button).
+- Real names, numbers, prices and dates at realistic lengths; tabular figures for numbers; long text truncates cleanly.
+- The details that make it feel real: a sticky bottom action bar where there's a primary action, a selected state for everything selectable, designed empty / loading / success states, 44px minimum touch targets, one icon style and size.
+- Use the design system's font. For display headings you may @import one Google Font at the top of a screen's <style>, if the design system allows a display face.`
 
 /** How a prototype gets real state and behaviour. */
 const SCRIPT_RULES = `Interactions (<prototype-script>)
