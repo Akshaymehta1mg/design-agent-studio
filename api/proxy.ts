@@ -2,7 +2,7 @@
 // vercel.json rewrites /api/p/:upstream/:path* here.
 import { UPSTREAMS, checkAccess, json, serverKey, type Upstream } from "./_shared"
 
-export const config = { runtime: "edge" }
+export const config = { runtime: "nodejs", maxDuration: 300 }
 
 // Headers the browser sends that must not reach the provider.
 const DROP = new Set(["host", "x-access-code", "cookie", "origin", "referer", "x-api-key", "authorization", "x-goog-api-key", "x-figma-token", "content-length", "connection", "accept-encoding"])
