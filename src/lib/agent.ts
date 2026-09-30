@@ -125,6 +125,7 @@ const SCREEN_BLOCKS = `Screen blocks (how prototype screens are delivered)
 </screen>
 - One block per screen, one after another, in plan order. Plain HTML: no code fences, no JSON escaping. Each screen is saved the moment its </screen> arrives, so always finish a block before starting the next.
 - Write every screen in the plan. To fix or replace a screen, write it again with the same id.
+- Plan the right number of screens. For an exploratory brief (a new concept or a direction to evaluate), plan 4–6 key moments that tell the story end to end, each fully realised, rather than every screen and state; the designer sees them side by side in the Storyboard view. For a flow to hand over, plan every screen and essential state (up to 12).
 - After the screens, optionally one <prototype-script>…</prototype-script> block for real state (see Interactions).
 - Keep chat text outside the blocks to a sentence or two; the blocks never show in the chat.`
 
@@ -144,7 +145,7 @@ Visual craft
 - The same component always looks the same across screens (header, card, list row, button).
 - Real names, numbers, prices and dates at realistic lengths; tabular figures for numbers; long text truncates cleanly.
 - The details that make it feel real: a sticky bottom action bar where there's a primary action, a selected state for everything selectable, designed empty / loading / success states, 44px minimum touch targets, one icon style and size.
-- Use the design system's font. For display headings you may @import one Google Font at the top of a screen's <style>, if the design system allows a display face.`
+- Use the design system's font, always with a fallback stack (e.g. Figtree, system-ui, sans-serif). For display headings you may @import one Google Font at the top of a screen's <style>, if the design system allows a display face.`
 
 /** How a prototype gets real state and behaviour. */
 const SCRIPT_RULES = `Interactions (<prototype-script>)

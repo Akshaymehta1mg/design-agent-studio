@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react"
-import { ArrowLeft, Download, ExternalLink, Play, RotateCcw, Smartphone } from "@/components/ui/icons"
+import { ArrowLeft, Download, ExternalLink, LayoutGrid, Play, RotateCcw, Smartphone } from "@/components/ui/icons"
 import type { DesignSystem, FrameNode } from "@/lib/types"
 import { useStore } from "@/lib/store"
 import { allDesignSystems, wireframeVars } from "@/lib/design-systems"
@@ -22,6 +22,41 @@ export function prototypeDoc(f: FrameNode, systems: DesignSystem[], standalone =
   const origin = typeof location !== "undefined" ? location.origin : ""
   const screens = standalone && origin ? (f.screens ?? []).map((s) => ({ ...s, html: s.html.replace(/(["'(])\/prism\//g, `$1${origin}/prism/`) })) : (f.screens ?? [])
   return buildPrototypeDoc(screens, f.startScreen ?? "", css, standalone ? { title: f.title, standalone: true, width: phone ? PHONE.w : f.w, script: f.script } : { script: f.script })
+}
+
+/** Scale of each phone in the storyboard. */
+const BOARD = 0.56
+
+/** Every screen side by side as a static phone; clicking one opens the flow there. */
+function Storyboard({ f, systems, onPick }: { f: FrameNode; systems: DesignSystem[]; onPick: (id: string) => void }) {
+  const phone = isPhone(f)
+  const w = phone ? PHONE.w : f.w
+  const h = phone ? PHONE.h : f.h
+  const css = useMemo(() => wireframeVars(systems.find((d) => d.id === f.designSystemId)) + (phone ? PHONE_SAFE_AREA_CSS : ""), [f.designSystemId, systems, phone])
+  return (
+    <div className="bg-canvas absolute inset-0 z-10 overflow-auto p-8" data-scrollable>
+      <div className="flex flex-wrap gap-x-8 gap-y-10">
+        {(f.screens ?? []).map((s, i) => (
+          <button key={s.id} onClick={() => onPick(s.id)} className="group flex flex-col gap-2 text-left" title={`Open ${s.title} in the flow`}>
+            <span className="text-muted-foreground group-hover:text-foreground text-[12px] font-medium">
+              {i + 1} · {s.title}
+            </span>
+            <span className={cn("block overflow-hidden bg-white shadow-md ring-1 ring-black/10 transition-shadow group-hover:shadow-xl group-hover:ring-black/25", phone ? "rounded-[30px]" : "rounded-xl")} style={{ width: w * BOARD, height: h * BOARD }}>
+              <iframe
+                title={s.title}
+                srcDoc={buildPrototypeDoc([s], s.id, css)}
+                sandbox="allow-scripts"
+                tabIndex={-1}
+                loading="lazy"
+                className="pointer-events-none block origin-top-left border-0 bg-white"
+                style={{ width: w, height: h, transform: `scale(${BOARD})` }}
+              />
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 const fileName = (f: FrameNode) => `${f.title.replace(/[^\w -]+/g, "").trim().replace(/\s+/g, "-").toLowerCase() || "prototype"}${f.version ? `-v${f.version}` : ""}.html`
@@ -62,12 +97,14 @@ export function PrototypePlayer() {
   const [canBack, setCanBack] = useState(false)
   const [scale, setScale] = useState(1)
   const [scriptError, setScriptError] = useState<string | null>(null)
+  const [board, setBoard] = useState(false)
 
   useEffect(() => {
     setCurrent(f?.startScreen)
     setCanBack(false)
     setScriptError(null)
   }, [f?.id, f?.startScreen])
+  useEffect(() => setBoard(false), [f?.id])
 
   useEffect(() => {
     const onMsg = (e: MessageEvent) => {
@@ -115,10 +152,18 @@ export function PrototypePlayer() {
                   {screens.length} screens · click through it like the real thing. Esc closes an open sheet, or goes back.
                 </DialogDescription>
               </div>
-              <Button variant="ghost" size="sm" className="h-8" disabled={!canBack} onClick={() => send({ type: "proto:back" })}>
+              <div className="bg-muted flex rounded-md p-0.5" role="tablist" aria-label="View">
+                <button role="tab" aria-selected={!board} onClick={() => setBoard(false)} className={cn("flex h-7 items-center gap-1.5 rounded px-2.5 text-[12.5px]", !board ? "bg-background font-medium shadow-xs" : "text-muted-foreground")}>
+                  <Play className="size-3.5" /> Flow
+                </button>
+                <button role="tab" aria-selected={board} onClick={() => setBoard(true)} className={cn("flex h-7 items-center gap-1.5 rounded px-2.5 text-[12.5px]", board ? "bg-background font-medium shadow-xs" : "text-muted-foreground")}>
+                  <LayoutGrid className="size-3.5" /> Storyboard
+                </button>
+              </div>
+              <Button variant="ghost" size="sm" className="h-8" disabled={!canBack || board} onClick={() => send({ type: "proto:back" })}>
                 <ArrowLeft /> Back
               </Button>
-              <Button variant="ghost" size="sm" className="h-8" onClick={() => send({ type: "proto:restart" })}>
+              <Button variant="ghost" size="sm" className="h-8" disabled={board} onClick={() => send({ type: "proto:restart" })}>
                 <RotateCcw /> Restart
               </Button>
               <Button variant="ghost" size="sm" className="h-8" onClick={() => openPrototypeInTab(f)}>
@@ -128,7 +173,17 @@ export function PrototypePlayer() {
                 <Download /> Download HTML
               </Button>
             </header>
-            <div className="flex min-h-0 flex-1">
+            <div className="relative flex min-h-0 flex-1">
+              {board && (
+                <Storyboard
+                  f={f}
+                  systems={allDesignSystems(custom)}
+                  onPick={(id) => {
+                    setBoard(false)
+                    send({ type: "proto:go", id })
+                  }}
+                />
+              )}
               <nav className="bg-sidebar hidden w-[220px] shrink-0 flex-col gap-px overflow-y-auto border-r p-2 md:flex" aria-label="Screens" data-scrollable>
                 <div className="text-muted-foreground px-2 pt-1 pb-1.5 text-[11px] font-medium">Screens</div>
                 {screens.map((s, i) => (
