@@ -275,7 +275,7 @@ function DebugLogs() {
 
 function DebugLogRow({ log, open, onToggle }: { log: DebugLogEntry; open: boolean; onToggle: () => void }) {
   const time = new Date(log.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
-  const hasError = !!log.error || log.toolCalls.some((c) => c.error)
+  const hasError = !!log.error || log.toolCalls.some((c) => c.error) || !!log.stepFinishReasons?.includes("length")
   return (
     <div className={cn("rounded border", hasError ? "border-destructive/40" : "border-transparent")}>
       <button onClick={onToggle} className="hover:bg-muted/50 flex w-full items-center gap-2 px-2 py-1.5 text-left text-[12px]">
@@ -291,7 +291,8 @@ function DebugLogRow({ log, open, onToggle }: { log: DebugLogEntry; open: boolea
           <div className="grid grid-cols-2 gap-x-4 gap-y-1">
             <div><span className="text-muted-foreground">Model:</span> <span className="font-mono">{log.model}</span></div>
             <div><span className="text-muted-foreground">Duration:</span> {log.durationMs}ms</div>
-            <div><span className="text-muted-foreground">Finish:</span> {log.finishReason ?? "—"}</div>
+            <div><span className="text-muted-foreground">Finish:</span> {log.finishReason ?? "—"}{log.stepFinishReasons?.length ? ` (steps: ${log.stepFinishReasons.join(", ")})` : ""}</div>
+            <div><span className="text-muted-foreground">Output cap:</span> {log.maxOutputTokens?.toLocaleString() ?? "—"}</div>
             <div><span className="text-muted-foreground">DS:</span> {log.dsId ?? "—"}</div>
           </div>
           {log.error && (

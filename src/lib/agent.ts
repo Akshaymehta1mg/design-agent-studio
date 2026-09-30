@@ -744,6 +744,9 @@ export async function runChat(convId: string, userMsg: ChatMessage, opts: { dept
         const debugToolCalls: DebugToolCall[] = []
         let passStepText = ""
         let passError: string | undefined
+        const stepFinishes: string[] = []
+        let stepIn = 0
+        let stepOut = 0
         const result = streamText({
           model,
           system,
@@ -752,7 +755,8 @@ export async function runChat(convId: string, userMsg: ChatMessage, opts: { dept
           toolChoice: opts.toolChoice,
           stopWhen: [stepCountIs(opts.steps ?? 14), ...stopAt],
           abortSignal: signal,
-          maxOutputTokens: compact ? (phase === "build" ? 12000 : 4096) : (phase === "build" ? 16000 : 16000),
+          // Build and refine both write whole prototype screens (create/iterate_prototype), so they need the large budget.
+          maxOutputTokens: phase === "build" || phase === "refine" ? (compact ? 12000 : 16000) : compact ? 4096 : 16000,
           // Rate-limited plans ask callers to wait (retry-after); the SDK honours it, so allow a few more tries.
           maxRetries: compact ? 4 : 2,
           // Text-only models reject images anywhere in the history, including tool results.
@@ -789,6 +793,10 @@ export async function runChat(convId: string, userMsg: ChatMessage, opts: { dept
             } else if (part.type === "start-step") {
               stepText = ""
               if (text) buffered += "\n\n"
+            } else if (part.type === "finish-step") {
+              stepFinishes.push(part.finishReason)
+              stepIn += part.usage?.inputTokens ?? 0
+              stepOut += part.usage?.outputTokens ?? 0
             } else if (part.type === "tool-error") {
               flush()
               const p = part as { toolName: string; error?: unknown }
@@ -823,8 +831,10 @@ export async function runChat(convId: string, userMsg: ChatMessage, opts: { dept
               responseText: passStepText,
               toolCalls: debugToolCalls,
               finishReason: finishReason as string | undefined,
-              inputTokens: (usage as { inputTokens?: number } | undefined)?.inputTokens,
-              outputTokens: (usage as { outputTokens?: number } | undefined)?.outputTokens,
+              stepFinishReasons: stepFinishes,
+              maxOutputTokens: phase === "build" || phase === "refine" ? (compact ? 12000 : 16000) : compact ? 4096 : 16000,
+              inputTokens: (usage as { inputTokens?: number } | undefined)?.inputTokens || stepIn,
+              outputTokens: (usage as { outputTokens?: number } | undefined)?.outputTokens || stepOut,
               durationMs: Date.now() - passStart,
               error: passError,
             })

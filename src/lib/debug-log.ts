@@ -21,6 +21,9 @@ export interface DebugLogEntry {
   responseText: string
   toolCalls: DebugToolCall[]
   finishReason?: string
+  /** One per model step; "length" means that step ran out of output tokens. */
+  stepFinishReasons?: string[]
+  maxOutputTokens?: number
   inputTokens?: number
   outputTokens?: number
   durationMs: number
