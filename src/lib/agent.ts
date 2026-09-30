@@ -15,7 +15,7 @@ import { ScreenStream, type StreamedScreen } from "./screen-stream"
 
 const MAX_ASKS_PER_TURN = 2
 import { loadPrismDoc, PRISM_ADAPTER, PRISM_CORE, PRISM_CORE_COMPACT, PRISM_DOCS, RX_FALLBACK_IMAGE, searchDesignSystemReference, searchVisualResearch, TATA_1MG_ASSET_BASE, TATA_1MG_TOKENS, VISUAL_RESEARCH_URL, visualResearchPatterns } from "./prism"
-import { DEVICE_SIZES } from "./wireframe"
+import { checkPrototype, DEVICE_SIZES } from "./wireframe"
 import { imageForModel } from "./relay"
 import { editsSummary, loadDesignReference, referenceIndex, referenceKeys, referenceSection } from "./design-reference"
 import DS_ASSETS from "@/prism/design-system/assets.json"
@@ -409,7 +409,7 @@ function canvasTools(convId: string, msgId: string, log: (r: ActionResult) => vo
         title: z.string().optional(),
         device: deviceEnum.optional(),
         start: z.string().optional(),
-        plan: planInput.optional().describe("The full screen list if it changes (new screens you'll add later)"),
+        plan: planInput.optional().describe("The new version's full screen list, when it changes. Screens not in it are dropped."),
         remove: z.array(z.string()).optional().describe("Ids of screens to drop"),
         screens: screensInput,
       }),
@@ -970,6 +970,16 @@ export async function runChat(convId: string, userMsg: ChatMessage, opts: { dept
           { role: "user", content: `Continue prototype ${proto.active}: write the remaining screens now as <screen id="…" title="…">…</screen> blocks, in this order: ${todo.map((t) => `${t.id} (${t.title})`).join(", ")}. Only the blocks, no other text.` },
         ])
         if (remaining().length >= todo.length) break
+      }
+      // Taps that go nowhere (a missing overlay or screen): one pass to rewrite the screens that have them.
+      const built = useStore.getState().conversations.find((x) => x.id === convId)?.canvas.nodes.find((n): n is FrameNode => n.id === proto.active && n.kind === "frame")
+      const dead = built?.screens?.length && !signal.aborted ? checkPrototype(built.screens, built.startScreen ?? "", (built.plannedScreens ?? []).map((p) => p.id)).broken : []
+      if (built && dead.length) {
+        useStore.getState().patchMessage(assistantId, { activity: "Fixing taps that go nowhere…" }, convId)
+        await pass([
+          ...latest,
+          { role: "user", content: `Some taps in prototype ${built.id} go nowhere: ${dead.slice(0, 24).join("; ")}. Write each affected screen again as a <screen> block with the same id: add the missing overlay (<div class="wf-overlay" data-overlay="…">) inside that screen, or point the tap at an existing screen. Only the blocks.` },
+        ])
       }
       const mine = getMessage(loc)
       if (!text.trim() && !mine?.parts?.some((p) => p.type === "ask") && mine?.actions?.length) appendText(loc, "Done. The changes are on the canvas.")

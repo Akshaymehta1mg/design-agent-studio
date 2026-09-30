@@ -179,11 +179,13 @@ export function iteratePrototype(
   const version = src.lineageId ? Math.max(...lineage.map((f) => f.version ?? 1)) + 1 : 2
   const removed = new Set((input.remove ?? []).map(screenSlug))
   // A plain wireframe becomes the first screen of the new prototype.
-  const base = (src.screens ?? (src.type === "wireframe" && src.html ? [{ id: screenSlug(src.title), title: src.title, html: src.html }] : [])).filter((s) => !removed.has(s.id))
+  // A new plan is the whole screen list: screens left out of it don't carry over.
+  const keep = input.plan?.length ? new Set(input.plan.map((p) => screenSlug(p.id || p.title))) : null
+  const base = (src.screens ?? (src.type === "wireframe" && src.html ? [{ id: screenSlug(src.title), title: src.title, html: src.html }] : [])).filter((s) => !removed.has(s.id) && (!keep || keep.has(s.id)))
   const known = [...base.map((s) => s.id), ...(input.plan ?? src.plannedScreens ?? []).map((p) => screenSlug(p.id || p.title))]
   const { screens } = normalizeScreens(input.screens ?? [], known)
   const merged = mergeScreens(base, screens)
-  if (!merged.length) return { ok: false, message: "The new version would have no screens." }
+  if (!merged.length && !input.plan?.length) return { ok: false, message: "The new version would have no screens." }
   const device = input.device ?? src.device ?? "mobile"
   const size = frameSize(convId, device)
   const pos = src.lineageId ? placeNextVersion(nodes, lineageId, size.w, size.h) : findFreeSpot(nodes, { x: src.x + src.w + 120, y: src.y, w: size.w, h: size.h }, "right")

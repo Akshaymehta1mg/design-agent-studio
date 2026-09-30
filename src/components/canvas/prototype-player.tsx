@@ -18,7 +18,10 @@ export function prototypeDoc(f: FrameNode, systems: DesignSystem[], standalone =
   const ds = systems.find((d) => d.id === f.designSystemId)
   const phone = isPhone(f)
   const css = wireframeVars(ds) + (phone && !standalone ? PHONE_SAFE_AREA_CSS : "")
-  return buildPrototypeDoc(f.screens ?? [], f.startScreen ?? "", css, standalone ? { title: f.title, standalone: true, width: phone ? PHONE.w : f.w } : {})
+  // A downloaded file has no server behind it: point the design system's asset paths at this site.
+  const origin = typeof location !== "undefined" ? location.origin : ""
+  const screens = standalone && origin ? (f.screens ?? []).map((s) => ({ ...s, html: s.html.replace(/(["'(])\/prism\//g, `$1${origin}/prism/`) })) : (f.screens ?? [])
+  return buildPrototypeDoc(screens, f.startScreen ?? "", css, standalone ? { title: f.title, standalone: true, width: phone ? PHONE.w : f.w } : {})
 }
 
 const fileName = (f: FrameNode) => `${f.title.replace(/[^\w -]+/g, "").trim().replace(/\s+/g, "-").toLowerCase() || "prototype"}${f.version ? `-v${f.version}` : ""}.html`
