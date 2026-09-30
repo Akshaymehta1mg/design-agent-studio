@@ -127,6 +127,13 @@ const SCREEN_BLOCKS = `Screen blocks (how prototype screens are delivered)
 - Write every screen in the plan. To fix or replace a screen, write it again with the same id.
 - Keep chat text outside the blocks to a sentence or two; the blocks never show in the chat.`
 
+/** Fidelity, interaction and motion rules for every prototype screen. */
+const PROTOTYPE_QUALITY = `Prototype quality (every screen)
+- Mid-fidelity: real layout, hierarchy and content with the design system's colours, type scale, spacing, radii and component shapes (headers, buttons, inputs, cards, chips, lists, tabs, bottom bars), applied with inline styles and the helpers. Real, specific copy, prices, counts and states. Simple inline SVG icons (20–24px, stroke). Images: approved assets or placeholders. Not grey boxes, and not pixel-perfect final UI: no decorative illustration or marketing polish.
+- Every important piece of information is clickable: every button, card, list row, product, price or offer, chip, tab, icon, badge, link and "View details" / "Know more" text. Each tap goes to a real screen (data-go), opens a sheet or dialog with the detail (data-open), or goes back (data-back). No dead taps: when a destination isn't in the plan, open an overlay with its content instead.
+- Only taps work. Never ask the user to swipe, drag, pinch or long-press; give a visible button for every action (e.g. Yes / No buttons on a card, not "swipe right").
+- Motion: screen transitions, sheet slides and dialog pops are automatic. Add your own CSS motion where it helps the flow, in a <style> block with @keyframes inside the screen (a progress bar filling, a success check drawing in, cards entering, a loading shimmer, a badge popping). It plays each time the screen or overlay opens. No scripts.`
+
 /** Tools a compact turn keeps (plus markup tools when the designer asks for critique). */
 const COMPACT_TOOLS = new Set(["create_prototype", "add_prototype_screens", "iterate_prototype", "ask_user", "update_plan", "read_design_system", "prism_reference", "create_workflow", "annotate", "comment", "add_note"])
 
@@ -147,11 +154,13 @@ Rules
 - Every question, decision or approval goes through ask_user (all questions for a moment in one call, 2–4 short options each), never plain chat text. Never ask what's under "Decisions".
 - Never annotate or add notes unless asked for critique, feedback or notes. Notes (add_note) are Markdown with a ## heading per part; reply in chat with one line.
 - Wireframes, screens and flows: build ONE clickable prototype. create_prototype with the title and plan (every screen id + title), then write every screen as a <screen> block (below). iterate_prototype for a new version, then write only the new or changed screens as blocks.
-- Screen HTML: a body fragment, no scripts, width ${mobile.w}px (mobile). Root <div class="wf-screen">; helpers wf-bar, wf-title, wf-body, wf-footer, wf-row, wf-col, wf-between, wf-h1, wf-h2, wf-h3, wf-text, wf-muted, wf-card, wf-img (placeholder, set height), wf-icon, wf-btn, wf-btn-primary, wf-btn-block, wf-input, wf-chip, wf-chip-on, wf-list, wf-tabbar. Inline styles for design-system tokens. Keep markup lean.
+- Screen HTML: a body fragment, no scripts, width ${mobile.w}px (mobile). Root <div class="wf-screen">; helpers wf-bar, wf-title, wf-body, wf-footer, wf-row, wf-col, wf-between, wf-h1, wf-h2, wf-h3, wf-text, wf-muted, wf-card, wf-img (placeholder, set height), wf-icon, wf-btn, wf-btn-primary, wf-btn-block, wf-input, wf-chip, wf-chip-on, wf-list, wf-tabbar. Inline styles for design-system tokens.
 - Links: data-go="screen-id" navigates, data-back goes back, data-open="id" shows <div class="wf-overlay" data-overlay="id"><div class="wf-sheet">…</div></div>, data-close hides it. Error/empty/success states are their own screens.
 - create_workflow for journeys and decision trees. read_design_system(section) for exact specs. prism_reference(name) for a Prism reference when a decision needs it.
 
 ${SCREEN_BLOCKS}
+
+${PROTOTYPE_QUALITY}
 
 Prism core
 ${PRISM_CORE_COMPACT}
@@ -206,7 +215,9 @@ Prototype links (create_prototype / iterate_prototype)
 - Overlays (bottom sheets, dialogs, menus, pickers) live inside the screen that opens them: <div class="wf-overlay" data-overlay="coupon"><div class="wf-sheet">…<div class="wf-btn" data-close>Close</div></div></div>. Add wf-center to the overlay for a centred dialog. They start hidden.
 - Represent other states (empty, error, loading, success) as their own screens and link to them from where they'd happen.
 - Real <input>, <select> and <textarea> elements work, so forms can be typed into. No scripts, no onclick; the studio adds the behaviour.
-- Keep markup lean (helper classes, few inline styles). Up to 12 screens in a prototype.
+- Up to 12 screens in a prototype.
+
+${PROTOTYPE_QUALITY}
 
 ${SCREEN_BLOCKS}
 ${opts.connectors?.length ? `\nConnected tools\n- You can also use tools from: ${opts.connectors.join(", ")}. Tool names are prefixed with the connector.\n` : ""}

@@ -110,7 +110,8 @@ BUILTIN_DESIGN_SYSTEMS.push({
   font: "Figtree",
   radius: 12,
   referenceUrl: TATA_1MG_REFERENCE_URL,
-  viewport: { w: 412, h: 924 },
+  // Prototypes render on an iPhone 17.
+  viewport: { w: 402, h: 874 },
   updatedAt: T,
   profile: TATA_1MG_GUIDE.replace(/^---\n[\s\S]*?\n---\n+/, ""),
 })

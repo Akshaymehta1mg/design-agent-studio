@@ -3,15 +3,22 @@ import { ArrowLeft, Download, ExternalLink, Play, RotateCcw, Smartphone } from "
 import type { DesignSystem, FrameNode } from "@/lib/types"
 import { useStore } from "@/lib/store"
 import { allDesignSystems, wireframeVars } from "@/lib/design-systems"
-import { buildPrototypeDoc } from "@/lib/wireframe"
+import { buildPrototypeDoc, DEVICE_SIZES, PHONE_SAFE_AREA_CSS } from "@/lib/wireframe"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
 
+const isPhone = (f: FrameNode) => (f.device ?? (f.w < 600 ? "mobile" : "desktop")) === "mobile"
+/** Phones play on an iPhone 17 screen, whatever size the frame was drawn at. */
+const PHONE = DEVICE_SIZES.mobile
+const BEZEL = 12
+
 /** The prototype as one HTML document; `standalone` is the downloadable file. */
 export function prototypeDoc(f: FrameNode, systems: DesignSystem[], standalone = false) {
   const ds = systems.find((d) => d.id === f.designSystemId)
-  return buildPrototypeDoc(f.screens ?? [], f.startScreen ?? "", wireframeVars(ds), standalone ? { title: f.title, standalone: true, width: f.w } : {})
+  const phone = isPhone(f)
+  const css = wireframeVars(ds) + (phone && !standalone ? PHONE_SAFE_AREA_CSS : "")
+  return buildPrototypeDoc(f.screens ?? [], f.startScreen ?? "", css, standalone ? { title: f.title, standalone: true, width: phone ? PHONE.w : f.w } : {})
 }
 
 const fileName = (f: FrameNode) => `${f.title.replace(/[^\w -]+/g, "").trim().replace(/\s+/g, "-").toLowerCase() || "prototype"}${f.version ? `-v${f.version}` : ""}.html`
@@ -68,8 +75,11 @@ export function PrototypePlayer() {
   }, [])
 
   // Fit the device into the stage (the stage mounts with the dialog, hence the callback ref).
-  const fw = f?.w ?? 0
-  const fh = f?.h ?? 0
+  const phone = !!f && isPhone(f)
+  const sw = phone ? PHONE.w : (f?.w ?? 0)
+  const sh = phone ? PHONE.h : (f?.h ?? 0)
+  const fw = phone ? sw + BEZEL * 2 : sw
+  const fh = phone ? sh + BEZEL * 2 : sh
   useEffect(() => {
     if (!stage || !fw) return
     const fit = () => setScale(Math.max(0.3, Math.min(1, (stage.clientHeight - 32) / fh, (stage.clientWidth - 32) / fw)))
@@ -128,16 +138,21 @@ export function PrototypePlayer() {
                 ))}
               </nav>
               <div ref={setStage} className="bg-canvas relative grid min-w-0 flex-1 place-items-center overflow-hidden">
-                <div className="overflow-hidden rounded-[22px] border bg-white shadow-lg" style={{ width: f.w * scale, height: f.h * scale }}>
-                  <iframe
-                    ref={iframe}
-                    key={f.id}
-                    title={`${f.title} prototype`}
-                    srcDoc={doc}
-                    sandbox="allow-scripts allow-forms"
-                    className="origin-top-left border-0 bg-white"
-                    style={{ width: f.w, height: f.h, transform: `scale(${scale})` }}
-                  />
+                <div style={{ width: fw * scale, height: fh * scale }}>
+                  <div
+                    className={cn("relative origin-top-left", phone ? "rounded-[68px] bg-[#0b0b0c] shadow-2xl ring-1 ring-black/40" : "overflow-hidden rounded-[22px] border bg-white shadow-lg")}
+                    style={{ width: fw, height: fh, padding: phone ? BEZEL : 0, transform: `scale(${scale})` }}
+                  >
+                    <div className={cn("relative h-full w-full overflow-hidden bg-white", phone && "rounded-[56px]")}>
+                      <iframe ref={iframe} key={f.id} title={`${f.title} prototype`} srcDoc={doc} sandbox="allow-scripts allow-forms" className="block border-0 bg-white" style={{ width: sw, height: sh }} />
+                      {phone && (
+                        <>
+                          <div aria-hidden className="pointer-events-none absolute top-[11px] left-1/2 h-[37px] w-[125px] -translate-x-1/2 rounded-full bg-black" />
+                          <div aria-hidden className="pointer-events-none absolute bottom-[8px] left-1/2 h-[5px] w-[139px] -translate-x-1/2 rounded-full bg-black/80" />
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
                 {index >= 0 && (
                   <div className="bg-background/90 text-muted-foreground absolute top-3 left-3 rounded-full border px-3 py-1 text-[12px] shadow-xs backdrop-blur">

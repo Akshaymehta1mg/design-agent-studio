@@ -4,7 +4,7 @@ Wireframe reference for Prism. Resolve conflicts: user direction → supplied sc
 
 ## Viewport and spacing
 
-Canonical viewport: 412×924px. Grid: 6 columns, 16px page margins, 8px gutters. Spacing scale: 0 2 4 8 12 16 20 24 28 32 36 40px. Base rhythm: 8px. Minimum primary-action height: 48px; compact controls: 40–44px.
+Viewport: iPhone 17, 402×874px (content is fluid; the source guide's 412×924 layouts scale down). Grid: 6 columns, 16px page margins, 8px gutters. Spacing scale: 0 2 4 8 12 16 20 24 28 32 36 40px. Base rhythm: 8px. Minimum primary-action height: 48px; compact controls: 40–44px.
 
 ## Typography
 

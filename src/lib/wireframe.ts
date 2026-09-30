@@ -1,7 +1,8 @@
 import type { Device, PrototypeScreen } from "./types"
 
 export const DEVICE_SIZES: Record<Device, { w: number; h: number }> = {
-  mobile: { w: 390, h: 844 },
+  // iPhone 17 (points)
+  mobile: { w: 402, h: 874 },
   tablet: { w: 820, h: 1080 },
   desktop: { w: 1280, h: 820 },
 }
@@ -116,6 +117,25 @@ export const PROTOTYPE_CSS = `
 .wf-overlay.wf-center{justify-content:center;align-items:center;padding:24px}
 .wf-overlay>.wf-sheet{display:flex;flex-direction:column;gap:12px;padding:8px 16px 24px;max-height:85vh;overflow:auto}
 .wf-overlay.wf-center>.wf-sheet,.wf-overlay.wf-center>.wf-card{width:100%;max-width:360px;border-radius:18px;padding:20px}
+@keyframes wf-in-fwd{from{opacity:.35;transform:translateX(28px)}to{opacity:1;transform:none}}
+@keyframes wf-in-back{from{opacity:.35;transform:translateX(-28px)}to{opacity:1;transform:none}}
+[data-screen].wf-in-fwd{animation:wf-in-fwd .26s cubic-bezier(.2,.8,.2,1)}
+[data-screen].wf-in-back{animation:wf-in-back .26s cubic-bezier(.2,.8,.2,1)}
+@keyframes wf-fade-in{from{opacity:0}}
+@keyframes wf-fade-out{to{opacity:0}}
+@keyframes wf-sheet-in{from{transform:translateY(100%)}}
+@keyframes wf-sheet-out{to{transform:translateY(100%)}}
+@keyframes wf-pop-in{from{opacity:0;transform:scale(.94)}}
+@keyframes wf-pop-out{to{opacity:0;transform:scale(.96)}}
+.wf-overlay:not([hidden]){animation:wf-fade-in .2s ease-out}
+.wf-overlay:not([hidden])>.wf-sheet{animation:wf-sheet-in .3s cubic-bezier(.2,.8,.2,1)}
+.wf-overlay.wf-center:not([hidden])>*{animation:wf-pop-in .22s cubic-bezier(.2,.8,.2,1)}
+.wf-overlay.wf-closing{animation:wf-fade-out .2s ease-in forwards}
+.wf-overlay.wf-closing>.wf-sheet{animation:wf-sheet-out .2s ease-in forwards}
+.wf-overlay.wf-center.wf-closing>*{animation:wf-pop-out .18s ease-in forwards}
+:is([data-go],[data-back],[data-open],[data-close]){transition:transform .12s ease,filter .12s ease}
+:is([data-go],[data-back],[data-open],[data-close]):active{transform:scale(.97);filter:brightness(.97)}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 .wf-proto-hint [data-screen]:not([hidden]) :is([data-go],[data-back],[data-open],[data-close]){outline:2px solid rgba(37,99,235,.6);outline-offset:2px;border-radius:6px}
 .wf-proto-nav{position:fixed;left:12px;bottom:12px;z-index:99;font:500 12px/1.3 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 .wf-proto-nav summary{list-style:none;cursor:pointer;background:#111;color:#fff;border-radius:999px;padding:7px 12px;box-shadow:0 4px 14px rgba(0,0,0,.2)}
@@ -126,31 +146,38 @@ export const PROTOTYPE_CSS = `
 `
 
 /** Runs inside the sandboxed prototype iframe (scripts allowed, no same-origin). */
+/** Inside the player's iPhone frame: keep content clear of the Dynamic Island. */
+export const PHONE_SAFE_AREA_CSS = `.wf-status{height:54px;padding:0 30px}.wf-screen:not(:has(>.wf-status)){padding-top:54px}.wf-footer{padding-bottom:30px}.wf-overlay>.wf-sheet{padding-bottom:34px}`
+
 const PROTOTYPE_RUNTIME = `(function(){
 var cur=null,stack=[];
 function q(s){return document.querySelector(s)}
 function esc(v){return String(v).replace(/["\\\\]/g,"\\\\$&")}
 function screen(id){return q('[data-screen="'+esc(id)+'"]')}
 function tell(){try{parent.postMessage({type:"proto:screen",id:cur,canBack:stack.length>0},"*")}catch(e){}}
-function show(id,push){var t=screen(id);if(!t)return;
+function show(id,mode){var t=screen(id);if(!t)return;
 document.querySelectorAll("[data-screen]").forEach(function(s){s.hidden=s!==t});
-document.querySelectorAll("[data-overlay]").forEach(function(o){o.hidden=true});
-if(push!==false&&cur&&cur!==id)stack.push(cur);cur=id;window.scrollTo(0,0);tell()}
-function back(){if(stack.length)show(stack.pop(),false)}
+document.querySelectorAll("[data-overlay]").forEach(function(o){o.hidden=true;o.classList.remove("wf-closing")});
+if(mode!=="back"&&mode!=="none"&&cur&&cur!==id)stack.push(cur);
+if(mode!=="none"&&cur&&cur!==id){t.classList.remove("wf-in-fwd","wf-in-back");void t.offsetWidth;t.classList.add(mode==="back"?"wf-in-back":"wf-in-fwd")}
+cur=id;window.scrollTo(0,0);tell()}
+function back(){if(stack.length)show(stack.pop(),"back")}
+function closeO(o){if(!o||o.hidden||o.classList.contains("wf-closing"))return;o.classList.add("wf-closing");setTimeout(function(){o.hidden=true;o.classList.remove("wf-closing")},200)}
 function hint(){document.body.classList.add("wf-proto-hint");clearTimeout(hint.t);hint.t=setTimeout(function(){document.body.classList.remove("wf-proto-hint")},700)}
 document.addEventListener("click",function(e){
+if(e.target.matches&&e.target.matches("[data-overlay]")){closeO(e.target);return}
 var el=e.target.closest("[data-go],[data-back],[data-open],[data-close],a[href^='#']");
 if(!el){if(!e.target.closest("input,textarea,select,label,summary,.wf-proto-nav"))hint();return}
 e.preventDefault();
 if(el.hasAttribute("data-back"))back();
 else if(el.getAttribute("data-go"))show(el.getAttribute("data-go"));
-else if(el.getAttribute("data-open")){var s=screen(cur),id=esc(el.getAttribute("data-open"));var o=(s&&s.querySelector('[data-overlay="'+id+'"]'))||q('[data-overlay="'+id+'"]');if(o)o.hidden=false}
-else if(el.hasAttribute("data-close")){var n=el.getAttribute("data-close");var o2=n?q('[data-overlay="'+esc(n)+'"]'):el.closest("[data-overlay]");if(o2)o2.hidden=true}
+else if(el.getAttribute("data-open")){var s=screen(cur),id=esc(el.getAttribute("data-open"));var o=(s&&s.querySelector('[data-overlay="'+id+'"]'))||q('[data-overlay="'+id+'"]');if(o){o.classList.remove("wf-closing");o.hidden=false}}
+else if(el.hasAttribute("data-close")){var n=el.getAttribute("data-close");var o2=n?q('[data-overlay="'+esc(n)+'"]'):el.closest("[data-overlay]");closeO(o2)}
 else if(el.matches("a[href^='#']")){var h=decodeURIComponent(el.getAttribute("href").slice(1));if(screen(h))show(h);if(el.closest(".wf-proto-nav"))el.closest("details").open=false}
 },true);
-document.addEventListener("keydown",function(e){if(e.key==="Escape"){var o=[].slice.call(document.querySelectorAll("[data-overlay]")).filter(function(x){return!x.hidden}).pop();if(o)o.hidden=true;else back()}});
-window.addEventListener("message",function(e){var d=e.data||{};if(d.type==="proto:go")show(d.id);if(d.type==="proto:back")back();if(d.type==="proto:restart"){stack=[];cur=null;show(document.body.getAttribute("data-start"),false)}});
-show(document.body.getAttribute("data-start"),false);
+document.addEventListener("keydown",function(e){if(e.key==="Escape"){var o=[].slice.call(document.querySelectorAll("[data-overlay]")).filter(function(x){return!x.hidden}).pop();if(o)closeO(o);else back()}});
+window.addEventListener("message",function(e){var d=e.data||{};if(d.type==="proto:go")show(d.id);if(d.type==="proto:back")back();if(d.type==="proto:restart"){stack=[];cur=null;show(document.body.getAttribute("data-start"),"none")}});
+show(document.body.getAttribute("data-start"),"none");
 })();`
 
 const slug = (s: string) =>
