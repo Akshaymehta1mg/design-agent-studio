@@ -10,6 +10,7 @@ import { allDesignSystems, BUILTIN_DESIGN_SYSTEMS, designSystemDigest } from "./
 import { connectorTools } from "./mcp"
 import { askUserInput, MAX_QUESTIONS, normalizeAsk } from "./ask-input"
 import { answeredDecisions, legacyAnswers, sameQuestion, type Decision } from "./decisions"
+import { pushDebugLog, type DebugToolCall } from "./debug-log"
 
 const MAX_ASKS_PER_TURN = 2
 import { loadPrismDoc, PRISM_ADAPTER, PRISM_CORE, PRISM_CORE_COMPACT, PRISM_DOCS, RX_FALLBACK_IMAGE, searchDesignSystemReference, searchVisualResearch, TATA_1MG_ASSET_BASE, TATA_1MG_TOKENS, VISUAL_RESEARCH_URL, visualResearchPatterns } from "./prism"
@@ -739,6 +740,10 @@ export async function runChat(convId: string, userMsg: ChatMessage, opts: { dept
 
       /** One streamed pass. Returns the text of its last step and the messages it added. */
       const pass = async (messages: ModelMessage[], opts: { tools?: ToolSet; toolChoice?: ToolChoice<ToolSet>; steps?: number; onAskStart?: () => void } = {}) => {
+        const passStart = Date.now()
+        const debugToolCalls: DebugToolCall[] = []
+        let passStepText = ""
+        let passError: string | undefined
         const result = streamText({
           model,
           system,
@@ -767,24 +772,65 @@ export async function runChat(convId: string, userMsg: ChatMessage, opts: { dept
             if (part.type === "text-delta") {
               text += part.text
               stepText += part.text
+              passStepText += part.text
               buffered += part.text
               if (Date.now() - lastFlush > 50) flush()
             } else if (part.type === "tool-input-start") {
               flush()
               if (part.toolName === "ask_user") opts.onAskStart?.()
               useStore.getState().patchMessage(assistantId, { activity: ACTIVITY[part.toolName] ?? "Working…" }, convId)
+            } else if (part.type === "tool-call") {
+              const p = part as { toolName: string; input?: unknown }
+              debugToolCalls.push({ name: p.toolName, input: p.input })
+            } else if (part.type === "tool-result") {
+              const p = part as { toolName: string; output?: unknown }
+              const last = [...debugToolCalls].reverse().find((c) => c.name === p.toolName && c.result === undefined && !c.error)
+              if (last) last.result = p.output
             } else if (part.type === "start-step") {
               stepText = ""
               if (text) buffered += "\n\n"
             } else if (part.type === "tool-error") {
               flush()
+              const p = part as { toolName: string; error?: unknown }
+              const last = [...debugToolCalls].reverse().find((c) => c.name === p.toolName && c.result === undefined && !c.error)
+              const errStr = String((p.error as { message?: string } | undefined)?.message ?? p.error ?? "unknown")
+              if (last) last.error = errStr
+              else debugToolCalls.push({ name: p.toolName, input: undefined, error: errStr })
               pushAction({ ok: false, message: "", log: { id: uid(), label: `${part.toolName.replace(/_/g, " ")} failed`, tone: "error" } })
             } else if (part.type === "error") {
+              passError = String((part.error as { message?: string } | undefined)?.message ?? part.error ?? "unknown")
               throw part.error
             }
           }
+        } catch (e) {
+          if (!passError) passError = e instanceof Error ? e.message : String(e)
+          throw e
         } finally {
           flush()
+          try {
+            const usage = await result.usage.catch(() => undefined)
+            const finishReason = await result.finishReason.catch(() => undefined)
+            pushDebugLog({
+              convId,
+              convTitle: c.title,
+              phase: phase ?? "other",
+              model: (model as { modelId?: string }).modelId ?? "unknown",
+              compact,
+              dsId: designSystemFor(c)?.id,
+              systemPrompt: system,
+              historyMessages: messages,
+              historyPreview: "",
+              responseText: passStepText,
+              toolCalls: debugToolCalls,
+              finishReason: finishReason as string | undefined,
+              inputTokens: (usage as { inputTokens?: number } | undefined)?.inputTokens,
+              outputTokens: (usage as { outputTokens?: number } | undefined)?.outputTokens,
+              durationMs: Date.now() - passStart,
+              error: passError,
+            })
+          } catch {
+            /* logging must never break the turn */
+          }
         }
         return { stepText, messages: (await result.response).messages }
       }

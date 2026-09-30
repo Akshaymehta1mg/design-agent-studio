@@ -2,6 +2,7 @@ import { useState } from "react"
 import { Check, Eye, EyeOff, Loader2, RefreshCw, ExternalLink, Trash2, AlertCircle } from "@/components/ui/icons"
 import { toast } from "sonner"
 import { useStore, defaultSettings, discardPendingWrites } from "@/lib/store"
+import { exportDebugLogs, clearDebugLogs, type DebugLogEntry } from "@/lib/debug-log"
 import { checkServer, useServer, viaServer } from "@/lib/server"
 import { fetchModels, pickDefaultModel, PROVIDERS, PROVIDER_ORDER, type KeyedProvider } from "@/lib/providers"
 import { PageHeader } from "@/components/pages/page-header"
@@ -200,6 +201,10 @@ export function SettingsPage() {
           </div>
         </Card>
 
+        <Card title="Debug logs" description="Every LLM call is captured (system prompt, messages, response, tool calls, tokens, errors). Use it to root-cause bugs. Last 100 entries.">
+          <DebugLogs />
+        </Card>
+
         <Card title="Data" description="Projects, settings and keys live in this browser's storage.">
           <DataControls />
         </Card>
@@ -217,6 +222,124 @@ function Card({ title, description, children }: { title: string; description?: s
       </div>
       {children}
     </section>
+  )
+}
+
+function DebugLogs() {
+  const logs = useStore((s) => s.debugLogs)
+  const [openId, setOpenId] = useState<string | null>(null)
+  const [confirmClear, setConfirmClear] = useState(false)
+
+  if (!logs.length) return <p className="text-muted-foreground text-[13px]">No LLM calls captured yet. Send a message in a project and they'll show up here.</p>
+
+  const download = () => {
+    const blob = new Blob([exportDebugLogs()], { type: "application/json" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `prismu-debug-logs-${Date.now()}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const totalIn = logs.reduce((s, l) => s + (l.inputTokens ?? 0), 0)
+  const totalOut = logs.reduce((s, l) => s + (l.outputTokens ?? 0), 0)
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="text-muted-foreground text-[12.5px]">
+          {logs.length} calls · {totalIn.toLocaleString()} in / {totalOut.toLocaleString()} out tokens
+        </div>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={download}>Export JSON</Button>
+          {confirmClear ? (
+            <>
+              <Button size="sm" variant="destructive" onClick={() => { clearDebugLogs(); setConfirmClear(false) }}>Confirm clear</Button>
+              <Button size="sm" variant="ghost" onClick={() => setConfirmClear(false)}>Cancel</Button>
+            </>
+          ) : (
+            <Button size="sm" variant="ghost" onClick={() => setConfirmClear(true)}>Clear all</Button>
+          )}
+        </div>
+      </div>
+
+      <div className="flex max-h-[420px] flex-col gap-1 overflow-y-auto rounded-md border p-1">
+        {logs.map((l) => (
+          <DebugLogRow key={l.id} log={l} open={openId === l.id} onToggle={() => setOpenId((cur) => (cur === l.id ? null : l.id))} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function DebugLogRow({ log, open, onToggle }: { log: DebugLogEntry; open: boolean; onToggle: () => void }) {
+  const time = new Date(log.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+  const hasError = !!log.error || log.toolCalls.some((c) => c.error)
+  return (
+    <div className={cn("rounded border", hasError ? "border-destructive/40" : "border-transparent")}>
+      <button onClick={onToggle} className="hover:bg-muted/50 flex w-full items-center gap-2 px-2 py-1.5 text-left text-[12px]">
+        <span className="text-muted-foreground w-16 shrink-0 font-mono">{time}</span>
+        <span className="w-20 shrink-0 truncate">{log.phase}</span>
+        <span className="text-muted-foreground w-24 shrink-0 truncate">{log.compact ? "compact" : "full"}</span>
+        <span className="flex-1 truncate">{log.convTitle}</span>
+        <span className="text-muted-foreground shrink-0 font-mono">{log.inputTokens ?? "?"}/{log.outputTokens ?? "?"}</span>
+        {hasError && <AlertCircle className="text-destructive size-3.5 shrink-0" />}
+      </button>
+      {open && (
+        <div className="flex flex-col gap-2 px-2 py-2 text-[11.5px]">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+            <div><span className="text-muted-foreground">Model:</span> <span className="font-mono">{log.model}</span></div>
+            <div><span className="text-muted-foreground">Duration:</span> {log.durationMs}ms</div>
+            <div><span className="text-muted-foreground">Finish:</span> {log.finishReason ?? "—"}</div>
+            <div><span className="text-muted-foreground">DS:</span> {log.dsId ?? "—"}</div>
+          </div>
+          {log.error && (
+            <details open>
+              <summary className="text-destructive cursor-pointer font-semibold">Error</summary>
+              <pre className="bg-muted mt-1 max-h-40 overflow-auto rounded p-2 text-[11px]">{log.error}</pre>
+            </details>
+          )}
+          <details>
+            <summary className="text-muted-foreground cursor-pointer font-semibold">System prompt ({log.systemPrompt.length} chars)</summary>
+            <pre className="bg-muted mt-1 max-h-60 overflow-auto rounded p-2 text-[11px] whitespace-pre-wrap">{log.systemPrompt}</pre>
+          </details>
+          <details>
+            <summary className="text-muted-foreground cursor-pointer font-semibold">Messages sent</summary>
+            <pre className="bg-muted mt-1 max-h-60 overflow-auto rounded p-2 text-[11px] whitespace-pre-wrap">{log.historyPreview}</pre>
+          </details>
+          <details>
+            <summary className="text-muted-foreground cursor-pointer font-semibold">Response text ({log.responseText.length} chars)</summary>
+            <pre className="bg-muted mt-1 max-h-60 overflow-auto rounded p-2 text-[11px] whitespace-pre-wrap">{log.responseText || "(no text — model called tools only)"}</pre>
+          </details>
+          {log.toolCalls.length > 0 && (
+            <details>
+              <summary className="text-muted-foreground cursor-pointer font-semibold">Tool calls ({log.toolCalls.length})</summary>
+              <div className="mt-1 flex flex-col gap-2">
+                {log.toolCalls.map((c, i) => (
+                  <div key={i} className={cn("rounded border p-2", c.error ? "border-destructive/40" : "")}>
+                    <div className="font-mono font-semibold">{c.name}</div>
+                    {c.input !== undefined && (
+                      <details>
+                        <summary className="text-muted-foreground cursor-pointer">input</summary>
+                        <pre className="bg-muted mt-1 max-h-40 overflow-auto rounded p-1.5 text-[11px]">{JSON.stringify(c.input, null, 2)}</pre>
+                      </details>
+                    )}
+                    {c.result !== undefined && (
+                      <details>
+                        <summary className="text-muted-foreground cursor-pointer">result</summary>
+                        <pre className="bg-muted mt-1 max-h-40 overflow-auto rounded p-1.5 text-[11px]">{typeof c.result === "string" ? c.result : JSON.stringify(c.result, null, 2)}</pre>
+                      </details>
+                    )}
+                    {c.error && <pre className="bg-destructive/10 text-destructive mt-1 rounded p-1.5 text-[11px]">{c.error}</pre>}
+                  </div>
+                ))}
+              </div>
+            </details>
+          )}
+        </div>
+      )}
+    </div>
   )
 }
 
