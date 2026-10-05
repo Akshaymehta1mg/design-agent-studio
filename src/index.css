@@ -267,6 +267,5 @@
 :root[data-theme="dark"] .prism-glow, .dark .prism-glow { opacity: 0.55; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .prism-glow { opacity: 0.55; } }
 
-/* Dashboard nav: the current page reads as a raised tab with a violet icon. */
+/* Dashboard nav: the current page reads as a raised tab. */
 .nav-item[data-active="true"] { background: var(--background); box-shadow: 0 0 0 1px var(--border), var(--elev-xs); }
-.nav-item[data-active="true"] svg { color: var(--primary); }
