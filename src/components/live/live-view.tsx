@@ -264,7 +264,7 @@ export function LivePanel() {
     <div className="bg-background flex h-full min-w-0 flex-col">
       <header className="flex h-14 shrink-0 items-center gap-2.5 border-b px-4">
         <div className="min-w-0 flex-1 leading-tight">
-          <div className="text-[13.5px] font-semibold">Design Agent</div>
+          <div className="text-[13.5px] font-semibold">Prism</div>
           <div className="text-muted-foreground text-[11.5px]">Live crit {status === "live" ? "· in session" : ""}</div>
         </div>
         {status === "live" && <span className="bg-ember pulse-ring size-2.5 rounded-full" aria-label="Live" />}

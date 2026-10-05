@@ -12,7 +12,7 @@ const PAGES: { id: Page; label: string; icon: React.ComponentType<{ className?: 
   { id: "files", label: "Files", icon: FileStack },
   { id: "connectors", label: "Connectors", icon: Plug },
   { id: "context", label: "Context file", icon: FileText },
-  { id: "prism", label: "Prism", icon: Triangle },
+  { id: "prism", label: "Prism core", icon: Triangle },
   { id: "design-systems", label: "Design systems", icon: Palette },
   { id: "visual-research", label: "Visual research", icon: GalleryHorizontalEnd },
   { id: "settings", label: "Settings", icon: Settings2 },

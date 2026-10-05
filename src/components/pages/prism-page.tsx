@@ -36,7 +36,7 @@ export function PrismPage() {
     <div className="h-full overflow-y-auto" data-scrollable>
       <div className="mx-auto max-w-[1180px] px-6 pb-16 md:px-10">
         <header className="pt-10 pb-6">
-          <h1 className="text-[30px] leading-tight font-bold">Prism</h1>
+          <h1 className="text-[30px] leading-tight font-bold">Prism core</h1>
           <p className="text-muted-foreground mt-1.5 max-w-2xl text-[14.5px] leading-relaxed">
             The design agent's operating rules. Prism core applies to every brief; its references load only when a step needs them. It reads the design system and visual research from their own pages.
           </p>

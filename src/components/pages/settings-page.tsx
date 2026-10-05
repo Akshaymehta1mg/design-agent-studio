@@ -58,7 +58,7 @@ export function SettingsPage() {
 
   return (
     <div className="h-full overflow-y-auto" data-scrollable>
-      <div className="mx-auto flex max-w-[720px] flex-col gap-8 px-6 pb-16 md:px-10">
+      <div className="mx-auto flex max-w-[1180px] flex-col gap-6 px-6 pb-16 md:px-10 [&>section]:max-w-[760px]">
         <PageHeader title="Settings" description="Keys stay in this browser and go only to the provider you call. Nothing is stored on a server." />
 
         {server.deployed && <DeploymentCard />}
@@ -74,9 +74,9 @@ export function SettingsPage() {
           <Tabs value={tab} onValueChange={(v) => setTab(v as KeyedProvider)}>
             <TabsList className="grid h-auto w-full grid-cols-3 sm:grid-cols-6">
               {PROVIDER_ORDER.map((id) => (
-                <TabsTrigger key={id} value={id} className="relative flex h-auto flex-col items-start gap-0 px-2 py-1.5 text-left">
-                  <span className="text-[12.5px] font-semibold">{PROVIDERS[id].name}</span>
-                  <span className="text-muted-foreground truncate text-[10.5px] font-normal">{PROVIDERS[id].vendor}</span>
+                <TabsTrigger key={id} value={id} className="relative flex h-auto min-w-0 flex-col items-start gap-0 overflow-hidden px-2 py-1.5 text-left">
+                  <span className="max-w-full truncate text-[12.5px] font-semibold">{PROVIDERS[id].name}</span>
+                  <span className="text-muted-foreground max-w-full truncate text-[10.5px] font-normal">{PROVIDERS[id].vendor}</span>
                   {settings.providers[id].status === "ok" && <span className="bg-ok absolute top-1.5 right-1.5 size-1.5 rounded-full" />}
                 </TabsTrigger>
               ))}

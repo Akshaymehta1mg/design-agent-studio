@@ -140,7 +140,7 @@ export function getLanguageModel(provider: KeyedProvider, modelId: string, state
       case "google":
         return createGoogleGenerativeAI({ apiKey: "server", baseURL: `${base}/v1beta`, headers })(modelId)
       case "openrouter":
-        return createOpenAICompatible({ name: "openrouter", baseURL: `${base}/v1`, apiKey: "server", headers: { ...headers, "X-Title": "Prismu" } })(modelId)
+        return createOpenAICompatible({ name: "openrouter", baseURL: `${base}/v1`, apiKey: "server", headers: { ...headers, "X-Title": "Prism" } })(modelId)
       case "moonshot":
         return createOpenAICompatible({ name: "moonshot", baseURL: `${base}/v1`, apiKey: "server", headers })(modelId)
     }
@@ -157,7 +157,7 @@ export function getLanguageModel(provider: KeyedProvider, modelId: string, state
         name: "openrouter",
         baseURL: "https://openrouter.ai/api/v1",
         apiKey: key,
-        headers: { "HTTP-Referer": typeof location !== "undefined" ? location.origin : "", "X-Title": "Prismu" },
+        headers: { "HTTP-Referer": typeof location !== "undefined" ? location.origin : "", "X-Title": "Prism" },
       })(modelId)
     case "moonshot":
       return createOpenAICompatible({ name: "moonshot", baseURL: `${MOONSHOT_BASE}/v1`, apiKey: key })(modelId)

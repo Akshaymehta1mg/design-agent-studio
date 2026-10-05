@@ -51,17 +51,29 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { ProjectMenu, ProjectThumb, projectMeta, timeAgo } from "@/components/project-card"
 import { RenameDialog } from "@/components/rename-dialog"
+import { emitCreate } from "@/components/shell/dashboard-sidebar"
 
 export function HomePage() {
   const name = useStore((s) => s.settings.profileName?.trim())
   return (
     <div className="h-full overflow-y-auto" data-scrollable>
       <div className="mx-auto flex max-w-[1180px] flex-col px-6 md:px-10">
-        <section className="flex flex-col items-center pt-[max(56px,12vh)] pb-14">
-          <motion.h1 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: EASE_OUT }} className="text-center text-[34px] leading-tight font-bold md:text-[40px]">
+        <section className="relative flex flex-col items-center pt-[max(56px,12vh)] pb-16">
+          <motion.div aria-hidden className="prism-glow" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1.2, ease: EASE_OUT }} />
+          <motion.h1
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, ease: EASE_OUT }}
+            className="relative text-center text-[34px] leading-[1.1] font-extrabold tracking-[-0.035em] text-balance md:text-[44px]"
+          >
             What can I help with{name ? `, ${name}` : ""}?
           </motion.h1>
-          <HomeComposer />
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.45, ease: EASE_OUT, delay: 0.08 }} className="text-muted-foreground relative mt-3 max-w-[520px] text-center text-[15px] leading-relaxed text-pretty">
+            Critique a screen, sketch a wireframe or map a flow. Prism works in your design system and keeps every version.
+          </motion.p>
+          <div className="relative w-full max-w-[720px]">
+            <HomeComposer />
+          </div>
         </section>
         <Recents />
       </div>
@@ -169,7 +181,7 @@ function HomeComposer() {
   const hasContent = !!text.trim() || images.length > 0 || !!figma
 
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: EASE_OUT, delay: 0.05 }} className="mt-8 w-full max-w-[720px]">
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: EASE_OUT, delay: 0.05 }} className="mt-8 w-full">
       <div
         className="bg-background focus-within:border-ring/60 rounded-[22px] border shadow-md transition-[border-color,box-shadow] focus-within:shadow-lg"
         onDragOver={(e) => e.preventDefault()}
@@ -227,10 +239,10 @@ function HomeComposer() {
               addImages(imgs)
             }
           }}
-          placeholder="Ask Design Agent to critique, wireframe or map anything…"
+          placeholder="Ask Prism to critique, wireframe or map anything…"
           className="placeholder:text-muted-foreground block w-full resize-none bg-transparent px-5 pt-4 pb-1 text-[15.5px] leading-relaxed outline-none"
         />
-        <div className="flex items-center gap-1.5 px-3 pb-3">
+        <div className="flex flex-wrap items-center gap-1.5 px-3 pb-3">
           <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="size-9 rounded-full [&_svg]:size-5" aria-label="Add files and settings">
@@ -264,13 +276,13 @@ function HomeComposer() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="bg-muted hover:bg-accent inline-flex h-8 items-center gap-1.5 rounded-full pr-2.5 pl-2 text-[12.5px] font-medium transition-colors">
+              <button className="bg-muted hover:bg-accent inline-flex h-8 max-w-full items-center gap-1.5 rounded-full whitespace-nowrap pr-2.5 pl-2 text-[12.5px] font-medium transition-colors">
                 <span className="flex -space-x-1">
                   {ds.colors.slice(0, 3).map((c) => (
                     <span key={c.name} className="ring-muted size-3.5 rounded-full ring-2" style={{ background: c.value }} />
                   ))}
                 </span>
-                <span className="text-muted-foreground">Design system</span>
+                <span className="text-muted-foreground hidden sm:inline">Design system</span>
                 <span>{ds.name}</span>
                 <ChevronDown className="text-muted-foreground size-3.5" />
               </button>
@@ -466,7 +478,17 @@ export function ProjectCollection({ limit, showHeader = true, title = "Recents" 
       )}
 
       {list.length === 0 ? (
-        <div className="text-muted-foreground rounded-2xl border border-dashed px-6 py-14 text-center text-[13.5px]">{query ? "No projects match that search." : "No projects yet. Start one from the box above."}</div>
+        query ? (
+          <div className="text-muted-foreground rounded-2xl border border-dashed px-6 py-14 text-center text-[13.5px]">No projects match “{query}”.</div>
+        ) : (
+          <div className="bg-muted/40 flex flex-col items-center gap-3 rounded-2xl border border-dashed px-6 py-12 text-center">
+            <div className="text-[15px] font-semibold">No projects yet</div>
+            <p className="text-muted-foreground max-w-sm text-[13.5px] leading-relaxed">Each project keeps its canvas, chat and every version Prism makes. Start one here, or ask from the box on Home.</p>
+            <Button className="mt-1 rounded-full" onClick={() => emitCreate("blank")}>
+              <Plus /> New project
+            </Button>
+          </div>
+        )
       ) : view === "grid" ? (
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {list.map((c, i) => (
