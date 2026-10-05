@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react"
 import { motion } from "motion/react"
-import { AlertCircle, ArrowLeft, Check, Copy, ExternalLink, FileJson, Images, Loader2, PenLine, Plus, RefreshCw, Star, Trash2, Upload, Shapes as Figma } from "@/components/ui/icons"
+import { type Icon, AlertCircle, ArrowLeft, ArrowRight, Check, Copy, ExternalLink, FileJson, Images, Loader2, PenLine, Plus, RefreshCw, Star, Trash2, Upload, Shapes as Figma } from "@/components/ui/icons"
 import { toast } from "sonner"
 import type { DesignSystem } from "@/lib/types"
 import { uid, useStore } from "@/lib/store"
@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { PageHeader, Section } from "./page-header"
+import { FigmaLogo, IconTile } from "@/components/type-icon"
 import { DesignReferenceView } from "./design-reference-view"
 
 const blank = (): DesignSystem => ({
@@ -35,6 +36,13 @@ const blank = (): DesignSystem => ({
   updatedAt: Date.now(),
 })
 
+const STARTS: { source: DesignSystem["source"]; title: string; desc: string; icon: Icon; bg: string }[] = [
+  { source: "figma", title: "Sync from Figma", desc: "Pull colors, type and components from a library file.", icon: Figma, bg: "" },
+  { source: "tokens", title: "Import tokens", desc: "Upload a W3C or Style Dictionary tokens file.", icon: FileJson, bg: "bg-blue-500" },
+  { source: "screens", title: "Extract from screens", desc: "Infer a system from the shipped screens in your Context file.", icon: Images, bg: "bg-sky-500" },
+  { source: "manual", title: "Start blank", desc: "Write the profile and pick the colors yourself.", icon: PenLine, bg: "bg-pink-500" },
+]
+
 export function DesignSystemsPage() {
   const custom = useStore((s) => s.designSystems)
   const upsert = useStore((s) => s.upsertDesignSystem)
@@ -44,8 +52,8 @@ export function DesignSystemsPage() {
 
   if (open) return <DesignSystemEditor ds={open} onBack={() => setOpenId(null)} onOpen={setOpenId} />
 
-  const create = () => {
-    const ds = blank()
+  const create = (source: DesignSystem["source"] = "figma") => {
+    const ds = { ...blank(), source }
     upsert(ds)
     setOpenId(ds.id)
   }
@@ -56,20 +64,43 @@ export function DesignSystemsPage() {
           title="Design systems"
           description="Pull your team's system from a Figma library or a tokens file. The agent follows the one a project uses, and wireframes pick up its color, radius and type."
           action={
-            <Button className="rounded-full" onClick={create}>
+            <Button className="rounded-full" onClick={() => create()}>
               <Plus /> Create design system
             </Button>
           }
         />
+        <div className="-mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {STARTS.map((a, i) => (
+            <motion.button
+              key={a.source}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, ease: EASE_OUT, delay: i * 0.04 }}
+              onClick={() => create(a.source)}
+              className="group bg-card hover:border-foreground/15 flex flex-col items-start gap-3 rounded-2xl border p-4 text-left shadow-xs transition-[box-shadow,border-color] hover:shadow-md"
+            >
+              {a.source === "figma" ? (
+                <span className="grid size-9 place-items-center rounded-[10px] border bg-white shadow-xs">
+                  <FigmaLogo size={18} />
+                </span>
+              ) : (
+                <IconTile icon={a.icon} bg={a.bg} size={36} />
+              )}
+              <span>
+                <span className="flex items-center gap-1 text-[14px] font-semibold">
+                  {a.title}
+                  <ArrowRight className="text-muted-foreground size-3.5 -translate-x-1 opacity-0 transition-[opacity,transform] group-hover:translate-x-0 group-hover:opacity-100" />
+                </span>
+                <span className="text-muted-foreground mt-0.5 block text-[12.5px] leading-snug">{a.desc}</span>
+              </span>
+            </motion.button>
+          ))}
+        </div>
         <Section title="Your design systems">
           {custom.length ? (
             <Grid systems={custom} onOpen={setOpenId} />
           ) : (
-            <button onClick={create} className="hover:bg-muted/50 flex flex-col items-center gap-2 rounded-2xl border border-dashed px-6 py-10 text-center transition-colors">
-              <Plus className="text-muted-foreground size-5" />
-              <span className="text-[14px] font-medium">Create your first design system</span>
-              <span className="text-muted-foreground max-w-md text-[13px]">Link a Figma library, upload design tokens, or infer one from the screens in your Context file.</span>
-            </button>
+            <p className="text-muted-foreground bg-muted/40 rounded-2xl border border-dashed px-5 py-4 text-[13.5px]">None yet. Start from one of the options above, and it shows up here.</p>
           )}
         </Section>
         <Section title="Built in">
