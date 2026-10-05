@@ -51,7 +51,7 @@ export function ContextPage() {
 
   return (
     <div className="h-full overflow-y-auto" data-scrollable>
-      <div className="mx-auto flex max-w-[880px] flex-col gap-10 px-6 pt-10 pb-16 md:px-10">
+      <div className="mx-auto flex max-w-[1180px] flex-col gap-10 px-6 pt-10 pb-16 md:px-10 [&>*]:max-w-[880px]">
         <header className="flex flex-wrap items-start justify-between gap-6 pt-0">
           <div className="max-w-xl">
             <h1 className="text-[30px] leading-tight font-bold">Context file</h1>

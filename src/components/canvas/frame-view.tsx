@@ -180,7 +180,7 @@ function MarkBadge({ mark: m, inv, active, onClick, corner }: { mark: Mark; inv:
         >
           <div className="eyebrow mb-1 flex items-center gap-1.5">
             <span className="size-2 rounded-full" style={{ background: color }} />
-            {m.author === "agent" ? "Design Agent" : "You"} · {m.severity && m.author === "agent" ? m.severity : m.type}
+            {m.author === "agent" ? "Prism" : "You"} · {m.severity && m.author === "agent" ? m.severity : m.type}
           </div>
           {m.text}
           <DeleteMark id={m.id} />

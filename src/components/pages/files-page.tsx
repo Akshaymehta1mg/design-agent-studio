@@ -15,6 +15,7 @@ export function FilesPage() {
     <div className="h-full overflow-y-auto" data-scrollable>
       <div className="mx-auto max-w-[1180px] px-6 md:px-10">
         <PageHeader
+          bordered={false}
           title="Files"
           description="Every project you've started, and every screenshot, wireframe and flow inside them."
           action={

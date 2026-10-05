@@ -250,3 +250,23 @@
   animation: shimmer 1.8s linear infinite;
 }
 @media (prefers-reduced-motion: reduce) { .wf-flow, .shimmer-text { animation: none; } .shimmer-text { color: var(--muted-foreground); } }
+
+/* Prism: light split into a soft spectrum behind the Home composer. The only decorative colour in the dashboard. */
+.prism-glow {
+  position: absolute;
+  inset: -40px -18% -10px;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(38% 70% at 22% 55%, oklch(0.7 0.2 293 / 0.30), transparent 70%),
+    radial-gradient(34% 64% at 46% 40%, oklch(0.72 0.15 262 / 0.24), transparent 70%),
+    radial-gradient(30% 60% at 68% 60%, oklch(0.82 0.12 200 / 0.22), transparent 70%),
+    radial-gradient(26% 52% at 86% 42%, oklch(0.86 0.1 75 / 0.18), transparent 70%);
+  filter: blur(36px);
+}
+:root[data-theme="dark"] .prism-glow, .dark .prism-glow { opacity: 0.55; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .prism-glow { opacity: 0.55; } }
+
+/* Dashboard nav: the current page reads as a raised tab with a violet icon. */
+.nav-item[data-active="true"] { background: var(--background); box-shadow: 0 0 0 1px var(--border), var(--elev-xs); }
+.nav-item[data-active="true"] svg { color: var(--primary); }

@@ -56,7 +56,7 @@ export function ConnectorsPage() {
   const added = new Set(connectors.map((c) => c.catalogId).filter(Boolean))
   return (
     <div className="h-full overflow-y-auto" data-scrollable>
-      <div className="mx-auto flex max-w-[980px] flex-col gap-10 px-6 pb-16 md:px-10">
+      <div className="mx-auto flex max-w-[1180px] flex-col gap-10 px-6 pb-16 md:px-10">
         <PageHeader
           title="Connectors"
           description="Connect MCP servers so the agent can read from and act in your other tools: pull a spec from Notion, file a Linear issue from a crit, or read variables from Figma."
