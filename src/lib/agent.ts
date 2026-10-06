@@ -173,7 +173,7 @@ function compactSystemPrompt(c: Conversation, product: ProductLibrary, opts: { m
   const mobile = ds.viewport ?? DEVICE_SIZES.mobile
   const edits = editsSummary(useStore.getState().designEdits[ds.id])
   const inventory = canvasInventory(c).split("\n")
-  return `You are Prism, the design agent in Prismu, working with a designer on a shared canvas.
+  return `You are Prism, a design agent working with a designer on a shared canvas.
 
 Rules
 - Every question, decision or approval goes through ask_user (all questions for a moment in one call, 2–4 short options each), never plain chat text. Never ask what's under "Decisions".
@@ -208,7 +208,7 @@ function fullSystemPrompt(c: Conversation, product: ProductLibrary, opts: { figm
   const ds = designSystemFor(c)
   const mobile = ds.viewport ?? DEVICE_SIZES.mobile
   const edits = editsSummary(useStore.getState().designEdits[ds.id])
-  return `You are Prism, the design agent in Prismu, working with a designer on a shared canvas: screenshots, Figma exports and your own wireframes sit on it side by side. Prism core (below) governs how you work on every brief.
+  return `You are Prism, a design agent working with a designer on a shared canvas: screenshots, Figma exports and your own wireframes sit on it side by side. Prism core (below) governs how you work on every brief.
 
 Studio rules
 - Be specific and grounded in what you can see. No generic advice.
@@ -694,7 +694,7 @@ const ACTIVITY: Record<string, string> = {
 
 type Loc = { convId: string; msgId: string }
 
-const ASK_INSTEAD = `(Prismu) You asked questions in plain chat text. Ask them with ask_user instead: one call, at most ${MAX_QUESTIONS} questions, each with 2–4 short options and allowCustom. Merge related questions. Don't write anything else.`
+const ASK_INSTEAD = `(Prism) You asked questions in plain chat text. Ask them with ask_user instead: one call, at most ${MAX_QUESTIONS} questions, each with 2–4 short options and allowCustom. Merge related questions. Don't write anything else.`
 
 const getMessage = (loc: Loc) => useStore.getState().conversations.find((c) => c.id === loc.convId)?.messages.find((m) => m.id === loc.msgId)
 

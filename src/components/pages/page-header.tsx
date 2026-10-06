@@ -1,11 +1,12 @@
+import { cn } from "@/lib/utils"
 import type { ReactNode } from "react"
 
-export function PageHeader({ title, description, action }: { title: string; description?: ReactNode; action?: ReactNode }) {
+export function PageHeader({ title, description, action, bordered = true }: { title: string; description?: ReactNode; action?: ReactNode; bordered?: boolean }) {
   return (
-    <header className="flex flex-wrap items-end justify-between gap-4 pt-10 pb-8">
+    <header className={cn("mb-2 flex flex-wrap items-end justify-between gap-4 pt-10 pb-6", bordered && "border-b")}>
       <div className="max-w-2xl">
-        <h1 className="text-[30px] leading-tight font-bold">{title}</h1>
-        {description && <p className="text-muted-foreground mt-1.5 text-[14.5px] leading-relaxed">{description}</p>}
+        <h1 className="text-[28px] leading-tight font-bold tracking-[-0.025em]">{title}</h1>
+        {description && <p className="text-muted-foreground mt-2 text-[14.5px] leading-relaxed text-pretty">{description}</p>}
       </div>
       {action}
     </header>

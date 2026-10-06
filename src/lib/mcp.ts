@@ -8,14 +8,15 @@ import { relayFetch } from "./relay"
 import type { Connector } from "./types"
 
 /** Remote MCP servers the studio knows about. Most need an access token (or OAuth done elsewhere). */
-export const CONNECTOR_CATALOG: { id: string; name: string; description: string; url: string; transport: "http" | "sse"; auth?: "token" | "oauth"; note?: string }[] = [
-  { id: "mobbin", name: "Mobbin", description: "Search real app screens and flows. Prism uses it for its reference and visual-pattern research.", url: "https://api.mobbin.com/mcp", transport: "http", auth: "oauth", note: "Sign in with your Mobbin account. Screen search needs a Mobbin plan with MCP access." },
-  { id: "figma-desktop", name: "Figma (desktop)", description: "Selection, variables and components from the Figma desktop app's local Dev Mode server.", url: "http://127.0.0.1:3845/mcp", transport: "http", note: "Turn on the Dev Mode MCP server in Figma's preferences first." },
-  { id: "figma", name: "Figma (remote)", description: "Read design context and frames from files you can open.", url: "https://mcp.figma.com/mcp", transport: "http", note: "Needs an OAuth access token." },
-  { id: "linear", name: "Linear", description: "Read and create issues and projects so crits turn into tickets.", url: "https://mcp.linear.app/mcp", transport: "http", note: "Needs a Linear API key or OAuth token." },
-  { id: "notion", name: "Notion", description: "Pull PRDs and research notes into the conversation.", url: "https://mcp.notion.com/mcp", transport: "http", note: "Needs an OAuth token." },
-  { id: "github", name: "GitHub", description: "Look up components and tokens in your design system repo.", url: "https://api.githubcopilot.com/mcp/", transport: "http", note: "Needs a GitHub personal access token." },
-  { id: "atlassian", name: "Jira & Confluence", description: "Read specs and file issues in Atlassian products.", url: "https://mcp.atlassian.com/v1/sse", transport: "sse", note: "Needs an OAuth token." },
+export type ConnectorCategory = "Research" | "Design" | "Planning" | "Docs" | "Code"
+export const CONNECTOR_CATALOG: { id: string; name: string; category: ConnectorCategory; description: string; url: string; transport: "http" | "sse"; auth?: "token" | "oauth"; note?: string }[] = [
+  { id: "mobbin", category: "Research", name: "Mobbin", description: "Search real app screens and flows. Prism uses it for its reference and visual-pattern research.", url: "https://api.mobbin.com/mcp", transport: "http", auth: "oauth", note: "Sign in with your Mobbin account. Screen search needs a Mobbin plan with MCP access." },
+  { id: "figma-desktop", category: "Design", name: "Figma (desktop)", description: "Selection, variables and components from the Figma desktop app's local Dev Mode server.", url: "http://127.0.0.1:3845/mcp", transport: "http", note: "Turn on the Dev Mode MCP server in Figma's preferences first." },
+  { id: "figma", category: "Design", name: "Figma (remote)", description: "Read design context and frames from files you can open.", url: "https://mcp.figma.com/mcp", transport: "http", note: "Needs an OAuth access token." },
+  { id: "linear", category: "Planning", name: "Linear", description: "Read and create issues and projects so crits turn into tickets.", url: "https://mcp.linear.app/mcp", transport: "http", note: "Needs a Linear API key or OAuth token." },
+  { id: "notion", category: "Docs", name: "Notion", description: "Pull PRDs and research notes into the conversation.", url: "https://mcp.notion.com/mcp", transport: "http", note: "Needs an OAuth token." },
+  { id: "github", category: "Code", name: "GitHub", description: "Look up components and tokens in your design system repo.", url: "https://api.githubcopilot.com/mcp/", transport: "http", note: "Needs a GitHub personal access token." },
+  { id: "atlassian", category: "Planning", name: "Jira & Confluence", description: "Read specs and file issues in Atlassian products.", url: "https://mcp.atlassian.com/v1/sse", transport: "sse", note: "Needs an OAuth token." },
 ]
 
 // ───────── OAuth for connectors that sign in through the browser (Mobbin, Figma, Linear, Notion…) ─────────
@@ -61,7 +62,7 @@ class BrowserOAuthProvider implements OAuthClientProvider {
     return OAUTH_CALLBACK()
   }
   get clientMetadata(): OAuthClientMetadata {
-    return { client_name: "Prismu", redirect_uris: [OAUTH_CALLBACK()], grant_types: ["authorization_code", "refresh_token"], response_types: ["code"], token_endpoint_auth_method: "none" }
+    return { client_name: "Prism", redirect_uris: [OAUTH_CALLBACK()], grant_types: ["authorization_code", "refresh_token"], response_types: ["code"], token_endpoint_auth_method: "none" }
   }
   state() {
     const state = crypto.randomUUID()
@@ -144,7 +145,7 @@ function friendlyConnectError(e: unknown, c: Connector) {
 
 /** Connect with stored credentials. Never opens a sign-in window. */
 export async function connect(c: Connector): Promise<Client> {
-  const client = new Client({ name: "prismu", version: "0.1.0" })
+  const client = new Client({ name: "prism", version: "0.1.0" })
   try {
     await client.connect(transportFor(c))
   } catch (e) {
@@ -160,7 +161,7 @@ export async function connect(c: Connector): Promise<Client> {
 export async function signInConnector(c: Connector, popup: Window | null) {
   if (!popup) throw new Error("Your browser blocked the sign-in window. Allow pop-ups for this site and try again.")
   const provider = new BrowserOAuthProvider(c.id, popup)
-  const first = new Client({ name: "prismu", version: "0.1.0" })
+  const first = new Client({ name: "prism", version: "0.1.0" })
   const transport = transportFor(c, provider)
   try {
     await first.connect(transport)

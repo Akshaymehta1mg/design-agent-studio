@@ -208,6 +208,8 @@ export interface Conversation {
   designSystemId?: string
   /** Which step of Prism's loop the agent is on (see src/lib/phases.ts) */
   phase?: "discover" | "research" | "directions" | "build" | "refine"
+  /** Starred: listed under Favorites on Home and in the sidebar */
+  starred?: boolean
 }
 
 // ───────────────────────────── Product library ─────────────────────────────
