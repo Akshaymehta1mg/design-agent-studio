@@ -58,8 +58,8 @@ export function createWireframe(convId: string, input: { title: string; html: st
 }
 
 // ───────── prototypes ─────────
-// A prototype is built over a few calls: create_prototype plans every screen and builds the first few,
-// add_prototype_screens builds the rest into the same frame, so no single model response has to hold the whole flow.
+// create_prototype / iterate_prototype set up the frame and plan; the screens then arrive one by one, either streamed
+// as <screen> blocks in the reply (see screen-stream.ts) or, as a fallback, through add_prototype_screens.
 
 type ScreenInput = { id?: string; title: string; html: string }
 type PlanInput = { id: string; title: string }[]
@@ -87,11 +87,12 @@ function prototypeReport(f: FrameNode) {
   const screens = f.screens ?? []
   const planned = f.plannedScreens ?? []
   const todo = planned.filter((p) => !screens.some((s) => s.id === p.id))
+  if (!screens.length) return `Planned ${planned.length} screens: ${screenList(planned)}. Now write each of them as a <screen id="…" title="…">…</screen> block in your reply.`
   const { broken, unreachable } = checkPrototype(screens, f.startScreen ?? "", planned.map((p) => p.id))
   return [
     `Built ${screens.length}${planned.length > screens.length ? ` of ${planned.length}` : ""} screens: ${screenList(screens)}. Starts on ${f.startScreen}.`,
-    todo.length ? `Still to build: ${screenList(todo)}. Call add_prototype_screens with frame_id ${f.id} for the next 2–4 of them.` : "",
-    broken.length ? `Broken links: ${broken.join("; ")}. Fix them by re-sending those screens with add_prototype_screens.` : "",
+    todo.length ? `Still to build: ${screenList(todo)}. Write them next as <screen id="…" title="…">…</screen> blocks in your reply.` : "",
+    broken.length ? `Broken links: ${broken.join("; ")}. Fix them by writing those screens again as <screen> blocks with the same ids.` : "",
     !todo.length && unreachable.length ? `Nothing links to: ${unreachable.join(", ")}.` : "",
   ]
     .filter(Boolean)
@@ -110,10 +111,10 @@ function withStart(frame: FrameNode, start?: string): FrameNode {
 }
 
 /** A new prototype: the plan for the whole flow and its first screens. */
-export function createPrototype(convId: string, input: { title: string; screens: ScreenInput[]; plan?: PlanInput; start?: string; device?: Device; summary?: string }): ActionResult & { frameId?: string } {
-  if (!input.screens?.length) return { ok: false, message: "A prototype needs at least one screen." }
+export function createPrototype(convId: string, input: { title: string; screens?: ScreenInput[]; plan?: PlanInput; start?: string; device?: Device; summary?: string }): ActionResult & { frameId?: string } {
+  if (!input.screens?.length && !input.plan?.length) return { ok: false, message: "Give the plan (every screen id and title), then write the screens as <screen> blocks." }
   const known = (input.plan ?? []).map((p) => screenSlug(p.id || p.title))
-  const { screens } = normalizeScreens(input.screens, known)
+  const { screens } = normalizeScreens(input.screens ?? [], known)
   const device = input.device ?? "mobile"
   const size = frameSize(convId, device)
   const nodes = conv(convId)?.canvas.nodes ?? []
@@ -148,14 +149,27 @@ export function createPrototype(convId: string, input: { title: string; screens:
   }
 }
 
+/** Set a prototype's shared behaviour (its <prototype-script>). A script that doesn't parse isn't saved. */
+export function setPrototypeScript(convId: string, frameId: string, script: string): ActionResult {
+  const src = findFrame(convId, frameId)
+  if (!src?.screens) return { ok: false, message: `No prototype with id ${frameId}.` }
+  try {
+    new Function(script)
+  } catch (e) {
+    return { ok: false, message: `The prototype-script has a syntax error (${(e as Error).message}); it was not saved.` }
+  }
+  useStore.getState().editCanvas((d) => ({ ...d, nodes: d.nodes.map((n) => (n.id === src.id ? { ...src, script } : n)) }), { convId, record: false })
+  return { ok: true, message: `Saved the interactions script for ${frameLabel(src)} (${script.length} chars).` }
+}
+
 /** Add or replace screens in a prototype that's being built in this turn. */
-export function addPrototypeScreens(convId: string, input: { frame_id: string; screens: ScreenInput[]; start?: string }, building: Set<string>): ActionResult {
+export function addPrototypeScreens(convId: string, input: { frame_id: string; screens?: ScreenInput[]; start?: string }, building: Set<string>): ActionResult {
   const src = findFrame(convId, input.frame_id)
   if (!src?.screens) return { ok: false, message: `No prototype with id ${input.frame_id}.` }
   if (!building.has(src.id)) return { ok: false, message: `Prototype ${src.id} is finished; use iterate_prototype to make its next version.` }
   if (!input.screens?.length) return { ok: false, message: "Send at least one screen." }
   const known = [...src.screens.map((s) => s.id), ...(src.plannedScreens ?? []).map((p) => p.id)]
-  const { screens } = normalizeScreens(input.screens, known)
+  const { screens } = normalizeScreens(input.screens ?? [], known)
   const merged = mergeScreens(src.screens, screens)
   const frame = withStart({ ...src, screens: merged, plannedScreens: normalizePlan(src.plannedScreens, merged) }, input.start)
   useStore.getState().editCanvas((d) => ({ ...d, nodes: d.nodes.map((n) => (n.id === frame.id ? frame : n)) }), { convId, record: false })
@@ -164,26 +178,27 @@ export function addPrototypeScreens(convId: string, input: { frame_id: string; s
 
 /**
  * The next version of a prototype (or a wireframe turned into one), beside the source.
- * Unchanged screens carry over; send only new or changed ones, and add more with add_prototype_screens.
+ * Unchanged screens carry over; the new or changed ones follow as streamed <screen> blocks.
  */
 export function iteratePrototype(
   convId: string,
-  input: { source_frame_id: string; change_summary: string; screens: ScreenInput[]; remove?: string[]; plan?: PlanInput; start?: string; title?: string; device?: Device },
+  input: { source_frame_id: string; change_summary: string; screens?: ScreenInput[]; remove?: string[]; plan?: PlanInput; start?: string; title?: string; device?: Device },
 ): ActionResult & { frameId?: string } {
   const src = findFrame(convId, input.source_frame_id)
   if (!src) return { ok: false, message: `No frame with id ${input.source_frame_id}. Use create_prototype for a new flow.` }
-  if (!input.screens?.length && !input.remove?.length) return { ok: false, message: "Send the new or changed screens (unchanged ones carry over)." }
   const nodes = conv(convId)!.canvas.nodes
   const lineageId = src.lineageId ?? uid("l_")
   const lineage = nodes.filter((n): n is FrameNode => n.kind === "frame" && n.lineageId === lineageId)
   const version = src.lineageId ? Math.max(...lineage.map((f) => f.version ?? 1)) + 1 : 2
   const removed = new Set((input.remove ?? []).map(screenSlug))
   // A plain wireframe becomes the first screen of the new prototype.
-  const base = (src.screens ?? (src.type === "wireframe" && src.html ? [{ id: screenSlug(src.title), title: src.title, html: src.html }] : [])).filter((s) => !removed.has(s.id))
+  // A new plan is the whole screen list: screens left out of it don't carry over.
+  const keep = input.plan?.length ? new Set(input.plan.map((p) => screenSlug(p.id || p.title))) : null
+  const base = (src.screens ?? (src.type === "wireframe" && src.html ? [{ id: screenSlug(src.title), title: src.title, html: src.html }] : [])).filter((s) => !removed.has(s.id) && (!keep || keep.has(s.id)))
   const known = [...base.map((s) => s.id), ...(input.plan ?? src.plannedScreens ?? []).map((p) => screenSlug(p.id || p.title))]
   const { screens } = normalizeScreens(input.screens ?? [], known)
   const merged = mergeScreens(base, screens)
-  if (!merged.length) return { ok: false, message: "The new version would have no screens." }
+  if (!merged.length && !input.plan?.length) return { ok: false, message: "The new version would have no screens." }
   const device = input.device ?? src.device ?? "mobile"
   const size = frameSize(convId, device)
   const pos = src.lineageId ? placeNextVersion(nodes, lineageId, size.w, size.h) : findFreeSpot(nodes, { x: src.x + src.w + 120, y: src.y, w: size.w, h: size.h }, "right")
@@ -200,6 +215,7 @@ export function iteratePrototype(
       screens: merged,
       plannedScreens: plan,
       startScreen: src.startScreen,
+      script: src.script,
       device,
       source: "agent",
       designSystemId: dsIdFor(convId),
