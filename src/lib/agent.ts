@@ -1,4 +1,4 @@
-import { streamText, generateText, tool, stepCountIs, hasToolCall, type ModelMessage, type LanguageModel, type ToolChoice, type ToolSet } from "ai"
+import { streamText, generateText, tool, stepCountIs, hasToolCall, InvalidToolInputError, type ModelMessage, type LanguageModel, type ToolChoice, type ToolSet } from "ai"
 import { z } from "zod"
 import type { ActionLog, Attachment, ChatMessage, Conversation, FrameNode, MessagePart, ProductLibrary } from "./types"
 import { frameLabel, uid, useStore } from "./store"
@@ -18,7 +18,7 @@ import { imageForModel } from "./relay"
 import { editsSummary, loadDesignReference, referenceIndex, referenceKeys, referenceSection } from "./design-reference"
 import DS_ASSETS from "@/prism/design-system/assets.json"
 import { hasFigmaAccess } from "./figma"
-import { CONNECTORS_IN, currentPhase, GATED, NEXT, PHASE_TOOLS, PHASES, phaseLabel, phasePrompt, type Phase } from "./phases"
+import { CONNECTORS_IN, GATED, hasCodeDump, NEXT, PHASE_TOOLS, PHASES, phaseLabel, phasePrompt, startPhase, stripCodeDump, type Phase } from "./phases"
 import { viaServer, type ServerUpstream } from "./server"
 
 // ───────────────────────── model access ─────────────────────────
@@ -609,6 +609,26 @@ type Loc = { convId: string; msgId: string }
 
 const ASK_INSTEAD = `(Prism) You asked questions in plain chat text. Ask them with ask_user instead: one call, at most ${MAX_QUESTIONS} questions, each with 2–4 short options and allowCustom. Merge related questions. Don't write anything else.`
 
+function smallerCalls(tools: string[], why: string) {
+  const names = [...new Set(tools)].join(", ")
+  return `(Prism) Your ${names} call ${why}. Try again in smaller calls: at most 2 screens per call, lean markup (helper classes, few inline styles). Start with iterate_prototype (or create_prototype) and the first 1–2 screens, then add_prototype_screens with 1–2 more until done. Don't repeat the earlier call as it was.`
+}
+
+const PROTOTYPE_TOOLS = ["create_prototype", "add_prototype_screens", "iterate_prototype"]
+const CODE_IN_CHAT = `(Prism) You pasted the prototype's HTML into the chat. The designer can't use code in the chat: build it on the canvas now with create_prototype (or iterate_prototype for a new version of an existing prototype), then add_prototype_screens until the plan is built. Reuse the screens you wrote, as wf-screen fragments. Don't paste code again.`
+
+/** Take pasted HTML out of a reply, so the chat keeps the explanation and the canvas gets the prototype. */
+function removeCodeFromReply(loc: Loc) {
+  useStore.getState().patchMessage(
+    loc.msgId,
+    (m) => {
+      const parts = (m.parts ?? []).map((p) => (p.type === "text" ? { ...p, text: stripCodeDump(p.text) } : p)).filter((p) => p.type !== "text" || p.text)
+      return { parts, text: parts.flatMap((p) => (p.type === "text" ? [p.text] : [])).join("\n\n") }
+    },
+    loc.convId,
+  )
+}
+
 const getMessage = (loc: Loc) => useStore.getState().conversations.find((c) => c.id === loc.convId)?.messages.find((m) => m.id === loc.msgId)
 
 const textOf = (parts: MessagePart[]) =>
@@ -687,7 +707,9 @@ export async function runChat(convId: string, userMsg: ChatMessage, opts: { dept
   const { model, label } = currentModel()
   const assistantId = uid("c_")
   const startConv = store.conversations.find((x) => x.id === convId)
-  const phase: Phase = startConv ? currentPhase(startConv) : "discover"
+  const phase: Phase = startConv ? startPhase(startConv, userMsg) : "discover"
+  // A typed answer or a request to build moves the conversation on (see startPhase); save it before the reply.
+  if (startConv && startConv.phase !== phase) store.updateConversation(convId, (c) => ({ ...c, phase }))
   /** Set by next_phase, or by an answered checkpoint: the step the next reply works on. */
   let advanceTo: Phase | null = null
   store.addMessage({ id: assistantId, role: "assistant", text: "", status: "streaming", model: label, actions: [], createdAt: Date.now(), activity: "Thinking…", phase }, convId)
@@ -734,20 +756,26 @@ export async function runChat(convId: string, userMsg: ChatMessage, opts: { dept
       // A step ends at its checkpoint (a question or approval) or when it hands over to another step.
       const stopAt = [hasToolCall("next_phase"), ...(GATED.has(phase) ? [hasToolCall("ask_user")] : [])]
       const signal = controller!.signal
+      const smallModel = wantsCompactPrompt()
       const readsImages = currentModelReadsImages()
       let text = ""
 
       /** One streamed pass. Returns the text of its last step and the messages it added. */
       const pass = async (messages: ModelMessage[], opts: { tools?: ToolSet; toolChoice?: ToolChoice<ToolSet>; steps?: number; onAskStart?: () => void } = {}) => {
+        /** Tools whose calls failed in this pass, and whether a reply hit the output limit. */
+        const failed: string[] = []
+        let cutOff = false
         const result = streamText({
           model,
           system,
           messages,
           tools: opts.tools ?? tools,
           toolChoice: opts.toolChoice,
-          stopWhen: [stepCountIs(opts.steps ?? 14), ...stopAt],
+          // Two failed tool calls end the pass, so the same oversized call isn't sent again and again.
+          stopWhen: [stepCountIs(opts.steps ?? 14), ...stopAt, () => failed.length >= 2],
           abortSignal: signal,
-          maxOutputTokens: compact ? (phase === "build" ? 8000 : 4096) : (phase === "build" ? 8000 : 16000),
+          // Prototype screens are long: a call cut off at the limit never runs. Only small models get a smaller cap.
+          maxOutputTokens: smallModel ? (phase === "build" || phase === "refine" ? 8000 : 4096) : 16000,
           // Rate-limited plans ask callers to wait (retry-after); the SDK honours it, so allow a few more tries.
           maxRetries: compact ? 4 : 2,
           // Text-only models reject images anywhere in the history, including tool results.
@@ -776,9 +804,14 @@ export async function runChat(convId: string, userMsg: ChatMessage, opts: { dept
             } else if (part.type === "start-step") {
               stepText = ""
               if (text) buffered += "\n\n"
+            } else if (part.type === "finish-step") {
+              if (part.finishReason === "length") cutOff = true
             } else if (part.type === "tool-error") {
               flush()
-              pushAction({ ok: false, message: "", log: { id: uid(), label: `${part.toolName.replace(/_/g, " ")} failed`, tone: "error" } })
+              failed.push(part.toolName)
+              const name = part.toolName.replace(/_/g, " ")
+              const bad = InvalidToolInputError.isInstance(part.error) || /json|parse|invalid|validation|expected/i.test(String((part.error as Error)?.message ?? part.error))
+              pushAction({ ok: false, message: "", log: { id: uid(), label: bad ? `${name} didn't run: the call was incomplete` : `${name} failed`, tone: "error" } })
             } else if (part.type === "error") {
               throw part.error
             }
@@ -786,11 +819,21 @@ export async function runChat(convId: string, userMsg: ChatMessage, opts: { dept
         } finally {
           flush()
         }
-        return { stepText, messages: (await result.response).messages }
+        return { stepText, messages: (await result.response).messages, failed, cutOff }
       }
 
+      const agentFrames = () => useStore.getState().conversations.find((x) => x.id === convId)?.canvas.nodes.filter((n) => n.kind === "frame" && n.source === "agent").length ?? 0
+      const framesBefore = agentFrames()
       let history = toModelMessages(c, userMsg, compact)
-      const first = await pass(history)
+      let first = await pass(history)
+      // Failed tool calls (usually a prototype too long for one reply): retry once, in smaller pieces.
+      if (first.failed.length || (first.cutOff && (phase === "build" || phase === "refine"))) {
+        const why = first.cutOff ? "was cut off at the output limit, so it never ran" : "had invalid or incomplete input, so it never ran"
+        history = [...history, ...first.messages, { role: "user", content: smallerCalls(first.failed.length ? first.failed : ["last tool"], why) }]
+        appendText(loc, "\n\n_That was too much for one step, so I'm building it in smaller pieces._\n\n")
+        const again = await pass(history)
+        first = { ...again, messages: again.messages }
+      }
 
       // Safety net: questions typed into the chat instead of the question card get turned into one.
       const asked = () => !!getMessage(loc)?.parts?.some((p) => p.type === "ask")
@@ -802,11 +845,32 @@ export async function runChat(convId: string, userMsg: ChatMessage, opts: { dept
           history = [...history, ...forced.messages]
           // Continue with the answers (or with the reminder that they were already given); in a step,
           // the answer starts the next step as its own reply instead.
-          if (!GATED.has(phase)) await pass(history)
+          if (!GATED.has(phase)) history = [...history, ...(await pass(history)).messages]
         } catch (e) {
           if (signal.aborted) throw e
           // Couldn't convert: keep the questions as the model wrote them.
           if (before) useStore.getState().patchMessage(assistantId, { parts: before, text: textOf(before) }, convId)
+        }
+      }
+      else history = [...history, ...first.messages]
+
+      // Safety net: a prototype pasted into the chat as HTML instead of built on the canvas.
+      if (hasCodeDump(getMessage(loc)?.text ?? "") && agentFrames() === framesBefore) {
+        removeCodeFromReply(loc)
+        const protoTools = Object.fromEntries(Object.entries(tools).filter(([k]) => PROTOTYPE_TOOLS.includes(k)))
+        if (Object.keys(protoTools).length) {
+          try {
+            history = [...history, { role: "user", content: CODE_IN_CHAT }]
+            const forced = await pass(history, { tools: protoTools, toolChoice: "required", steps: 1 })
+            history = [...history, ...forced.messages]
+            await pass(history)
+          } catch (e) {
+            if (signal.aborted) throw e
+          }
+        } else {
+          // This step can't build (e.g. directions): hand over to the prototype step, which can.
+          advanceTo = "build"
+          appendText(loc, "\n\n_Moving on to the prototype step to build this on the canvas._")
         }
       }
       const mine = getMessage(loc)
