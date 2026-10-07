@@ -18,7 +18,7 @@ import { imageForModel } from "./relay"
 import { editsSummary, loadDesignReference, referenceIndex, referenceKeys, referenceSection } from "./design-reference"
 import DS_ASSETS from "@/prism/design-system/assets.json"
 import { hasFigmaAccess } from "./figma"
-import { CONNECTORS_IN, currentPhase, GATED, NEXT, PHASE_TOOLS, PHASES, phaseLabel, phasePrompt, type Phase } from "./phases"
+import { CONNECTORS_IN, GATED, hasCodeDump, NEXT, PHASE_TOOLS, PHASES, phaseLabel, phasePrompt, startPhase, stripCodeDump, type Phase } from "./phases"
 import { viaServer, type ServerUpstream } from "./server"
 
 // ───────────────────────── model access ─────────────────────────
@@ -609,6 +609,21 @@ type Loc = { convId: string; msgId: string }
 
 const ASK_INSTEAD = `(Prism) You asked questions in plain chat text. Ask them with ask_user instead: one call, at most ${MAX_QUESTIONS} questions, each with 2–4 short options and allowCustom. Merge related questions. Don't write anything else.`
 
+const PROTOTYPE_TOOLS = ["create_prototype", "add_prototype_screens", "iterate_prototype"]
+const CODE_IN_CHAT = `(Prism) You pasted the prototype's HTML into the chat. The designer can't use code in the chat: build it on the canvas now with create_prototype (or iterate_prototype for a new version of an existing prototype), then add_prototype_screens until the plan is built. Reuse the screens you wrote, as wf-screen fragments. Don't paste code again.`
+
+/** Take pasted HTML out of a reply, so the chat keeps the explanation and the canvas gets the prototype. */
+function removeCodeFromReply(loc: Loc) {
+  useStore.getState().patchMessage(
+    loc.msgId,
+    (m) => {
+      const parts = (m.parts ?? []).map((p) => (p.type === "text" ? { ...p, text: stripCodeDump(p.text) } : p)).filter((p) => p.type !== "text" || p.text)
+      return { parts, text: parts.flatMap((p) => (p.type === "text" ? [p.text] : [])).join("\n\n") }
+    },
+    loc.convId,
+  )
+}
+
 const getMessage = (loc: Loc) => useStore.getState().conversations.find((c) => c.id === loc.convId)?.messages.find((m) => m.id === loc.msgId)
 
 const textOf = (parts: MessagePart[]) =>
@@ -687,7 +702,9 @@ export async function runChat(convId: string, userMsg: ChatMessage, opts: { dept
   const { model, label } = currentModel()
   const assistantId = uid("c_")
   const startConv = store.conversations.find((x) => x.id === convId)
-  const phase: Phase = startConv ? currentPhase(startConv) : "discover"
+  const phase: Phase = startConv ? startPhase(startConv, userMsg) : "discover"
+  // A typed answer or a request to build moves the conversation on (see startPhase); save it before the reply.
+  if (startConv && startConv.phase !== phase) store.updateConversation(convId, (c) => ({ ...c, phase }))
   /** Set by next_phase, or by an answered checkpoint: the step the next reply works on. */
   let advanceTo: Phase | null = null
   store.addMessage({ id: assistantId, role: "assistant", text: "", status: "streaming", model: label, actions: [], createdAt: Date.now(), activity: "Thinking…", phase }, convId)
@@ -789,6 +806,8 @@ export async function runChat(convId: string, userMsg: ChatMessage, opts: { dept
         return { stepText, messages: (await result.response).messages }
       }
 
+      const agentFrames = () => useStore.getState().conversations.find((x) => x.id === convId)?.canvas.nodes.filter((n) => n.kind === "frame" && n.source === "agent").length ?? 0
+      const framesBefore = agentFrames()
       let history = toModelMessages(c, userMsg, compact)
       const first = await pass(history)
 
@@ -802,11 +821,32 @@ export async function runChat(convId: string, userMsg: ChatMessage, opts: { dept
           history = [...history, ...forced.messages]
           // Continue with the answers (or with the reminder that they were already given); in a step,
           // the answer starts the next step as its own reply instead.
-          if (!GATED.has(phase)) await pass(history)
+          if (!GATED.has(phase)) history = [...history, ...(await pass(history)).messages]
         } catch (e) {
           if (signal.aborted) throw e
           // Couldn't convert: keep the questions as the model wrote them.
           if (before) useStore.getState().patchMessage(assistantId, { parts: before, text: textOf(before) }, convId)
+        }
+      }
+      else history = [...history, ...first.messages]
+
+      // Safety net: a prototype pasted into the chat as HTML instead of built on the canvas.
+      if (hasCodeDump(getMessage(loc)?.text ?? "") && agentFrames() === framesBefore) {
+        removeCodeFromReply(loc)
+        const protoTools = Object.fromEntries(Object.entries(tools).filter(([k]) => PROTOTYPE_TOOLS.includes(k)))
+        if (Object.keys(protoTools).length) {
+          try {
+            history = [...history, { role: "user", content: CODE_IN_CHAT }]
+            const forced = await pass(history, { tools: protoTools, toolChoice: "required", steps: 1 })
+            history = [...history, ...forced.messages]
+            await pass(history)
+          } catch (e) {
+            if (signal.aborted) throw e
+          }
+        } else {
+          // This step can't build (e.g. directions): hand over to the prototype step, which can.
+          advanceTo = "build"
+          appendText(loc, "\n\n_Moving on to the prototype step to build this on the canvas._")
         }
       }
       const mine = getMessage(loc)
