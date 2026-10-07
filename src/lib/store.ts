@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import { persist, type PersistStorage, type StorageValue } from "zustand/middleware"
-import { get as idbGet, set as idbSet, del as idbDel } from "idb-keyval"
+import { get as idbGet, getMany as idbGetMany, set as idbSet, del as idbDel, keys as idbKeys } from "idb-keyval"
 import { nanoid } from "nanoid"
 import type {
   CanvasDoc,
@@ -24,24 +24,131 @@ import { DEFAULT_DESIGN_SYSTEM_ID } from "./design-systems"
 export const uid = (p = "") => p + nanoid(7)
 
 // ───────── storage: IndexedDB with an in-memory fallback (private windows, sandboxes) ─────────
-// Writes are debounced: the persisted state holds every screenshot as a data URL, so serialising
-// it on each store update (every streamed token) exhausts memory and crashes the tab.
+// The state holds every screenshot as a data URL. Serialising all of it on each save froze the
+// canvas (a save follows every pan, drag and streamed reply), so large data URLs are stored once
+// under their own keys and the saved state only carries a short reference to them.
+// Writes are also debounced, so streaming doesn't save on every token.
 const memory = new Map<string, string>()
 const WRITE_DELAY = 800
 const pending = new Map<string, unknown>()
 let writeTimer = 0
 
+const BLOB_PREFIX = "das:blob:"
+const REF = "\u0000blob:" // can't occur in real data
+const BIG = 16 * 1024
+/** data URL → blob key. Map lookups on a string we've seen before are cheap, so each image is written once. */
+const blobKeys = new Map<string, string>()
+const memoryBlobs = new Map<string, string>()
+let liveBlobs = new Set<string>()
+
+function stashBlob(src: string): string {
+  let key = blobKeys.get(src)
+  if (!key) {
+    key = BLOB_PREFIX + nanoid(12)
+    blobKeys.set(src, key)
+    memoryBlobs.set(key, src)
+    idbSet(key, src).catch(() => {
+      /* stays in memoryBlobs */
+    })
+  }
+  return key
+}
+
+/** Copy of a JSON value with large data URLs swapped for blob references. Cost scales with the number of values, not their size. */
+function dehydrate(v: unknown, used: Set<string>): unknown {
+  if (typeof v === "string") {
+    if (v.length > BIG && v.startsWith("data:")) {
+      const key = stashBlob(v)
+      used.add(key)
+      return REF + key
+    }
+    return v
+  }
+  if (Array.isArray(v)) return v.map((x) => dehydrate(x, used))
+  if (v && typeof v === "object") {
+    const out: Record<string, unknown> = {}
+    for (const k in v) {
+      const x = (v as Record<string, unknown>)[k]
+      if (x !== undefined && typeof x !== "function") out[k] = dehydrate(x, used)
+    }
+    return out
+  }
+  return v
+}
+
 function flushWrites() {
   clearTimeout(writeTimer)
   writeTimer = 0
   for (const [k, v] of pending) {
-    const text = JSON.stringify(v)
+    const used = new Set<string>()
+    const text = JSON.stringify(dehydrate(v, used))
     memory.set(k, text)
-    idbSet(k, text).catch(() => {
-      /* stay in memory */
-    })
+    idbSet(k, text)
+      .then(() => {
+        // Images no longer referenced (deleted frames, cleared screens) are removed after the state that drops them is saved.
+        for (const key of liveBlobs) if (!used.has(key)) dropBlob(key)
+        liveBlobs = used
+      })
+      .catch(() => {
+        /* stay in memory */
+      })
   }
   pending.clear()
+}
+
+function dropBlob(key: string) {
+  const src = memoryBlobs.get(key)
+  if (src !== undefined) blobKeys.delete(src)
+  memoryBlobs.delete(key)
+  idbDel(key).catch(() => {})
+}
+
+/** Read the saved state and put the images back. Also reads the older format, which kept everything inline. */
+async function readState(k: string): Promise<StorageValue<unknown> | null> {
+  let text: string | null
+  try {
+    text = ((await idbGet(k)) as string | undefined) ?? memory.get(k) ?? null
+  } catch {
+    text = memory.get(k) ?? null
+  }
+  if (!text) return null
+  const refs = new Set<string>()
+  const parsed = JSON.parse(text, (_key, value) => {
+    if (typeof value === "string" && value.startsWith(REF)) refs.add(value.slice(REF.length))
+    return value
+  })
+  // Images written by a session that closed before its state was saved are never referenced; clear them out.
+  idbKeys()
+    .then((all) => all.forEach((key) => typeof key === "string" && key.startsWith(BLOB_PREFIX) && !refs.has(key) && !memoryBlobs.has(key) && idbDel(key).catch(() => {})))
+    .catch(() => {})
+  if (!refs.size) return parsed as StorageValue<unknown>
+  const keys = [...refs]
+  let values: (string | undefined)[] = []
+  try {
+    values = (await idbGetMany(keys)) as (string | undefined)[]
+  } catch {
+    /* fall back to memory below */
+  }
+  const found = new Map<string, string>()
+  keys.forEach((key, i) => {
+    const src = values[i] ?? memoryBlobs.get(key)
+    if (src === undefined) return
+    found.set(key, src)
+    blobKeys.set(src, key)
+    memoryBlobs.set(key, src)
+  })
+  liveBlobs = new Set(found.keys())
+  const restore = (v: unknown): unknown => {
+    if (typeof v === "string") return v.startsWith(REF) ? (found.get(v.slice(REF.length)) ?? "") : v
+    if (Array.isArray(v)) return v.map(restore)
+    if (v && typeof v === "object") {
+      const o = v as Record<string, unknown>
+      for (const key in o) o[key] = restore(o[key])
+      return o
+    }
+    return v
+  }
+  return restore(parsed) as StorageValue<unknown>
 }
 
 /** Drop queued writes, e.g. before clearing storage and reloading. */
@@ -57,15 +164,7 @@ if (typeof window !== "undefined") {
 }
 
 const safeStorage: PersistStorage<unknown> = {
-  getItem: async (k) => {
-    let text: string | null
-    try {
-      text = ((await idbGet(k)) as string | undefined) ?? memory.get(k) ?? null
-    } catch {
-      text = memory.get(k) ?? null
-    }
-    return text ? (JSON.parse(text) as StorageValue<unknown>) : null
-  },
+  getItem: readState,
   setItem: (k, v) => {
     pending.set(k, v)
     if (!writeTimer) writeTimer = window.setTimeout(flushWrites, WRITE_DELAY)

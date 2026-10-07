@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { motion } from "motion/react"
 import { ArrowLeft, Check, ChevronDown, Layers, MousePointer2, Radio, Shapes as Figma, Palette } from "@/components/ui/icons"
 import { useActiveConversation, useStore } from "@/lib/store"
@@ -110,11 +110,15 @@ export function ProjectView() {
   const [pane, setPane] = useState<"main" | "side">("main")
   const frames = conv.canvas.nodes.filter((n) => n.kind === "frame") as FrameNode[]
 
-  const askAbout = (f: FrameNode) => {
-    select([f.id])
-    setPane("side")
-    window.dispatchEvent(new CustomEvent("das:compose", { detail: { text: f.type === "wireframe" ? "Critique this version and suggest what the next one should change." : "What would you change on this screen?" } }))
-  }
+  // Stable, so streamed chat updates (which re-render this view) don't re-render the canvas.
+  const askAbout = useCallback(
+    (f: FrameNode) => {
+      select([f.id])
+      setPane("side")
+      window.dispatchEvent(new CustomEvent("das:compose", { detail: { text: f.type === "wireframe" ? "Critique this version and suggest what the next one should change." : "What would you change on this screen?" } }))
+    },
+    [select],
+  )
 
   const main = mode === "live" ? <LiveStage /> : <Canvas onAskAbout={askAbout} />
   const side = mode === "live" ? <LivePanel /> : <ChatPanel />

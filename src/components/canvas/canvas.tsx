@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useShallow } from "zustand/react/shallow"
 import { Hand, ImagePlus, MessageCircle, Minus, MousePointer2, Plus, Redo2, StickyNote, Undo2, Maximize, Upload } from "@/components/ui/icons"
 import type { CanvasDoc, CanvasNode, FrameNode, Viewport } from "@/lib/types"
@@ -20,10 +20,11 @@ type Drag =
   | { kind: "move"; sx: number; sy: number; ids: string[]; moved: boolean }
   | { kind: "marquee"; sx: number; sy: number; ex: number; ey: number; additive: boolean }
 
+const NO_MARKS: CanvasDoc["marks"] = []
 const MIN_Z = 0.08
 const MAX_Z = 3
 
-export function Canvas({ onAskAbout }: { onAskAbout: (f: FrameNode) => void }) {
+export const Canvas = memo(function Canvas({ onAskAbout }: { onAskAbout: (f: FrameNode) => void }) {
   // Subscribe to the canvas only; the conversation object changes with every chat message.
   const active = (s: ReturnType<typeof useStore.getState>) => s.conversations.find((c) => c.id === s.activeId) ?? s.conversations[0]
   const convId = useStore((s) => active(s).id)
@@ -35,6 +36,9 @@ export function Canvas({ onAskAbout }: { onAskAbout: (f: FrameNode) => void }) {
   const history = useStore((s) => s.history[convId])
   const wrap = useRef<HTMLDivElement>(null)
   const [vp, setVp] = useState<Viewport>(doc.viewport)
+  // Handlers read the viewport through a ref, so they stay stable while it changes on every pan frame.
+  const vpRef = useRef(vp)
+  vpRef.current = vp
   const [drag, setDrag] = useState<Drag | null>(null)
   const [offset, setOffset] = useState<{ dx: number; dy: number }>({ dx: 0, dy: 0 })
   const [space, setSpace] = useState(false)
@@ -59,13 +63,11 @@ export function Canvas({ onAskAbout }: { onAskAbout: (f: FrameNode) => void }) {
     return () => clearTimeout(t)
   }, [vp, setViewport])
 
-  const toWorld = useCallback(
-    (cx: number, cy: number) => {
-      const r = wrap.current!.getBoundingClientRect()
-      return { x: (cx - r.left - vp.x) / vp.zoom, y: (cy - r.top - vp.y) / vp.zoom }
-    },
-    [vp],
-  )
+  const toWorld = useCallback((cx: number, cy: number) => {
+    const r = wrap.current!.getBoundingClientRect()
+    const v = vpRef.current
+    return { x: (cx - r.left - v.x) / v.zoom, y: (cy - r.top - v.y) / v.zoom }
+  }, [])
 
   const zoomAt = useCallback((factor: number, cx?: number, cy?: number) => {
     setVp((v) => {
@@ -212,7 +214,7 @@ export function Canvas({ onAskAbout }: { onAskAbout: (f: FrameNode) => void }) {
       e.stopPropagation()
       wrap.current?.setPointerCapture(e.pointerId)
       if (panning || e.button === 1) {
-        setDrag({ kind: "pan", sx: e.clientX, sy: e.clientY, vx: vp.x, vy: vp.y })
+        setDrag({ kind: "pan", sx: e.clientX, sy: e.clientY, vx: vpRef.current.x, vy: vpRef.current.y })
         return
       }
       if (tool === "comment") {
@@ -230,7 +232,7 @@ export function Canvas({ onAskAbout }: { onAskAbout: (f: FrameNode) => void }) {
       select(ids)
       setDrag({ kind: "move", sx: e.clientX, sy: e.clientY, ids, moved: false })
     },
-    [panning, vp, tool, doc.nodes, selection, select, toWorld],
+    [panning, tool, doc.nodes, selection, select, toWorld],
   )
 
   const onMove = (e: React.PointerEvent) => {
@@ -281,6 +283,9 @@ export function Canvas({ onAskAbout }: { onAskAbout: (f: FrameNode) => void }) {
     },
     [editCanvas, select],
   )
+
+  // Stable, so FrameView's memo holds while the viewport changes on every pan frame.
+  const onPreview = useCallback((f: FrameNode) => (f.screens?.length ? useStore.getState().playPrototype(f.id) : setPreview(f)), [])
 
   const marksByFrame = useMemo(() => {
     const m = new Map<string, typeof doc.marks>()
@@ -341,12 +346,12 @@ export function Canvas({ onAskAbout }: { onAskAbout: (f: FrameNode) => void }) {
               <FrameView
                 key={n.id}
                 frame={n}
-                marks={marksByFrame.get(n.id) ?? []}
+                marks={marksByFrame.get(n.id) ?? NO_MARKS}
                 selected={selSet.has(n.id)}
                 zoom={vp.zoom}
                 offset={moving?.has(n.id) ? offset : undefined}
                 onPointerDown={onNodeDown}
-                onPreview={(f) => (f.screens?.length ? useStore.getState().playPrototype(f.id) : setPreview(f))}
+                onPreview={onPreview}
                 onDelete={deleteNode}
                 onAsk={onAskAbout}
                 activeMark={activeMark}
@@ -466,7 +471,7 @@ export function Canvas({ onAskAbout }: { onAskAbout: (f: FrameNode) => void }) {
       </Dialog>
     </div>
   )
-}
+})
 
 function ToolButton({ label, k, active, disabled, onClick, children }: { label: string; k?: string; active?: boolean; disabled?: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
